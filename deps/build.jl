@@ -1,2 +1,1 @@
-using Iterators
-Iterators.update()
+Pkg.add("Iterators")

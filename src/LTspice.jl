@@ -160,7 +160,7 @@ function getParam(LTspiceFile::ASCIIString)
   for block in paramOrCommentBlocks
     paramCardsInBlock = matchall(r"\.param.*?(\\n|$)"mi,block)
     for paramCard in paramCardsInBlock
-      x = match(r".(?:param|PARAM)[ ]+(\S+)[= ]*(.*?)(?:\\n|$)",paramCard)
+      x = match(r".(?:param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\\n|$)",paramCard)
       if x != nothing
         value = try
           parsefloat(x.captures[2])
@@ -168,7 +168,13 @@ function getParam(LTspiceFile::ASCIIString)
           nan(Float64)
         end
         if !isnan(value)
-          paramDict[x.captures[1]]=value
+          si = match(r"(K|k|MEG|meg|G|g|T|t|M|m|U|u|N|n|P|p|F|f).*?",x.captures[3])
+          if si!=nothing
+            si_multiplier = units[si.captures[1]]
+          else
+            si_multiplier = 1.0
+          end
+          paramDict[x.captures[1]]=value * si_multiplier
         end
       end
     end

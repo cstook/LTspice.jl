@@ -3,9 +3,7 @@
 
 module LTspice
 
-using Iterators
-
-import Base: show, haskey, get, keys, values, getindex, setindex!
+import Base: show, haskey, get, keys, values, getindex, setindex!, start, next, done, length
 
 export LTspiceSimulation, defaultLTspiceExcutable, run!, getMeasurments
 export getParameters, getSimulationFile
@@ -29,6 +27,28 @@ type LTspiceSimulation
     new(excutable,simulationFile,logFile,LTspiceFile,LTspiceLog,param,meas)
   end
 end
+
+# ****  BEGIN make LTspiceSimulation an iterator  ****
+
+Base.start(x::LTspiceSimulation) = (start(x.param),start(x.meas))
+
+function Base.next(x::LTspiceSimulation, state)
+  if ~done(x.param,state[1])
+    param,paramState = next(x.param,state[1])
+    return (param,(paramState,state[2]))
+  elseif ~done(x.meas,state[2])
+    meas,measState = next(x.meas,state[2])
+    return (meas,(state[1],measState))
+  else
+    Error("LTspiceSimulation iterator errror")
+  end
+end
+
+Base.done(x::LTspiceSimulation, state) = done(x.param,state[1]) & done(x.meas,state[2])
+
+Base.length(x::LTspiceSimulation) = length(x.param) + length(x.meas)
+
+# **** end make LTspiceSimulation an iterator ****
 
 function show(io::IO, x::LTspiceSimulation)
   println(io,x.simulationFile)
@@ -152,13 +172,13 @@ function get(x::LTspiceSimulation, key::ASCIIString, default::Float64)
 end
 
 function keys(x::LTspiceSimulation)
-  # returns an iterator all keys (param and meas)
-  chain(keys(x.param),keys(x.meas))
+  # returns an array all keys (param and meas)
+  vcat(collect(keys(x.param)),collect(keys(x.meas)))
 end
 
 function values(x::LTspiceSimulation)
   # returns an array of all values (param and meas)
-  chain(values(x.param),values(x.meas))
+  vcat(collect(values(x.param)),collect(values(x.meas)))
 end
 
 function getindex(x::LTspiceSimulation, key::ASCIIString)

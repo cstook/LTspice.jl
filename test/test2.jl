@@ -13,3 +13,7 @@ LTspice.readlog!(test2)
 
 @test(length(test2.meas)==3)
 @test(length(test2.param)==4)
+
+@test(length(keys(test2))==7)
+@test(length(values(test2))==7)
+@test(length(test2)==7)

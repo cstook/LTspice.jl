@@ -50,6 +50,27 @@ Base.length(x::LTspiceSimulation) = length(x.param) + length(x.meas)
 
 # **** end make LTspiceSimulation an iterator ****
 
+# units as defined in LTspice
+units = Dict()
+units["K"] = 1.0e3
+units["k"] = 1.0e3
+units["MEG"] = 1.0e6
+units["meg"] = 1.0e6
+units["G"] = 1.0e9
+units["g"] = 1.0e9
+units["T"] = 1.0e12
+units["t"] = 1.0e12
+units["M"] = 1.0e-3
+units["m"] = 1.0e-3
+units["U"] = 1.0e-6
+units["u"] = 1.0e-6
+units["N"] = 1.0e-9
+units["n"] = 1.0e-9
+units["P"] = 1.0e-12
+units["p"] = 1.0e-12
+units["F"] = 1.0e-15
+units["f"] = 1.0e-15
+
 function show(io::IO, x::LTspiceSimulation)
   println(io,x.simulationFile)
   println(io,"")

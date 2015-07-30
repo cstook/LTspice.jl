@@ -2,13 +2,13 @@ Circuit: * C:\Users\Chris\.julia\v0.3\LTspice\test\test3.asc
 
 Direct Newton iteration for .op point succeeded.
 
-x: INTEG(i(r1))=5.1 FROM 0 TO 1
-y: INTEG(i(r2))=5 FROM 0 TO 1
-z: INTEG(i(r3))=0.1 FROM 0 TO 1
+x: INTEG(i(r1))=1.00394 FROM 0 TO 1
+y: INTEG(i(r2))=0.984252 FROM 0 TO 1
+z: INTEG(i(r3))=0.019685 FROM 0 TO 1
 
 
-Date: Wed Jul 29 18:39:37 2015
-Total elapsed time: 0.032 seconds.
+Date: Thu Jul 30 01:56:28 2015
+Total elapsed time: 0.031 seconds.
 
 tnom = 27
 temp = 27
@@ -21,7 +21,7 @@ rejected = 0
 matrix size = 3
 fillins = 0
 solver = Normal
-Matrix Compiler1: 86 bytes object code size  0.0/0.0/[0.0]
-Matrix Compiler2: 163 bytes object code size  0.0/0.0/[0.0]
+Matrix Compiler1: 50 bytes object code size  0.0/0.0/[0.0]
+Matrix Compiler2: 175 bytes object code size  0.0/0.0/[0.0]
 
 

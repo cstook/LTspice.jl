@@ -10,21 +10,22 @@ export getParameters, getSimulationFile
 
 
 type LTspiceSimulation
-  excutable ::ASCIIString               # include path
-  simulationFile  ::ASCIIString         # include full path and extention
-  logFile ::  ASCIIString               # include full path and extention
-  LTspiceFile ::ASCIIString             # text of circuit file
-  LTspiceLog ::ASCIIString              # text of log file
-  param :: Dict{ASCIIString,Float64}    # dictionay of parameters
-  meas :: Dict{ASCIIString,Float64}     # dictionary of measurments
+  excutable ::ASCIIString                 # include path
+  simulationFile  ::ASCIIString           # include full path and extention
+  logFile ::  ASCIIString                 # include full path and extention
+  LTspiceFile ::ASCIIString               # text of circuit file
+  LTspiceLog ::ASCIIString                # text of log file
+  param :: Dict{ASCIIString,Float64}      # dictionay of parameters
+  meas :: Dict{ASCIIString,Float64}       # dictionary of measurments
+  unit :: Dict{ASCIIString,ASCIIString}   # dictionary of units
 
   function LTspiceSimulation(excutable::ASCIIString,simulationFile::ASCIIString)
     LTspiceFile = readall(simulationFile)
     logFile = "$(match(r"(.*?)\.",simulationFile).captures[1]).log"
     LTspiceLog = ""
-    param = getParam(LTspiceFile)
+    (param,unit) = getParam(LTspiceFile)
     meas = getMeasKeys(LTspiceFile)
-    new(excutable,simulationFile,logFile,LTspiceFile,LTspiceLog,param,meas)
+    new(excutable,simulationFile,logFile,LTspiceFile,LTspiceLog,param,meas,unit)
   end
 end
 
@@ -156,6 +157,7 @@ function getParam(LTspiceFile::ASCIIString)
   # simulation parameters, keys and values
   # note: will only find parameters without units
   paramDict = Dict{ASCIIString,Float64}()
+  unitDict = Dict{ASCIIString,ASCIIString}()
   paramOrCommentBlocks = matchall(r"(!|\\n)\.(?:param|PARAM).*+$"mi,LTspiceFile)
   for block in paramOrCommentBlocks
     paramCardsInBlock = matchall(r"\.param.*?(\\n|$)"mi,block)
@@ -169,17 +171,19 @@ function getParam(LTspiceFile::ASCIIString)
         end
         if !isnan(value)
           si = match(r"(K|k|MEG|meg|G|g|T|t|M|m|U|u|N|n|P|p|F|f).*?",x.captures[3])
-          if si!=nothing
-            si_multiplier = units[si.captures[1]]
-          else
-            si_multiplier = 1.0
+          si_multiplier = 1.0
+          if (si!=nothing)
+            if haskey(units,si.captures[1])
+              si_multiplier = units[si.captures[1]]
+              unitDict[x.captures[1]] = si.captures[1]
+            end
           end
           paramDict[x.captures[1]]=value * si_multiplier
         end
       end
     end
   end
-  return(paramDict)
+  return(paramDict,unitDict)
 end
 
 
@@ -227,7 +231,11 @@ function setindex!(x::LTspiceSimulation, value:: Float64, key::ASCIIString)
   # meas Dict cannot be set.  It is the result of a simulation
   if haskey(x.param,key)
     x.param[key] = value
-    newFile = modifyLTspiceFile(x.LTspiceFile,value,key)
+    si_multiplier = 1.0
+    if haskey(x.unit,key)
+      si_multiplier = units[x.unit[key]]
+    end
+    newFile = modifyLTspiceFile(x.LTspiceFile,value/si_multiplier,key)
     x.LTspiceFile = newFile
     outIO = open("$(x.simulationFile)","w")
     print(outIO,newFile)

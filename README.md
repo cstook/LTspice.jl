@@ -5,7 +5,7 @@
 
 LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice) simulation parameters and measurments.
 
-# Example 1
+## Example 1
 
 <img src="https://github.com/cstook/LTspice.jl/blob/readme_examples/examples/example%201/example1.jpg">
 
@@ -14,5 +14,51 @@ in this example parameter x is the voltage accross a 5 Ohm resister and measurme
 create an instance of LTspiceSimulation
 
 ```
+using LTspice
+filename = "example1.asc"
+exc = defaultLTspiceExcutable()
+ex1 = LTspiceSimulation(exc,filename)
+```
+where filename includes path to the simulation file and exc is the path to the LTspice excutable scad3.  the function defaultLTspiceExcutable() retruns the correct path on for windown machine.  For now, this will need to be manualy determined for other systems.
+
+Access parameters and measurments using their name as the key.
+
+Set a parameter to a new value
+```
+ex1["x"] = 12.0
+```
+
+run the simulation
+```
+run!(ex1)
+```
+
+read the resulting measurment
+```
+print(ex1["y"])
+```
+this will print 2.4
+
+getMeasurments returns a dictionary of just the measurments
+```
+dict_of_measurments = getMeasurments(ex1)
+```
+
+getParameters returns a dictionary of just the parameters
+```
+dict_of_parameters = getParameters(ex1)
+```
+
+getSimulationFile returns the simulation filename ACSIIString 
+```
+filename = getSimulationFile(ex1)
+```
+
+
+## Example 2
+
+
+
+
 
 

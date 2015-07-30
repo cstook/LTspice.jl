@@ -9,7 +9,7 @@ LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linea
 
 <img src="https://github.com/cstook/LTspice.jl/blob/readme_examples/examples/example%201/example1.jpg">
 
-in this example parameter x is the voltage accross a 5 Ohm resister and measurment y is the current throught the resistor.
+In this example parameter x is the voltage accross a 5 Ohm resister and measurment y is the current throught the resistor.
 
 create an instance of LTspiceSimulation
 
@@ -19,7 +19,7 @@ filename = "example1.asc"
 exc = defaultLTspiceExcutable()
 ex1 = LTspiceSimulation(exc,filename)
 ```
-where filename includes path to the simulation file and exc is the path to the LTspice excutable scad3.  the function defaultLTspiceExcutable() retruns the correct path on for windown machine.  For now, this will need to be manualy determined for other systems.
+where filename includes path to the simulation file and exc is the path to the LTspice excutable scad3.exe.  The function defaultLTspiceExcutable() retruns the correct path on a windows machine.  For now, this will need to be manualy determined for other systems.
 
 Access parameters and measurments using their name as the key.
 
@@ -49,7 +49,7 @@ getParameters returns a dictionary of just the parameters
 dict_of_parameters = getParameters(ex1)
 ```
 
-getSimulationFile returns the simulation filename ACSIIString 
+getSimulationFile returns the simulation file name ACSIIString 
 ```
 filename = getSimulationFile(ex1)
 ```

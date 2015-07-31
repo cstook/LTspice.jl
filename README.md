@@ -73,7 +73,7 @@ filename = "example2.asc"
 exc = defaultLTspiceExcutable()
 example2 = LTspiceSimulation(exc,filename)
 ```
-Define function to minimize. In this case we will find Rload for mamimum power transfer.
+Define function to minimize. In this case we will find Rload for maximum power transfer.
 ```
 function minimizeMe(x::Float64, sim::LTspiceSimulation)
     sim["Rload"] = x

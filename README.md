@@ -59,7 +59,7 @@ filename = getSimulationFile(ex1)
 
 use optim to perform an optimization on a LTspice simulation
 
-<ing src="https://github.com/cstook/LTspice.jl/blob/readme_examples/examples/example%202/example2.jpg">
+<img src="https://github.com/cstook/LTspice.jl/blob/master/examples/example%202/example2.jpg">
 
 load modules
 ```

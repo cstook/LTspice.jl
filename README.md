@@ -57,7 +57,7 @@ filename = getSimulationFile(ex1)
 
 ## Example 2
 
-use optim to perform an optimization on a LTspice simulation
+Use [Optim.jl](https://github.com/JuliaOpt/Optim.jl) to perform an optimization on a LTspice simulation
 
 <img src="https://github.com/cstook/LTspice.jl/blob/master/examples/example%202/example2.jpg">
 

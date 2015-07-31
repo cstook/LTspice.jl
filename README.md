@@ -7,7 +7,7 @@ LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linea
 
 ## Example 1
 
-<img src="https://github.com/cstook/LTspice.jl/blob/readme_examples/examples/example%201/example1.jpg">
+<img src="https://github.com/cstook/LTspice.jl/blob/master/examples/example%201/example1.jpg">
 
 In this example parameter x is the voltage accross a 5 Ohm resistor and measurment y is the current throught the resistor.
 

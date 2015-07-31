@@ -57,6 +57,37 @@ filename = getSimulationFile(ex1)
 
 ## Example 2
 
+use optim to perform an optimization on a LTspice simulation
+
+<ing src="https://github.com/cstook/LTspice.jl/blob/readme_examples/examples/example%202/example2.jpg">
+
+load modules
+```
+using Optim
+using LTspice
+```
+
+create inctance of LTspiceSimulation type
+```
+filename = "example2.asc"
+exc = defaultLTspiceExcutable()
+example2 = LTspiceSimulation(exc,filename)
+```
+Define function to minimize. In this case we will find Rload for mamimum power transfer.
+```
+function minimizeMe(x::Float64, sim::LTspiceSimulation)
+    sim["Rload"] = x
+    run!(sim)
+    return(-sim["pload"])
+end
+```
+
+Perform the optimization
+```
+result = optimize(x -> minimizeMe(x,example2),10.0,100.0)
+```
+
+```example2["Rload"]``` is now 49.997848295918075
 
 
 

@@ -67,7 +67,7 @@ using Optim
 using LTspice
 ```
 
-Create inctance of LTspiceSimulation type.
+Create instance of LTspiceSimulation type.
 ```
 filename = "example2.asc"
 exc = defaultLTspiceExcutable()

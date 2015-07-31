@@ -5,7 +5,7 @@ Circuit: * C:\Users\Chris\.julia\v0.3\LTspice\examples\example 2\example2.asc
 pload: INTEG(-i(r2)*v(load))=0.00749839 FROM 0 TO 3
 
 
-Date: Thu Jul 30 23:19:42 2015
+Date: Thu Jul 30 23:38:49 2015
 Total elapsed time: 0.000 seconds.
 
 tnom = 27
@@ -19,7 +19,7 @@ rejected = 0
 matrix size = 3
 fillins = 0
 solver = Normal
-Matrix Compiler1: 50 bytes object code size  0.0/0.1/[0.0]
+Matrix Compiler1: 50 bytes object code size  0.0/0.0/[0.0]
 Matrix Compiler2: 175 bytes object code size  0.0/0.0/[0.0]
 
 

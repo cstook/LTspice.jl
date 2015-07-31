@@ -11,7 +11,7 @@ LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linea
 
 In this example parameter x is the voltage accross a 5 Ohm resistor and measurment y is the current throught the resistor.
 
-create an instance of LTspiceSimulation
+Create an instance of LTspiceSimulation.
 
 ```
 using LTspice
@@ -19,37 +19,37 @@ filename = "example1.asc"
 exc = defaultLTspiceExcutable()
 ex1 = LTspiceSimulation(exc,filename)
 ```
-where filename includes path to the simulation file and exc is the path to the LTspice excutable scad3.exe.  The function defaultLTspiceExcutable() retruns the correct path on a windows machine.  For now, this will need to be manualy determined for other systems.
+Where filename includes path to the simulation file and exc is the path to the LTspice excutable scad3.exe.  The function defaultLTspiceExcutable() retruns the correct path on a windows machine.  For now, this will need to be manualy determined for other systems.
 
 Access parameters and measurments using their name as the key.
 
-Set a parameter to a new value
+Set a parameter to a new value.
 ```
 ex1["x"] = 12.0
 ```
 
-run the simulation
+Run the simulation.
 ```
 run!(ex1)
 ```
 
-read the resulting measurment
+Read the resulting measurment.
 ```
 print(ex1["y"])
 ```
-this will print 2.4
+This will print 2.4.
 
 getMeasurments returns a dictionary of just the measurments
 ```
 dict_of_measurments = getMeasurments(ex1)
 ```
 
-getParameters returns a dictionary of just the parameters
+getParameters returns a dictionary of just the parameters.
 ```
 dict_of_parameters = getParameters(ex1)
 ```
 
-getSimulationFile returns the simulation file name ACSIIString 
+getSimulationFile returns the simulation file name ACSIIString. 
 ```
 filename = getSimulationFile(ex1)
 ```
@@ -61,13 +61,13 @@ Use [Optim.jl](https://github.com/JuliaOpt/Optim.jl) to perform an optimization 
 
 <img src="https://github.com/cstook/LTspice.jl/blob/master/examples/example%202/example2.jpg">
 
-load modules
+Load modules.
 ```
 using Optim
 using LTspice
 ```
 
-create inctance of LTspiceSimulation type
+Create inctance of LTspiceSimulation type.
 ```
 filename = "example2.asc"
 exc = defaultLTspiceExcutable()
@@ -82,7 +82,7 @@ function minimizeMe(x::Float64, sim::LTspiceSimulation)
 end
 ```
 
-Perform the optimization
+Perform the optimization.
 ```
 result = optimize(x -> minimizeMe(x,example2),10.0,100.0)
 ```

@@ -1,6 +1,6 @@
 filename = "test2.asc"
 exc = defaultLTspiceExcutable()
-test2 = LTspiceSimulation(exc,filename)
+test2 = LTspiceSimulation!(exc,filename)
 LTspice.readlog!(test2)
 
 @test_approx_eq(test2["c"],2.0)

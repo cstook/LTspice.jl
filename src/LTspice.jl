@@ -5,11 +5,13 @@ module LTspice
 
 import Base: show, haskey, get, keys, values, getindex, setindex!, start, next, done, length
 
-export LTspiceSimulation, defaultLTspiceExcutable, run!, getMeasurments
+export LTspiceSimulation!, LTspiceSimulation,defaultLTspiceExcutable, run!, getMeasurments
 export getParameters, getSimulationFile
 
-
-type LTspiceSimulation
+"""
+Let's see what this does.
+"""
+type LTspiceSimulation!
   excutable ::ASCIIString                 # include path
   simulationFile  ::ASCIIString           # include full path and extention
   logFile ::  ASCIIString                 # include full path and extention
@@ -19,9 +21,14 @@ type LTspiceSimulation
   meas :: Dict{ASCIIString,Float64}       # dictionary of measurments
   unit :: Dict{ASCIIString,ASCIIString}   # dictionary of units
 
-  function LTspiceSimulation(excutable::ASCIIString,simulationFile::ASCIIString)
+  """
+  Returns an instance of LTspiceSimulation!.  Changes to parameters will update
+  the circuit file.
+  """
+  function LTspiceSimulation!(excutable::ASCIIString,simulationFile::ASCIIString)
     LTspiceFile = readall(simulationFile)
-    logFile = "$(match(r"(.*?)\.",simulationFile).captures[1]).log"
+    (everythingbeforedot,e) = splitext(simulationFile)
+    logFile = "$everythingbeforedot.log"  # log file is .log instead of .asc
     LTspiceLog = ""
     (param,unit) = getParam(LTspiceFile)
     meas = getMeasKeys(LTspiceFile)
@@ -29,11 +36,23 @@ type LTspiceSimulation
   end
 end
 
-# ****  BEGIN make LTspiceSimulation an iterator  ****
+"""
+Returns an instance of LTspiceSimulation! after copying the citcuit file to
+a temporary working directory.  Original circuit file is not modified.
+"""
+function LTspiceSimulation(excutable::ASCIIString,simulationFile::ASCIIString)
+  td = mktempdir()
+  (d,f) = splitdir(simulationFile)
+  workingcircuitpath = joinpath(td,f)
+  cp(simulationFile,workingcircuitpath)
+  LTspiceSimulation!(excutable,workingcircuitpath)
+end
 
-Base.start(x::LTspiceSimulation) = (start(x.param),start(x.meas))
+# ****  BEGIN make LTspiceSimulation! an iterator  ****
 
-function Base.next(x::LTspiceSimulation, state)
+Base.start(x::LTspiceSimulation!) = (start(x.param),start(x.meas))
+
+function Base.next(x::LTspiceSimulation!, state)
   if ~done(x.param,state[1])
     param,paramState = next(x.param,state[1])
     return (param,(paramState,state[2]))
@@ -41,15 +60,15 @@ function Base.next(x::LTspiceSimulation, state)
     meas,measState = next(x.meas,state[2])
     return (meas,(state[1],measState))
   else
-    Error("LTspiceSimulation iterator errror")
+    Error("LTspiceSimulation! iterator errror")
   end
 end
 
-Base.done(x::LTspiceSimulation, state) = done(x.param,state[1]) & done(x.meas,state[2])
+Base.done(x::LTspiceSimulation!, state) = done(x.param,state[1]) & done(x.meas,state[2])
 
-Base.length(x::LTspiceSimulation) = length(x.param) + length(x.meas)
+Base.length(x::LTspiceSimulation!) = length(x.param) + length(x.meas)
 
-# **** end make LTspiceSimulation an iterator ****
+# **** end make LTspiceSimulation! an iterator ****
 
 # units as defined in LTspice
 units = Dict()
@@ -72,7 +91,7 @@ units["p"] = 1.0e-12
 units["F"] = 1.0e-15
 units["f"] = 1.0e-15
 
-function show(io::IO, x::LTspiceSimulation)
+function show(io::IO, x::LTspiceSimulation!)
   println(io,x.simulationFile)
   println(io,"")
   println(io,"Parameters")
@@ -88,29 +107,29 @@ end
 
 defaultLTspiceExcutable() = "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe"
 
-function getMeasurments(x::LTspiceSimulation)
+function getMeasurments(x::LTspiceSimulation!)
   # returns a Dict of measurment value pairs
   x.meas
 end
 
-function getParameters(x::LTspiceSimulation)
+function getParameters(x::LTspiceSimulation!)
   # returns a Dict of parameter value pairs
   x.param
 end
 
-function getSimulationFile(x::LTspiceSimulation)
+function getSimulationFile(x::LTspiceSimulation!)
   # returns string specifing simulation file
   x.simulationFile
 end
 
-function run!(x::LTspiceSimulation)
+function run!(x::LTspiceSimulation!)
   # runs simulation and updates meas values
   run(`$(x.excutable) -b -Run $(x.simulationFile)`)
   readlog!(x)
   return(nothing)
 end
 
-function readlog!(x::LTspiceSimulation)
+function readlog!(x::LTspiceSimulation!)
   # reads simulation file and updates meas values
   x.LTspiceLog = readall(x.logFile)
   allMeasures = matchall(r"^(\S+):.*=([0-9e\-+.]+)"m,x.LTspiceLog)
@@ -126,7 +145,7 @@ function readlog!(x::LTspiceSimulation)
   return(nothing)
 end
 
-function readfile!(x::LTspiceSimulation)
+function readfile!(x::LTspiceSimulation!)
   x.LTspiceFile = readall(x.simulationFile)
   return(nothing)
 end
@@ -187,12 +206,12 @@ function getParam(LTspiceFile::ASCIIString)
 end
 
 
-function haskey(x::LTspiceSimulation, key::ASCIIString)
+function haskey(x::LTspiceSimulation!, key::ASCIIString)
   # true if key is in param or meas
   haskey(x.meas,key) | haskey(x.param,key)
 end
 
-function get(x::LTspiceSimulation, key::ASCIIString, default::Float64)
+function get(x::LTspiceSimulation!, key::ASCIIString, default::Float64)
   # returns value for key in either param or meas
   # returns default if key not found
   if haskey(x,key)
@@ -202,17 +221,17 @@ function get(x::LTspiceSimulation, key::ASCIIString, default::Float64)
   end
 end
 
-function keys(x::LTspiceSimulation)
+function keys(x::LTspiceSimulation!)
   # returns an array all keys (param and meas)
   vcat(collect(keys(x.param)),collect(keys(x.meas)))
 end
 
-function values(x::LTspiceSimulation)
+function values(x::LTspiceSimulation!)
   # returns an array of all values (param and meas)
   vcat(collect(values(x.param)),collect(values(x.meas)))
 end
 
-function getindex(x::LTspiceSimulation, key::ASCIIString)
+function getindex(x::LTspiceSimulation!, key::ASCIIString)
   # returns value for key in either param or meas
   # value = x[key]
   # dosen't handle multiple keys, but neither does standard julia library for Dict
@@ -225,7 +244,7 @@ function getindex(x::LTspiceSimulation, key::ASCIIString)
   end
 end
 
-function setindex!(x::LTspiceSimulation, value:: Float64, key::ASCIIString)
+function setindex!(x::LTspiceSimulation!, value:: Float64, key::ASCIIString)
   # sets the value of param specified by key
   # x[key] = value
   # meas Dict cannot be set.  It is the result of a simulation

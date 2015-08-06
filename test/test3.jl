@@ -4,7 +4,7 @@ cp("test3.log","temp\\test3.log")
 
 filename = "temp\\test3.asc"
 exc = defaultLTspiceExcutable()
-test3 = LTspiceSimulation(exc,filename)
+test3 = LTspiceSimulation!(exc,filename)
 LTspice.readlog!(test3)
 
 @test_approx_eq(test3["a"],10.0)

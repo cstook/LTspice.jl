@@ -1,6 +1,6 @@
 filename = "test1.asc"
 exc = defaultLTspiceExcutable()
-test1 = LTspiceSimulation(exc,filename)
+test1 = LTspiceSimulation!(exc,filename)
 LTspice.readlog!(test1)
 
 @test test1["Vin"] == 5

@@ -13,9 +13,9 @@ Let's see what this does.
 """
 type LTspiceSimulation!
   excutable ::ASCIIString                               # include full path and extention
-  circuit_file  ::ASCIIString                           # include full path and extention
+  circuit_file ::  ASCIIString                          # include full path and extention
   log_file ::  ASCIIString                              # include full path and extention
-  circuit_file_array ::ASCIIString                      # text of circuit file
+  circuit_file_array ::Array{ASCIIString,1}             # text of circuit file
   param :: Dict{ASCIIString,(Float64,Float64,Int)}      # dictionay of parameters
   meas :: Dict{ASCIIString,Float64}                     # dictionary of measurments
   measurments_invalid :: Bool                           # true if simulation needs to be run
@@ -25,7 +25,7 @@ type LTspiceSimulation!
   the circuit file.
   """
   function LTspiceSimulation!(excutable::ASCIIString,circuit_file::ASCIIString)
-    (everythingbeforedot,e) = splitext(simulationFile)
+    (everythingbeforedot,e) = splitext(circuit_file)
     log_file = "$everythingbeforedot.log"  # log file is .log instead of .asc
     (p,m,cfa) = parseCircuitFile(circuit_file)
     new(excutable,circuit_file,log_file,cfa,p,m,true)
@@ -36,11 +36,11 @@ end
 Returns an instance of LTspiceSimulation! after copying the circuit file to
 a temporary working directory.  Original circuit file is not modified.
 """
-function LTspiceSimulation(excutable::ASCIIString,simulationFile::ASCIIString)
+function LTspiceSimulation(excutable::ASCIIString,circuit_file::ASCIIString)
   td = mktempdir()
-  (d,f) = splitdir(simulationFile)
+  (d,f) = splitdir(circuit_file)
   workingcircuitpath = joinpath(td,f)
-  cp(simulationFile,workingcircuitpath)
+  cp(circuit_file,workingcircuitpath)
   LTspiceSimulation!(excutable,workingcircuitpath)
 end
 
@@ -88,10 +88,10 @@ units["F"] = 1.0e-15
 units["f"] = 1.0e-15
 
 function show(io::IO, x::LTspiceSimulation!)
-  println(io,x.simulationFile)
+  println(io,x.circuit_file)
   println(io,"")
   println(io,"Parameters")
-  for (key,value) in x.param
+  for (key,(value,m,i)) in x.param
     println(io,"$(rpad(key,25,' ')) = $value")
   end
   println(io,"")
@@ -118,20 +118,20 @@ end
 
 function getSimulationFile(x::LTspiceSimulation!)
   # returns string specifing simulation file
-  x.simulationFile
+  x.circuit_file
 end
 
 function run!(x::LTspiceSimulation!)
   # runs simulation and updates meas values
   writecircuitfile(x)
-  run(`$(x.excutable) -b -Run $(x.simulationFile)`)
+  run(`$(x.excutable) -b -Run $(x.circuit_file)`)
   readlog!(x)
   x.measurments_invalid = false
   return(nothing)
 end
 
 function readlog!(x::LTspiceSimulation!)
-  # reads simulation file and updates meas values
+  # reads simulation log file and updates meas values
   LTspiceLog = readall(x.log_file)
   allMeasures = matchall(r"^(\S+):.*=([0-9e\-+.]+)"m,LTspiceLog)
   for measure in allMeasures
@@ -154,7 +154,7 @@ function writecircuitfile(x::LTspiceSimulation!)
   close(io)
 end
 
-function parseCircuitFile(simulationFile::ASCIIString)
+function parseCircuitFile(circuit_file::ASCIIString)
   # reads circuit file and returns a tuple of
   # Dict of parameters
   # Dict of measurments, values N/A
@@ -163,7 +163,7 @@ function parseCircuitFile(simulationFile::ASCIIString)
   #     The elements of the array split the file around parameter values to avoid parsing the file
   #     every time a parameter is modified
 
-  LTspiceFile = readall(simulationFile)            # read the circuit file
+  LTspiceFile = readall(circuit_file)            # read the circuit file
 
   # create empty dictionarys to be filled as file is parsed
   parameters = Dict{ASCIIString,(Float64,Float64,Int)}()     # Dict of parameters.  key = parameter, value = (parameter value, multiplier, circuit file array index)
@@ -250,14 +250,13 @@ function getindex(x::LTspiceSimulation!, key::ASCIIString)
     if x.measurments_invalid
       run!(x)
     end
-    (v,m,i) = x.meas[key]
-    return(v)
+    v = x.meas[key]
   elseif haskey(x.param,key)
     (v,m,i) = x.param[key]
-    return(v)
   else
     throw(KeyError(key))
   end
+  return(v)
 end
 
 function setindex!(x::LTspiceSimulation!, value:: Float64, key::ASCIIString)

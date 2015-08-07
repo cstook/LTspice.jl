@@ -205,6 +205,50 @@ function getParam(LTspiceFile::ASCIIString)
   return(paramDict,unitDict)
 end
 
+# ***********************************************************************************************************************
+# ***********************************************************************************************************************
+
+function parseCircuitFile(simulationFile::ASCIIString)
+  # reads circuit file and returns a tuple of
+  # Dict of parameters
+  # Dict of measurments, values N/A
+  # circuit file array
+  #     The circuit file array is an array of strings which when concatenated produce the circuit file
+  #     The elements of the array split the file around parameter values to avoid parsing the file
+  #     every time a parameter is modified
+
+  LTspiceFile = readall(simulationFile)            # read the circuit file
+
+  # create empty dictionarys to be filled as file is parsed
+  p = Dict{ASCIIString,(Float64,Float64,Int)}()    # Dict of parameters.  key = parameter, value = (parameter value, multiplier, circuit file array index)
+  m = Dict{ASCIIString,Float64}()                  # Dict of measurments
+
+  # define some regular expressions we will use to parse the circuit file
+  match_paramerers_or_measurments_directives = r"!(.*(?:param|PARAM|measure|MEASURE|meas|MEAS).*)"  # no comments, could be multiline, created with Ctrl-M
+  match_parameter_caputre_name_value_unit = r".(?:param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\\n|$)"
+  capture_si_units = r"(K|k|MEG|meg|G|g|T|t|M|m|U|u|N|n|P|p|F|f).*?"
+  match_measurment_card_capture_name = r".(?:measure|MEASURE|meas|MEAS)[ ]+(?:ac|AC|dc|DC|op|OP|tran|TRAN|tf|TF|noise|NOISE)[ ]+(\S+)[ ]+"
+  match_tags = r"(TEXT .*?(!|;)|.(param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\\n|$)|.(measure|MEASURE|meas|MEAS)[ ]+(?:ac|AC|dc|DC|op|OP|tran|TRAN|tf|TF|noise|NOISE)[ ]+(\S+)[ ]+)"
+
+  # parse the file
+  directive = false   # true for directives, false for comments
+  m = match(match_tags,LTspiceFile)
+  while m!=nothing
+    # determine if we are processign a comment or directive
+    if m.captures[2] = "!"
+      directive = true
+    elseif m.captures[2] = ";"
+      directive = false
+    end
+    if directive
+
+
+    m = match(match_tags,LTspiceFile,m.offset+length(m.match))
+  end
+
+
+
+
 
 function haskey(x::LTspiceSimulation!, key::ASCIIString)
   # true if key is in param or meas

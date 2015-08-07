@@ -205,8 +205,6 @@ function getParam(LTspiceFile::ASCIIString)
   return(paramDict,unitDict)
 end
 
-# ***********************************************************************************************************************
-# ***********************************************************************************************************************
 
 function parseCircuitFile(simulationFile::ASCIIString)
   # reads circuit file and returns a tuple of
@@ -220,31 +218,59 @@ function parseCircuitFile(simulationFile::ASCIIString)
   LTspiceFile = readall(simulationFile)            # read the circuit file
 
   # create empty dictionarys to be filled as file is parsed
-  p = Dict{ASCIIString,(Float64,Float64,Int)}()    # Dict of parameters.  key = parameter, value = (parameter value, multiplier, circuit file array index)
-  m = Dict{ASCIIString,Float64}()                  # Dict of measurments
-
-  # define some regular expressions we will use to parse the circuit file
-  match_paramerers_or_measurments_directives = r"!(.*(?:param|PARAM|measure|MEASURE|meas|MEAS).*)"  # no comments, could be multiline, created with Ctrl-M
-  match_parameter_caputre_name_value_unit = r".(?:param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\\n|$)"
-  capture_si_units = r"(K|k|MEG|meg|G|g|T|t|M|m|U|u|N|n|P|p|F|f).*?"
-  match_measurment_card_capture_name = r".(?:measure|MEASURE|meas|MEAS)[ ]+(?:ac|AC|dc|DC|op|OP|tran|TRAN|tf|TF|noise|NOISE)[ ]+(\S+)[ ]+"
+  parameters = Dict{ASCIIString,(Float64,Float64,Int)}()    # Dict of parameters.  key = parameter, value = (parameter value, multiplier, circuit file array index)
+  measurments = Dict{ASCIIString,Float64}()                  # Dict of measurments
+  CFA = Array(ASCIIString,1)
+  CFA[1] = ""
+  # regex used to parse file.  I know this is a bad comment.
   match_tags = r"(TEXT .*?(!|;)|.(param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\\n|$)|.(measure|MEASURE|meas|MEAS)[ ]+(?:ac|AC|dc|DC|op|OP|tran|TRAN|tf|TF|noise|NOISE)[ ]+(\S+)[ ]+)"
 
   # parse the file
   directive = false   # true for directives, false for comments
   m = match(match_tags,LTspiceFile)
+  i = 0  # index for circuit file array
+  position = 1   # pointer into LTspiceFile
+  old_position = 1
   while m!=nothing
     # determine if we are processign a comment or directive
-    if m.captures[2] = "!"
+    if m.captures[2] == "!"
       directive = true
-    elseif m.captures[2] = ";"
+    elseif m.captures[2] == ";"
       directive = false
     end
     if directive
-
-
-    m = match(match_tags,LTspiceFile,m.offset+length(m.match))
+      if m.captures[3]!=nothing  # this is a paramater card
+        if haskey(units,m.captures[6]) # if their is an SI unit
+          multiplier = units[m.captures[6]] # find the multiplier
+        else
+          multiplier = 1.0 # if no unit, multiplier is 1.0
+        end
+        value = try  # try to convert the value.  might just want to let the exception happen...
+          parsefloat(m.captures[5])
+        catch
+          nan(Float64)
+        end
+        old_position = position
+        position = m.offsets[5]
+   #     println(LTspiceFile[old_position:position-1])
+        CFA = vcat(CFA,LTspiceFile[old_position:position])  # text before the value
+        i += 1
+   #     println(LTspiceFile[position:m.offsets[5]+length(m.captures[5])-1])
+   #     println()
+        CFA = vcat(CFA,LTspiceFile[position:m.offsets[5]+length(m.captures[5])-1])  # text of the value
+        i += 1
+        parameters[m.captures[4]] = (value * multiplier, multiplier, i)
+        position = m.offsets[5]+length(m.captures[5])
+      end
+      if m.captures[7]!=nothing  # this is a measurment card
+        measurments[m.captures[8]] = nan(Float64)  # fill out the Dict with nan's
+      end
+    end
+    m = match(match_tags,LTspiceFile,m.offset+length(m.match))   # find next match
   end
+  CFA = vcat(CFA,LTspiceFile[position:])  # the rest of the circuit
+  return(parameters, measurments, CFA)
+end
 
 
 

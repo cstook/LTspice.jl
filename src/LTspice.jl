@@ -113,7 +113,11 @@ end
 
 function getParameters(x::LTspiceSimulation!)
   # returns a Dict of parameter value pairs
-  x.param
+  d = Dict{ASCIIString, Float64}()
+  for (key,(v,m,i)) in x.param
+    d[key] =  v
+  end
+  return d
 end
 
 function getSimulationFile(x::LTspiceSimulation!)

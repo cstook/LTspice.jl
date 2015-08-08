@@ -175,7 +175,7 @@ function parseCircuitFile(circuit_file::ASCIIString)
   CFA = Array(ASCIIString,1)
   CFA[1] = ""
   # regex used to parse file.  I know this is a bad comment.
-  match_tags = r"(TEXT .*?(!|;)|.(param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\\n|$)|.(measure|MEASURE|meas|MEAS)[ ]+(?:ac|AC|dc|DC|op|OP|tran|TRAN|tf|TF|noise|NOISE)[ ]+(\S+)[ ]+)"
+  match_tags = r"(TEXT .*?(!|;)|.(param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\\n|$)|.(measure|MEASURE|meas|MEAS)[ ]+(?:ac|AC|dc|DC|op|OP|tran|TRAN|tf|TF|noise|NOISE)[ ]+(\S+)[ ]+)"m
 
   # parse the file
   directive = false   # true for directives, false for comments
@@ -184,6 +184,7 @@ function parseCircuitFile(circuit_file::ASCIIString)
   position = 1   # pointer into LTspiceFile
   old_position = 1
   while m!=nothing
+    println(m)
     # determine if we are processign a comment or directive
     if m.captures[2] == "!"
       directive = true
@@ -212,12 +213,13 @@ function parseCircuitFile(circuit_file::ASCIIString)
         position = m.offsets[5]+length(m.captures[5])
       end
       if m.captures[7]!=nothing  # this is a measurment card
-        measurments[m.captures[8]] = nan(Float64)  # fill out the Dict with nan's
+        key = lowercase(m.captures[8])  # measurments are all lower case in log file
+        measurments[key] = nan(Float64)  # fill out the Dict with nan's
       end
     end
     m = match(match_tags,LTspiceFile,m.offset+length(m.match))   # find next match
   end
-  CFA = vcat(CFA,LTspiceFile[position:])  # the rest of the circuit
+  CFA = vcat(CFA,LTspiceFile[position:end])  # the rest of the circuit
   return(parameters, measurments, CFA)
 end
 

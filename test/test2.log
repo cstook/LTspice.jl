@@ -7,7 +7,7 @@ y: INTEG(i(r2))=0.984252 FROM 0 TO 1
 z: INTEG(i(r3))=0.019685 FROM 0 TO 1
 
 
-Date: Sat Aug 08 00:07:35 2015
+Date: Sat Aug 08 00:14:11 2015
 Total elapsed time: 0.016 seconds.
 
 tnom = 27
@@ -21,7 +21,7 @@ rejected = 0
 matrix size = 3
 fillins = 0
 solver = Normal
-Matrix Compiler1: 50 bytes object code size  0.0/0.0/[0.0]
-Matrix Compiler2:      15 opcodes  0.0/[0.0]/0.0
+Matrix Compiler1:       3 opcodes  0.0/[0.0]/0.0
+Matrix Compiler2: 175 bytes object code size  0.0/0.0/[0.0]
 
 

@@ -1,5 +1,5 @@
 filename = "test2.asc"
-exc = defaultLTspiceExcutable()
+exc = ""  # null string will not run LTspice.exe.  Test parsing only.
 test2 = LTspiceSimulation!(exc,filename)
 LTspice.readlog!(test2)
 

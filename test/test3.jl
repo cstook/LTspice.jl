@@ -3,7 +3,7 @@ cp("test3.asc","temp\\test3.asc")
 cp("test3.log","temp\\test3.log")
 
 filename = "temp\\test3.asc"
-exc = defaultLTspiceExcutable()
+exc = ""  # null string will not run LTspice.exe.  Test parsing only.
 test3 = LTspiceSimulation!(exc,filename)
 LTspice.readlog!(test3)
 

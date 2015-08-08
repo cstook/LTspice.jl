@@ -135,7 +135,9 @@ end
 function run!(x::LTspiceSimulation!)
   # runs simulation and updates meas values
   writecircuitfile(x)
-  run(`$(x.excutable) -b -Run $(x.circuit_file)`)
+  if x.excutable != ""
+    run(`$(x.excutable) -b -Run $(x.circuit_file)`)
+  end
   readlog!(x)
   x.measurments_invalid = false
   return(nothing)

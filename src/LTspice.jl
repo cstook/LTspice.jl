@@ -184,7 +184,6 @@ function parseCircuitFile(circuit_file::ASCIIString)
   position = 1   # pointer into LTspiceFile
   old_position = 1
   while m!=nothing
-    println(m)
     # determine if we are processign a comment or directive
     if m.captures[2] == "!"
       directive = true

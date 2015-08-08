@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/cstook/LTspice.jl.svg?branch=master)](https://travis-ci.org/cstook/LTspice.jl)
 
 
-LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice) simulation parameters and measurments.  Parameters and measurments are accessed as a dictionary like type.  Simulations with steped parameters (.step directive) are not supported.
+LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice) simulation parameters and measurments.  Parameters and measurments are accessed as a dictionary like type.  Simulations with stepped parameters (.step directive) are not supported.
 
 ## Example 1
 
@@ -11,7 +11,7 @@ LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linea
 
 In this example parameter x is the voltage accross a 5 Ohm resistor and measurment y is the current throught the resistor.
 
-Create an instance of LTspiceSimulation.
+Create an instance of LTspiceSimulation!.
 
 ```
 using LTspice
@@ -66,11 +66,11 @@ using Optim
 using LTspice
 ```
 
-Create instance of LTspiceSimulation type.
+Create instance of LTspiceSimulation! type.
 ```
 filename = "example2.asc"
 exc = defaultLTspiceExcutable()
-example2 = LTspiceSimulation(exc,filename)
+example2 = LTspiceSimulation(exc,filename)  # work in temp directory
 ```
 Define function to minimize. In this case we will find Rload for maximum power transfer.
 ```

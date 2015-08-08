@@ -5,7 +5,7 @@ Direct Newton iteration for .op point succeeded.
 current: i(r1)=2.5
 
 
-Date: Fri Aug 07 21:04:04 2015
+Date: Fri Aug 07 21:09:41 2015
 Total elapsed time: 0.000 seconds.
 
 tnom = 27
@@ -19,7 +19,7 @@ rejected = 0
 matrix size = 2
 fillins = 0
 solver = Normal
-Matrix Compiler1:       2 opcodes  0.0/[0.0]/0.0
-Matrix Compiler2:       9 opcodes  0.0/[0.0]/0.0
+Matrix Compiler1: off  [0.0]/0.0/0.0
+Matrix Compiler2: off  [0.0]/0.0/0.0
 
 

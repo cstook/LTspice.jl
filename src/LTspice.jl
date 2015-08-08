@@ -5,12 +5,9 @@ module LTspice
 
 import Base: show, haskey, get, keys, values, getindex, setindex!, start, next, done, length
 
-export LTspiceSimulation!, LTspiceSimulation,defaultLTspiceExcutable, run!, getMeasurments
+export LTspiceSimulation!, LTspiceSimulation,defaultLTspiceExcutable, getMeasurments
 export getParameters, getSimulationFile
 
-"""
-Let's see what this does.
-"""
 type LTspiceSimulation!
   excutable ::ASCIIString                               # include full path and extention
   circuit_file ::  ASCIIString                          # include full path and extention
@@ -104,13 +101,21 @@ function show(io::IO, x::LTspiceSimulation!)
   end
 end
 
+"""
+returns "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe"
+which is correct for a windows system
+"""
 defaultLTspiceExcutable() = "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe"
 
+"""
+Returns a Dict of measurments.
+"""
 function getMeasurments(x::LTspiceSimulation!)
   # returns a Dict of measurment value pairs
   x.meas
 end
 
+"Returns a Dict of parameters"
 function getParameters(x::LTspiceSimulation!)
   # returns a Dict of parameter value pairs
   d = Dict{ASCIIString, Float64}()
@@ -120,11 +125,13 @@ function getParameters(x::LTspiceSimulation!)
   return d
 end
 
+"Returns full path of the simulation file"
 function getSimulationFile(x::LTspiceSimulation!)
   # returns string specifing simulation file
   x.circuit_file
 end
 
+"Writes parameters back to circuit file. Runs simulation.  Reads measurments from log file."
 function run!(x::LTspiceSimulation!)
   # runs simulation and updates meas values
   writecircuitfile(x)
@@ -134,6 +141,7 @@ function run!(x::LTspiceSimulation!)
   return(nothing)
 end
 
+"Parses the log file to update measurments"
 function readlog!(x::LTspiceSimulation!)
   # reads simulation log file and updates meas values
   LTspiceLog = readall(x.log_file)
@@ -150,6 +158,7 @@ function readlog!(x::LTspiceSimulation!)
   return(nothing)
 end
 
+"Writes circuit file, with any modified parameters, back to disk"
 function writecircuitfile(x::LTspiceSimulation!)
   io = open(x.circuit_file,false,true,false,false,false)  # open circuit file to be overwritten
   for text in x.circuit_file_array
@@ -158,6 +167,9 @@ function writecircuitfile(x::LTspiceSimulation!)
   close(io)
 end
 
+"""
+Parses circuit file and returns Dict of parameters, Dict of measurments, circuit file array.
+"""
 function parseCircuitFile(circuit_file::ASCIIString)
   # reads circuit file and returns a tuple of
   # Dict of parameters

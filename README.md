@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/cstook/LTspice.jl.svg?branch=master)](https://travis-ci.org/cstook/LTspice.jl)
 
 
-LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice) simulation parameters and measurments.
+LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice) simulation parameters and measurments.  Parameters and measurments are accessed as a dictionary like type.  Simulations with steped parameters (.step directive) are not supported.
 
 ## Example 1
 
@@ -19,7 +19,9 @@ filename = "example1.asc"
 exc = defaultLTspiceExcutable()
 ex1 = LTspiceSimulation(exc,filename)
 ```
-Where filename includes path to the simulation file and exc is the path to the LTspice excutable scad3.exe.  The function defaultLTspiceExcutable() retruns the correct path on a windows machine.  For now, this will need to be manualy determined for other systems.
+Where filename includes path to the simulation file and exc is the path to the LTspice excutable scad3.exe.  The function ```defaultLTspiceExcutable()``` retruns the correct path on a windows machine.  For now, this will need to be manualy determined for other systems.
+
+An instance of ```LTspiceSimulation!``` created with ```LTspiceSimulation``` will copy the circuit file to a temporary working directory leaving the original circuit file unaltered.  Using ```LTspiceSimulation!``` will overwrite original circuit file as changes are made.
 
 Access parameters and measurments using their name as the key.
 
@@ -28,16 +30,13 @@ Set a parameter to a new value.
 ex1["x"] = 12.0
 ```
 
-Run the simulation.
-```
-run!(ex1)
-```
-
 Read the resulting measurment.
 ```
 print(ex1["y"])
 ```
 This will print 2.4.
+
+Circuit file writes and simulation runs are lazy.  In this example the write and run occurs when measurment y is requested.
 
 getMeasurments returns a dictionary of just the measurments
 ```
@@ -77,7 +76,6 @@ Define function to minimize. In this case we will find Rload for maximum power t
 ```
 function minimizeMe(x::Float64, sim::LTspiceSimulation)
     sim["Rload"] = x
-    run!(sim)
     return(-sim["pload"])
 end
 ```

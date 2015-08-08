@@ -29,6 +29,8 @@ for (key,value) in p
   test3[key] = 1.0
 end
 
+LTspice.writecircuitfile(test3)
+
 test3b = LTspiceSimulation(exc,filename)
 p = LTspice.getParameters(test3b)
 for (key,value) in p

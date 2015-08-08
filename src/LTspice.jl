@@ -180,7 +180,7 @@ function parseCircuitFile(circuit_file::ASCIIString)
   # parse the file
   directive = false   # true for directives, false for comments
   m = match(match_tags,LTspiceFile)
-  i = 0  # index for circuit file array
+  i = 1  # index for circuit file array
   position = 1   # pointer into LTspiceFile
   old_position = 1
   while m!=nothing
@@ -204,7 +204,7 @@ function parseCircuitFile(circuit_file::ASCIIString)
         end
         old_position = position
         position = m.offsets[5]
-        CFA = vcat(CFA,LTspiceFile[old_position:position])  # text before the value
+        CFA = vcat(CFA,LTspiceFile[old_position:position-1])  # text before the value
         i += 1
         CFA = vcat(CFA,LTspiceFile[position:m.offsets[5]+length(m.captures[5])-1])  # text of the value
         i += 1

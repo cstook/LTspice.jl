@@ -11,17 +11,17 @@ LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linea
 
 In this example parameter x is the voltage accross a 5 Ohm resistor and measurment y is the current throught the resistor.
 
-Create an instance of LTspiceSimulation!.
+Create an instance of ltspicesimulation!.
 
 ```
 using LTspice
 filename = "example1.asc"
-exc = defaultLTspiceExcutable()
-ex1 = LTspiceSimulation(exc,filename)
+exc = defaultltspiceexcutable()
+ex1 = ltspicesimulation(exc,filename)
 ```
-Where filename includes path to the simulation file and exc is the path to the LTspice excutable scad3.exe.  The function ```defaultLTspiceExcutable()``` retruns the correct path on a windows machine.  For now, this will need to be manualy determined for other systems.
+Where filename includes path to the simulation file and exc is the path to the LTspice excutable scad3.exe.  The function ```defaultltspiceexcutable()``` retruns the correct path on a windows machine.  For now, this will need to be manualy determined for other systems.
 
-An instance of ```LTspiceSimulation!``` created with ```LTspiceSimulation``` will copy the circuit file to a temporary working directory leaving the original circuit file unaltered.  Using ```LTspiceSimulation!``` will overwrite original circuit file as changes are made.
+An instance of ```ltspicesimulation!``` created with ```ltspicesimulation``` will copy the circuit file to a temporary working directory leaving the original circuit file unaltered.  Using ```ltspicesimulation!``` will overwrite original circuit file as changes are made.
 
 Access parameters and measurments using their name as the key.
 
@@ -38,19 +38,19 @@ This will print 2.4.
 
 Circuit file writes and simulation runs are lazy.  In this example the write and run occurs when measurment y is requested.
 
-getMeasurments returns a dictionary of just the measurments
+getmeasurments returns a dictionary of just the measurments
 ```
-dict_of_measurments = getMeasurments(ex1)
-```
-
-getParameters returns a dictionary of just the parameters.
-```
-dict_of_parameters = getParameters(ex1)
+dict_of_measurments = getmeasurments(ex1)
 ```
 
-getSimulationFile returns the simulation file name ACSIIString. 
+getparameters returns a dictionary of just the parameters.
 ```
-filename = getSimulationFile(ex1)
+dict_of_parameters = getparameters(ex1)
+```
+
+getcircuitpath returns the simulation file name ACSIIString. 
+```
+filename = getcircuitpath(ex1)
 ```
 
 
@@ -66,15 +66,15 @@ using Optim
 using LTspice
 ```
 
-Create instance of LTspiceSimulation! type.
+Create instance of ltspicesimulation! type.
 ```
 filename = "example2.asc"
-exc = defaultLTspiceExcutable()
-example2 = LTspiceSimulation(exc,filename)  # work in temp directory
+exc = defaultltspiceexcutable()
+example2 = ltspicesimulation(exc,filename)  # work in temp directory
 ```
 Define function to minimize. In this case we will find Rload for maximum power transfer.
 ```
-function minimizeMe(x::Float64, sim::LTspiceSimulation)
+function minimizeMe(x::Float64, sim::ltspicesimulation)
     sim["Rload"] = x
     return(-sim["pload"])
 end

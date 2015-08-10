@@ -9,10 +9,10 @@ using LTspice
 filename = "example1.asc"
 
 # path to scad3.exe 
-exc = defaultLTspiceExcutable()	
+exc = defaultltspiceexcutable()	
 
-# create an instance of LTspiceSimulation type
-ex1 = LTspiceSimulation(exc,filename) 
+# create an instance of ltspicesimulation type
+ex1 = ltspicesimulation(exc,filename) 
 
 # change parameter x to 12.0
 ex1["x"] = 12.0
@@ -24,10 +24,10 @@ run!(ex1)
 print(ex1["y"])
 
 # dictionary od just measurments
-dict_of_measurments = getMeasurments(ex1)
+dict_of_measurments = getmeasurments(ex1)
 
 # dictionary of just parameters
-dict_of_parameters = getParameters(ex1)
+dict_of_parameters = getparameters(ex1)
 
 # same as filename above
-filename = getSimulationFile(ex1)
+filename = getcircuitpath(ex1)

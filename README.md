@@ -87,7 +87,7 @@ example2 = ltspicesimulation(filepath) 	  # work in temp directory
 ```
 Define function to minimize. In this case we will find Rload for maximum power transfer.
 ```
-function minimizeMe(x::Float64, sim::ltspicesimulation)
+function minimizeme(x::Float64, sim::ltspicesimulation)
     sim["Rload"] = x
     return(-sim["pload"])
 end
@@ -95,7 +95,7 @@ end
 
 Perform the optimization.
 ```
-result = optimize(x -> minimizeMe(x,example2),10.0,100.0)
+result = optimize(x -> minimizeme(x,example2),10.0,100.0)
 ```
 
 ```example2["Rload"]``` is now 49.997848295918075

@@ -1,11 +1,11 @@
-# this module provided an interface to treat the parameters and measurments
+# this module provided an interface to treat the parameters and measurements
 # of an LTspice simulation as a dictionary like type
 
 module LTspice
 
 import Base: show, haskey, get, keys, values, getindex, setindex!, start, next, done, length
 
-export ltspicesimulation!, ltspicesimulation, getmeasurments
+export ltspicesimulation!, ltspicesimulation, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
 
 type ltspicesimulation!
@@ -14,8 +14,8 @@ type ltspicesimulation!
   logpath ::  ASCIIString                               # include full path and extention
   circuitfilearray ::Array{ASCIIString,1}               # text of circuit file
   parameters :: Dict{ASCIIString,(Float64,Float64,Int)} # dictionay of parameters (value, multiplier, index)
-  measurments :: Dict{ASCIIString,Float64}              # dictionary of measurments
-  measurments_invalid :: Bool                           # true if simulation needs to be run
+  measurements :: Dict{ASCIIString,Float64}              # dictionary of measurements
+  measurements_invalid :: Bool                           # true if simulation needs to be run
 
   """
   Returns an instance of ltspicesimulation!.  Changes to parameters will update
@@ -54,23 +54,23 @@ end
 
 # ****  BEGIN make ltspicesimulation! an iterator  ****
 
-Base.start(x::ltspicesimulation!) = (start(x.parameters),start(x.measurments))
+Base.start(x::ltspicesimulation!) = (start(x.parameters),start(x.measurements))
 
 function Base.next(x::ltspicesimulation!, state)
   if ~done(x.parameters,state[1])
     param,paramState = next(x.parameters,state[1])
     return (param,(paramState,state[2]))
-  elseif ~done(x.measurments,state[2])
-    meas,measState = next(x.measurments,state[2])
+  elseif ~done(x.measurements,state[2])
+    meas,measState = next(x.measurements,state[2])
     return (meas,(state[1],measState))
   else
     Error("ltspicesimulation! iterator errror")
   end
 end
 
-Base.done(x::ltspicesimulation!, state) = done(x.parameters,state[1]) & done(x.measurments,state[2])
+Base.done(x::ltspicesimulation!, state) = done(x.parameters,state[1]) & done(x.measurements,state[2])
 
-Base.length(x::ltspicesimulation!) = length(x.parameters) + length(x.measurments)
+Base.length(x::ltspicesimulation!) = length(x.parameters) + length(x.measurements)
 
 # **** end make ltspicesimulation! an iterator ****
 
@@ -103,9 +103,9 @@ function show(io::IO, x::ltspicesimulation!)
     println(io,"$(rpad(key,25,' ')) = $value")
   end
   println(io,"")
-  println(io,"Measurments")
-  for (key,value) in x.measurments
-    if x.measurments_invalid
+  println(io,"measurements")
+  for (key,value) in x.measurements
+    if x.measurements_invalid
       value = nan(Float64)
     end
     println(io,"$(rpad(key,25,' ')) = $value")
@@ -129,11 +129,11 @@ function defaultltspiceexecutable()
 end
 
 """
-Returns a Dict of measurments.
+Returns a Dict of measurements.
 """
-function getmeasurments(x::ltspicesimulation!)
-  # returns a Dict of measurment value pairs
-  x.measurments
+function getmeasurements(x::ltspicesimulation!)
+  # returns a Dict of measurement value pairs
+  x.measurements
 end
 
 "Returns a Dict of parameters"
@@ -157,7 +157,7 @@ function getltspiceexecutablepath(x::ltspicesimulation!)
   x.executablepath
 end
 
-"Writes parameters back to circuit file. Runs simulation.  Reads measurments from log file."
+"Writes parameters back to circuit file. Runs simulation.  Reads measurements from log file."
 function run!(x::ltspicesimulation!)
   # runs simulation and updates meas values
   writecircuitfile(x)
@@ -165,11 +165,11 @@ function run!(x::ltspicesimulation!)
     run(`$(x.executablepath) -b -Run $(x.circuitpath)`)
   end
   readlog!(x)
-  x.measurments_invalid = false
+  x.measurements_invalid = false
   return(nothing)
 end
 
-"Parses the log file to update measurments"
+"Parses the log file to update measurements"
 function readlog!(x::ltspicesimulation!)
   # reads simulation log file and updates meas values
   LTspiceLog = readall(x.logpath)
@@ -181,7 +181,7 @@ function readlog!(x::ltspicesimulation!)
     catch
       nan(Float64)
     end
-    x.measurments[lowercase(m.captures[1])] = value
+    x.measurements[lowercase(m.captures[1])] = value
   end
   return(nothing)
 end
@@ -196,12 +196,12 @@ function writecircuitfile(x::ltspicesimulation!)
 end
 
 """
-Parses circuit file and returns Dict of parameters, Dict of measurments, circuit file array.
+Parses circuit file and returns Dict of parameters, Dict of measurements, circuit file array.
 """
 function parseCircuitFile(circuitpath::ASCIIString)
   # reads circuit file and returns a tuple of
   # Dict of parameters
-  # Dict of measurments, values N/A
+  # Dict of measurements, values N/A
   # circuit file array
   #     The circuit file array is an array of strings which when concatenated produce the circuit file
   #     The elements of the array split the file around parameter values to avoid parsing the file
@@ -211,7 +211,7 @@ function parseCircuitFile(circuitpath::ASCIIString)
 
   # create empty dictionarys to be filled as file is parsed
   parameters = Dict{ASCIIString,(Float64,Float64,Int)}()     # Dict of parameters.  key = parameter, value = (parameter value, multiplier, circuit file array index)
-  measurments = Dict{ASCIIString,Float64}()                  # Dict of measurments
+  measurements = Dict{ASCIIString,Float64}()                  # Dict of measurements
   CFA = Array(ASCIIString,1)
   CFA[1] = ""
   # regex used to parse file.  I know this is a bad comment.
@@ -251,20 +251,20 @@ function parseCircuitFile(circuitpath::ASCIIString)
         parameters[m.captures[4]] = (value * multiplier, multiplier, i)
         position = m.offsets[5]+length(m.captures[5])
       end
-      if m.captures[7]!=nothing  # this is a measurment card
-        key = lowercase(m.captures[8])  # measurments are all lower case in log file
-        measurments[key] = nan(Float64)  # fill out the Dict with nan's
+      if m.captures[7]!=nothing  # this is a measurement card
+        key = lowercase(m.captures[8])  # measurements are all lower case in log file
+        measurements[key] = nan(Float64)  # fill out the Dict with nan's
       end
     end
     m = match(match_tags,LTspiceFile,m.offset+length(m.match))   # find next match
   end
   CFA = vcat(CFA,LTspiceFile[position:end])  # the rest of the circuit
-  return(parameters, measurments, CFA)
+  return(parameters, measurements, CFA)
 end
 
 function haskey(x::ltspicesimulation!, key::ASCIIString)
   # true if key is in param or meas
-  haskey(x.measurments,key) | haskey(x.parameters,key)
+  haskey(x.measurements,key) | haskey(x.parameters,key)
 end
 
 function get(x::ltspicesimulation!, key::ASCIIString, default::Float64)
@@ -279,23 +279,23 @@ end
 
 function keys(x::ltspicesimulation!)
   # returns an array all keys (param and meas)
-  vcat(collect(keys(x.parameters)),collect(keys(x.measurments)))
+  vcat(collect(keys(x.parameters)),collect(keys(x.measurements)))
 end
 
 function values(x::ltspicesimulation!)
   # returns an array of all values (param and meas)
-  vcat(collect(values(x.parameters)),collect(values(x.measurments)))
+  vcat(collect(values(x.parameters)),collect(values(x.measurements)))
 end
 
 function getindex(x::ltspicesimulation!, key::ASCIIString)
   # returns value for key in either param or meas
   # value = x[key]
   # dosen't handle multiple keys, but neither does standard julia library for Dict
-  if haskey(x.measurments,key)
-    if x.measurments_invalid
+  if haskey(x.measurements,key)
+    if x.measurements_invalid
       run!(x)
     end
-    v = x.measurments[key]
+    v = x.measurements[key]
   elseif haskey(x.parameters,key)
     (v,m,i) = x.parameters[key]
   else
@@ -309,13 +309,13 @@ function setindex!(x::ltspicesimulation!, value:: Float64, key::ASCIIString)
   # x[key] = value
   # meas Dict cannot be set.  It is the result of a simulation
   if haskey(x.parameters,key)
-    x.measurments_invalid = true
+    x.measurements_invalid = true
     (v,m,i) = x.parameters[key]
     x.parameters[key] = (value,m,i)
     x.circuitfilearray[i] = "$(value/m)"
   else
-    if haskey(x.measurments,key)
-      error("measurments cannot be set.  Use run! to update")
+    if haskey(x.measurements,key)
+      error("measurements cannot be set.  Use run! to update")
     else
       throw(KeyError(key))
     end

@@ -6,26 +6,26 @@ module LTspice
 import Base: show, haskey, get, keys, values, getindex, setindex!, start, next, done, length
 
 export ltspicesimulation!, ltspicesimulation, getmeasurments
-export getparameters, getsimulationpath
+export getparameters, getcircuitpath, getltspiceexecutablepath
 
 type ltspicesimulation!
-  excutable ::ASCIIString                               # include full path and extention
-  circuit_file ::  ASCIIString                          # include full path and extention
-  log_file ::  ASCIIString                              # include full path and extention
-  circuit_file_array ::Array{ASCIIString,1}             # text of circuit file
-  param :: Dict{ASCIIString,(Float64,Float64,Int)}      # dictionay of parameters
-  meas :: Dict{ASCIIString,Float64}                     # dictionary of measurments
+  executablepath ::ASCIIString                          # include full path and extention
+  circuitpath ::  ASCIIString                           # include full path and extention
+  logpath ::  ASCIIString                               # include full path and extention
+  circuitfilearray ::Array{ASCIIString,1}             # text of circuit file
+  parameters :: Dict{ASCIIString,(Float64,Float64,Int)}      # dictionay of parameters
+  measurments :: Dict{ASCIIString,Float64}                     # dictionary of measurments
   measurments_invalid :: Bool                           # true if simulation needs to be run
 
   """
   Returns an instance of ltspicesimulation!.  Changes to parameters will update
   the circuit file.
   """
-  function ltspicesimulation!(circuit_file::ASCIIString, excutable::ASCIIString)
-    (everythingbeforedot,e) = splitext(circuit_file)
-    log_file = "$everythingbeforedot.log"  # log file is .log instead of .asc
-    (p,m,cfa) = parseCircuitFile(circuit_file)
-    new(excutable,circuit_file,log_file,cfa,p,m,true)
+  function ltspicesimulation!(circuitpath::ASCIIString, executablepath::ASCIIString)
+    (everythingbeforedot,e) = splitext(circuitpath)
+    logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
+    (p,m,cfa) = parseCircuitFile(circuitpath)
+    new(executablepath,circuitpath,logpath,cfa,p,m,true)
   end
 end
 
@@ -33,44 +33,44 @@ end
 Returns an instance of ltspicesimulation! after copying the circuit file to
 a temporary working directory.  Original circuit file is not modified.
 """
-function ltspicesimulation(circuit_file::ASCIIString, excutable::ASCIIString)
+function ltspicesimulation(circuitpath::ASCIIString, executablepath::ASCIIString)
   td = mktempdir()
-  (d,f) = splitdir(circuit_file)
+  (d,f) = splitdir(circuitpath)
   workingcircuitpath = joinpath(td,f)
-  cp(circuit_file,workingcircuitpath)
-  ltspicesimulation!(workingcircuitpath, excutable)
+  cp(circuitpath,workingcircuitpath)
+  ltspicesimulation!(workingcircuitpath, executablepath)
 end
 
-function ltspicesimulation(circuit_file::ASCIIString)
-  # look up default excutable if not specified
-  ltspicesimulation(circuit_file, defaultltspiceexcutable())
+function ltspicesimulation(circuitpath::ASCIIString)
+  # look up default executable if not specified
+  ltspicesimulation(circuitpath, defaultltspiceexecutable())
 end
 
-function ltspicesimulation!(circuit_file::ASCIIString)
-  # look up default excutable if not specified
-  ltspicesimulation!(circuit_file, defaultltspiceexcutable())
+function ltspicesimulation!(circuitpath::ASCIIString)
+  # look up default executable if not specified
+  ltspicesimulation!(circuitpath, defaultltspiceexecutable())
 end
 
 
 # ****  BEGIN make ltspicesimulation! an iterator  ****
 
-Base.start(x::ltspicesimulation!) = (start(x.param),start(x.meas))
+Base.start(x::ltspicesimulation!) = (start(x.parameters),start(x.measurments))
 
 function Base.next(x::ltspicesimulation!, state)
-  if ~done(x.param,state[1])
-    param,paramState = next(x.param,state[1])
+  if ~done(x.parameters,state[1])
+    param,paramState = next(x.parameters,state[1])
     return (param,(paramState,state[2]))
-  elseif ~done(x.meas,state[2])
-    meas,measState = next(x.meas,state[2])
+  elseif ~done(x.measurments,state[2])
+    meas,measState = next(x.measurments,state[2])
     return (meas,(state[1],measState))
   else
     Error("ltspicesimulation! iterator errror")
   end
 end
 
-Base.done(x::ltspicesimulation!, state) = done(x.param,state[1]) & done(x.meas,state[2])
+Base.done(x::ltspicesimulation!, state) = done(x.parameters,state[1]) & done(x.measurments,state[2])
 
-Base.length(x::ltspicesimulation!) = length(x.param) + length(x.meas)
+Base.length(x::ltspicesimulation!) = length(x.parameters) + length(x.measurments)
 
 # **** end make ltspicesimulation! an iterator ****
 
@@ -96,15 +96,15 @@ units["F"] = 1.0e-15
 units["f"] = 1.0e-15
 
 function show(io::IO, x::ltspicesimulation!)
-  println(io,x.circuit_file)
+  println(io,x.circuitpath)
   println(io,"")
   println(io,"Parameters")
-  for (key,(value,m,i)) in x.param
+  for (key,(value,m,i)) in x.parameters
     println(io,"$(rpad(key,25,' ')) = $value")
   end
   println(io,"")
   println(io,"Measurments")
-  for (key,value) in x.meas
+  for (key,value) in x.measurments
     if x.measurments_invalid
       value = nan(Float64)
     end
@@ -116,38 +116,53 @@ end
 returns "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe"
 which is correct for a windows system
 """
-defaultltspiceexcutable() = "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe"
+function defaultltspiceexecutable()
+  possibleltspiceexecutablelocations = [
+  "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe"
+  ]
+  for canidatepath in possibleltspiceexecutablelocations
+    if ispath(canidatepath)
+      return canidatepath
+    end
+  end
+  error("Could not find scad.exe")
+end
 
 """
 Returns a Dict of measurments.
 """
 function getmeasurments(x::ltspicesimulation!)
   # returns a Dict of measurment value pairs
-  x.meas
+  x.measurments
 end
 
 "Returns a Dict of parameters"
 function getparameters(x::ltspicesimulation!)
   # returns a Dict of parameter value pairs
   d = Dict{ASCIIString, Float64}()
-  for (key,(v,m,i)) in x.param
+  for (key,(v,m,i)) in x.parameters
     d[key] =  v
   end
   return d
 end
 
-"Returns full path of the simulation file"
-function getsimulationpath(x::ltspicesimulation!)
+"Returns path of the simulation file"
+function getcircuitpath(x::ltspicesimulation!)
   # returns string specifing simulation file
-  x.circuit_file
+  x.circuitpath
+end
+
+"Returns path of the LTspice executable"
+function getltspiceexecutablepath(x::ltspicesimulation!)
+  x.executablepath
 end
 
 "Writes parameters back to circuit file. Runs simulation.  Reads measurments from log file."
 function run!(x::ltspicesimulation!)
   # runs simulation and updates meas values
   writecircuitfile(x)
-  if x.excutable != ""
-    run(`$(x.excutable) -b -Run $(x.circuit_file)`)
+  if x.executablepath != ""
+    run(`$(x.executablepath) -b -Run $(x.circuitpath)`)
   end
   readlog!(x)
   x.measurments_invalid = false
@@ -157,7 +172,7 @@ end
 "Parses the log file to update measurments"
 function readlog!(x::ltspicesimulation!)
   # reads simulation log file and updates meas values
-  LTspiceLog = readall(x.log_file)
+  LTspiceLog = readall(x.logpath)
   allMeasures = matchall(r"^(\S+):.*=([0-9e\-+.]+)"m,LTspiceLog)
   for measure in allMeasures
     m =  match(r"^(\S+):.*=([0-9e\-+.]+)"m,measure)
@@ -166,15 +181,15 @@ function readlog!(x::ltspicesimulation!)
     catch
       nan(Float64)
     end
-    x.meas[lowercase(m.captures[1])] = value
+    x.measurments[lowercase(m.captures[1])] = value
   end
   return(nothing)
 end
 
 "Writes circuit file, with any modified parameters, back to disk"
 function writecircuitfile(x::ltspicesimulation!)
-  io = open(x.circuit_file,false,true,false,false,false)  # open circuit file to be overwritten
-  for text in x.circuit_file_array
+  io = open(x.circuitpath,false,true,false,false,false)  # open circuit file to be overwritten
+  for text in x.circuitfilearray
     print(io,text)
   end
   close(io)
@@ -183,7 +198,7 @@ end
 """
 Parses circuit file and returns Dict of parameters, Dict of measurments, circuit file array.
 """
-function parseCircuitFile(circuit_file::ASCIIString)
+function parseCircuitFile(circuitpath::ASCIIString)
   # reads circuit file and returns a tuple of
   # Dict of parameters
   # Dict of measurments, values N/A
@@ -192,7 +207,7 @@ function parseCircuitFile(circuit_file::ASCIIString)
   #     The elements of the array split the file around parameter values to avoid parsing the file
   #     every time a parameter is modified
 
-  LTspiceFile = readall(circuit_file)            # read the circuit file
+  LTspiceFile = readall(circuitpath)            # read the circuit file
 
   # create empty dictionarys to be filled as file is parsed
   parameters = Dict{ASCIIString,(Float64,Float64,Int)}()     # Dict of parameters.  key = parameter, value = (parameter value, multiplier, circuit file array index)
@@ -249,7 +264,7 @@ end
 
 function haskey(x::ltspicesimulation!, key::ASCIIString)
   # true if key is in param or meas
-  haskey(x.meas,key) | haskey(x.param,key)
+  haskey(x.measurments,key) | haskey(x.parameters,key)
 end
 
 function get(x::ltspicesimulation!, key::ASCIIString, default::Float64)
@@ -264,25 +279,25 @@ end
 
 function keys(x::ltspicesimulation!)
   # returns an array all keys (param and meas)
-  vcat(collect(keys(x.param)),collect(keys(x.meas)))
+  vcat(collect(keys(x.parameters)),collect(keys(x.measurments)))
 end
 
 function values(x::ltspicesimulation!)
   # returns an array of all values (param and meas)
-  vcat(collect(values(x.param)),collect(values(x.meas)))
+  vcat(collect(values(x.parameters)),collect(values(x.measurments)))
 end
 
 function getindex(x::ltspicesimulation!, key::ASCIIString)
   # returns value for key in either param or meas
   # value = x[key]
   # dosen't handle multiple keys, but neither does standard julia library for Dict
-  if haskey(x.meas,key)
+  if haskey(x.measurments,key)
     if x.measurments_invalid
       run!(x)
     end
-    v = x.meas[key]
-  elseif haskey(x.param,key)
-    (v,m,i) = x.param[key]
+    v = x.measurments[key]
+  elseif haskey(x.parameters,key)
+    (v,m,i) = x.parameters[key]
   else
     throw(KeyError(key))
   end
@@ -293,13 +308,13 @@ function setindex!(x::ltspicesimulation!, value:: Float64, key::ASCIIString)
   # sets the value of param specified by key
   # x[key] = value
   # meas Dict cannot be set.  It is the result of a simulation
-  if haskey(x.param,key)
+  if haskey(x.parameters,key)
     x.measurments_invalid = true
-    (v,m,i) = x.param[key]
-    x.param[key] = (value,m,i)
-    x.circuit_file_array[i] = "$(value/m)"
+    (v,m,i) = x.parameters[key]
+    x.parameters[key] = (value,m,i)
+    x.circuitfilearray[i] = "$(value/m)"
   else
-    if haskey(x.meas,key)
+    if haskey(x.measurments,key)
       error("measurments cannot be set.  Use run! to update")
     else
       throw(KeyError(key))

@@ -12,9 +12,9 @@ type ltspicesimulation!
   executablepath ::ASCIIString                          # include full path and extention
   circuitpath ::  ASCIIString                           # include full path and extention
   logpath ::  ASCIIString                               # include full path and extention
-  circuitfilearray ::Array{ASCIIString,1}             # text of circuit file
-  parameters :: Dict{ASCIIString,(Float64,Float64,Int)}      # dictionay of parameters
-  measurments :: Dict{ASCIIString,Float64}                     # dictionary of measurments
+  circuitfilearray ::Array{ASCIIString,1}               # text of circuit file
+  parameters :: Dict{ASCIIString,(Float64,Float64,Int)} # dictionay of parameters (value, multiplier, index)
+  measurments :: Dict{ASCIIString,Float64}              # dictionary of measurments
   measurments_invalid :: Bool                           # true if simulation needs to be run
 
   """

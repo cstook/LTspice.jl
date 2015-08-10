@@ -3,13 +3,13 @@
 [![Build Status](https://travis-ci.org/cstook/LTspice.jl.svg?branch=master)](https://travis-ci.org/cstook/LTspice.jl)
 
 
-LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice) simulation parameters and measurments.  Parameters and measurments are accessed as a dictionary like type.  Simulations with stepped parameters (.step directive) are not supported.
+LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice) simulation parameters and measurements.  Parameters and measurements are accessed as a dictionary like type.  Simulations with stepped parameters (.step directive) are not supported.
 
 ## Example 1
 
 <img src="https://github.com/cstook/LTspice.jl/blob/master/examples/example%201/example1.jpg">
 
-In this example parameter x is the voltage accross a 5 Ohm resistor and measurment y is the current throught the resistor.
+In this example parameter x is the voltage across a 5 Ohm resistor and measurement y is the current through the resistor.
 
 Import the module.
 ```
@@ -31,24 +31,24 @@ example1 = ltspicesimulation(circuitpath, executablepath)
 
 An instance of ```ltspicesimulation!``` created with ```ltspicesimulation``` will copy the circuit file to a temporary working directory leaving the original circuit file unaltered.  Using ```ltspicesimulation!``` will overwrite original circuit file as changes are made.
 
-Access parameters and measurments using their name as the key.
+Access parameters and measurements using their name as the key.
 
 Set a parameter to a new value.
 ```
 example1["x"] = 12.0
 ```
 
-Read the resulting measurment.
+Read the resulting measurement.
 ```
 print(example1["y"])
 ```
 This will print 2.4.
 
-Circuit file writes and simulation runs are lazy.  In this example the write and run occurs when measurment y is requested.
+Circuit file writes and simulation runs are lazy.  In this example the write and run occurs when measurement y is requested.
 
-```getmeasurments``` returns a dictionary of just the measurments
+```getmeasurements``` returns a dictionary of just the measurements
 ```
-dict_of_measurments = getmeasurments(example1)
+dict_of_measurements = getmeasurements(example1)
 ```
 
 ```getparameters``` returns a dictionary of just the parameters.

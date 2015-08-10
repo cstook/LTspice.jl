@@ -11,7 +11,7 @@ LTspice.readlog!(test2)
 @test_approx_eq(test2["z"],0.019685)
 @test_approx_eq(test2["y"],0.984252)
 
-@test(length(getmeasurments(test2))==3)
+@test(length(getmeasurements(test2))==3)
 @test(length(getparameters(test2))==4)
 
 @test(length(keys(test2))==7)

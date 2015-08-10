@@ -20,11 +20,11 @@ ex1["x"] = 12.0
 # run the simualtion
 run!(ex1)
 
-# print a measurment
+# print a measurement
 print(ex1["y"])
 
-# dictionary od just measurments
-dict_of_measurments = getmeasurments(ex1)
+# dictionary od just measurements
+dict_of_measurements = getmeasurements(ex1)
 
 # dictionary of just parameters
 dict_of_parameters = getparameters(ex1)

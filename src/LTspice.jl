@@ -326,7 +326,7 @@ function setindex!(x::ltspicesimulation!, value:: Float64, key::ASCIIString)
     x.circuitfilearray[i] = "$(value/m)"
   else
     if haskey(x.measurements,key)
-      error("measurements cannot be set.  Use run! to update")
+      error("measurements cannot be set.")
     else
       throw(KeyError(key))
     end

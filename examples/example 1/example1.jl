@@ -8,15 +8,15 @@ using LTspice
 # filename of simulation file including path
 circuitpath = "example1.asc"
 
-# create an instance of ltspicesimulation! type in a temporary directory
-example1 = ltspicesimulation(circuitpath)
+# create an instance of LTspiceSimulation! type in a temporary directory
+example1 = LTspiceSimulation(circuitpath)
 
-# create an instance of ltspicesimulation! type which will modify original circuit file
-example1 = ltspicesimulation!(circuitpath)
+# create an instance of LTspiceSimulation! type which will modify original circuit file
+example1 = LTspiceSimulation!(circuitpath)
 
 # you can also specify path of LTspice executable.
-example1 = ltspicesimulation!(circuitpath,"C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe")
-example1 = ltspicesimulation(circuitpath,"C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe")
+example1 = LTspiceSimulation!(circuitpath,"C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe")
+example1 = LTspiceSimulation(circuitpath,"C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe")
 
 # change parameter x to 12.0
 example1["x"] = 12.0

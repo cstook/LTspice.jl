@@ -4,7 +4,7 @@ cp("test3.log","temp\\test3.log")
 
 filename = "temp\\test3.asc"
 exc = ""  # null string will not run LTspice.exe.  Test parsing only.
-test3 = ltspicesimulation!(filename, exc)
+test3 = LTspiceSimulation!(filename, exc)
 LTspice.readlog!(test3)
 
 @test_approx_eq(test3["a"],10.0)
@@ -31,7 +31,7 @@ end
 
 LTspice.writecircuitfile(test3)
 
-test3b = ltspicesimulation(filename, exc)
+test3b = LTspiceSimulation(filename, exc)
 p = LTspice.getparameters(test3b)
 for (key,value) in p
   @test_approx_eq(test3b[key],1.0)

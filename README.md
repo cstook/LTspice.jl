@@ -16,20 +16,20 @@ Import the module.
 using LTspice
 ```
 
-Create an instance of ltspicesimulation!.
+Create an instance of LTspiceSimulation!.
 ```
 circuitpath = "example1.asc"
-example1 = ltspicesimulation(circuitpath)
+example1 = LTspiceSimulation(circuitpath)
 ```
 
 If the LTspice executable cannot be found, it's location can be specified.
 ```
 circuitpath = "example1.asc"
 executablepath = "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe"
-example1 = ltspicesimulation(circuitpath, executablepath)
+example1 = LTspiceSimulation(circuitpath, executablepath)
 ```
 
-An instance of ```ltspicesimulation!``` created with ```ltspicesimulation``` will copy the circuit file to a temporary working directory leaving the original circuit file unaltered.  Using ```ltspicesimulation!``` will overwrite original circuit file as changes are made.
+An instance of ```LTspiceSimulation!``` created with ```LTspiceSimulation``` will copy the circuit file to a temporary working directory leaving the original circuit file unaltered.  Using ```LTspiceSimulation!``` will overwrite original circuit file as changes are made.
 
 Access parameters and measurements using their name as the key.
 
@@ -80,14 +80,14 @@ using Optim
 using LTspice
 ```
 
-Create instance of ltspicesimulation! type.
+Create instance of LTspiceSimulation! type.
 ```
 filepath = "example2.asc"
-example2 = ltspicesimulation(filepath) 	  # work in temp directory
+example2 = LTspiceSimulation(filepath) 	  # work in temp directory
 ```
 Define function to minimize. In this case we will find Rload for maximum power transfer.
 ```
-function minimizeme(x::Float64, sim::ltspicesimulation)
+function minimizeme(x::Float64, sim::LTspiceSimulation)
     sim["Rload"] = x
     return(-sim["pload"])
 end

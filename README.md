@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/cstook/LTspice.jl.svg?branch=master)](https://travis-ci.org/cstook/LTspice.jl)
 
 
-LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice) simulation parameters and measurements.  Parameters and measurements are accessed as a dictionary like type.  Simulations with stepped parameters (.step directive) are not supported.
+LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice) simulation parameters and measurements.  Parameters and measurements are accessed as a dictionary like type.  .step directive is not supported.
 
 ## Example 1
 
@@ -46,7 +46,7 @@ This will print 2.4.
 
 Circuit file writes and simulation runs are lazy.  In this example the write and run occurs when measurement y is requested.
 
-```getmeasurements``` returns a dictionary of just the measurements
+```getmeasurements``` returns a dictionary of just the measurements.
 ```
 dict_of_measurements = getmeasurements(example1)
 ```

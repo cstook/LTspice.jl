@@ -215,7 +215,7 @@ function parseCircuitFile(circuitpath::ASCIIString)
   CFA = Array(ASCIIString,1)
   CFA[1] = ""
   # regex used to parse file.  I know this is a bad comment.
-  match_tags = r"(TEXT .*?(!|;)|.(param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\\n|$)|.(measure|MEASURE|meas|MEAS)[ ]+(?:ac|AC|dc|DC|op|OP|tran|TRAN|tf|TF|noise|NOISE)[ ]+(\S+)[ ]+)"m
+  match_tags = r"(TEXT .*?(!|;)|.(param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\\n|$)|.(measure|MEASURE|meas|MEAS)[ ]+(?:ac|AC|dc|DC|op|OP|tran|TRAN|tf|TF|noise|NOISE)[ ]+(\S+)[ ]+|.(step|STEP))"m
 
   # parse the file
   directive = false   # true for directives, false for comments
@@ -231,6 +231,7 @@ function parseCircuitFile(circuitpath::ASCIIString)
     parameterunit = m.captures[6]
     ismeasure = m.captures[7]!=nothing   # true for measurement card
     measurementname = m.captures[8]
+    isstep = m.captures[9]!=nothing
     # determine if we are processign a comment or directive
     if commentordirective == "!"
       directive = true
@@ -244,7 +245,7 @@ function parseCircuitFile(circuitpath::ASCIIString)
         else
           multiplier = 1.0 # if no unit, multiplier is 1.0
         end
-        value = try  # try to convert the value.  might just want to let the exception happen...
+        valuenounit = try  # try to convert the value.  might just want to let the exception happen...
           parsefloat(parametervalue)
         catch
           nan(Float64)
@@ -255,12 +256,15 @@ function parseCircuitFile(circuitpath::ASCIIString)
         i += 1
         CFA = vcat(CFA,LTspiceFile[position:position+length(parametervalue)-1])  # text of the value
         i += 1
-        parameters[parametername] = (value * multiplier, multiplier, i)
+        parameters[parametername] = (valuenounit * multiplier, multiplier, i)
         position = position+length(parametervalue)
       end
       if ismeasure  # this is a measurement card
         key = lowercase(measurementname)  # measurements are all lower case in log file
         measurements[key] = nan(Float64)  # fill out the Dict with nan's
+      end
+      if isstep # this is a step card
+        error(".step directive not supported")
       end
     end
     m = match(match_tags,LTspiceFile,m.offset+length(m.match))   # find next match

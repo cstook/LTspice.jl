@@ -1,6 +1,6 @@
 filename = "test1.asc"
 exc = ""  # null string will not run LTspice.exe.  Test parsing only.
-test1 = ltspicesimulation!(filename,exc)
+test1 = LTspiceSimulation!(filename,exc)
 LTspice.readlog!(test1)
 
 @test test1["Vin"] == 5

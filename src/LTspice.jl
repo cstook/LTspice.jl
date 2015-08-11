@@ -224,35 +224,42 @@ function parseCircuitFile(circuitpath::ASCIIString)
   position = 1   # pointer into LTspiceFile
   old_position = 1
   while m!=nothing
+    commentordirective = m.captures[2]    # ";" starts a comment, "!" starts a directive
+    isparamater = m.captures[3]!=nothing  # true for parameter card
+    parametername = m.captures[4]
+    parametervalue = m.captures[5]
+    parameterunit = m.captures[6]
+    ismeasure = m.captures[7]!=nothing   # true for measurement card
+    measurementname = m.captures[8]
     # determine if we are processign a comment or directive
-    if m.captures[2] == "!"
+    if commentordirective == "!"
       directive = true
-    elseif m.captures[2] == ";"
+    elseif commentordirective == ";"
       directive = false
     end
     if directive
-      if m.captures[3]!=nothing  # this is a paramater card
-        if haskey(units,m.captures[6]) # if their is an SI unit
-          multiplier = units[m.captures[6]] # find the multiplier
+      if isparamater  # this is a paramater card
+        if haskey(units,parameterunit) # if their is an SI unit
+          multiplier = units[parameterunit] # find the multiplier
         else
           multiplier = 1.0 # if no unit, multiplier is 1.0
         end
         value = try  # try to convert the value.  might just want to let the exception happen...
-          parsefloat(m.captures[5])
+          parsefloat(parametervalue)
         catch
           nan(Float64)
         end
         old_position = position
-        position = m.offsets[5]
+        position = m.offsets[5]   # offset of the begining if the value in the circuit file
         CFA = vcat(CFA,LTspiceFile[old_position:position-1])  # text before the value
         i += 1
-        CFA = vcat(CFA,LTspiceFile[position:m.offsets[5]+length(m.captures[5])-1])  # text of the value
+        CFA = vcat(CFA,LTspiceFile[position:position+length(parametervalue)-1])  # text of the value
         i += 1
-        parameters[m.captures[4]] = (value * multiplier, multiplier, i)
-        position = m.offsets[5]+length(m.captures[5])
+        parameters[parametername] = (value * multiplier, multiplier, i)
+        position = position+length(parametervalue)
       end
-      if m.captures[7]!=nothing  # this is a measurement card
-        key = lowercase(m.captures[8])  # measurements are all lower case in log file
+      if ismeasure  # this is a measurement card
+        key = lowercase(measurementname)  # measurements are all lower case in log file
         measurements[key] = nan(Float64)  # fill out the Dict with nan's
       end
     end

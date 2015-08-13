@@ -24,8 +24,8 @@ type LTspiceSimulation!
   function LTspiceSimulation!(circuitpath::ASCIIString, executablepath::ASCIIString)
     (everythingbeforedot,e) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
-    (p,m,cfa) = parseCircuitFile(circuitpath)
-    new(executablepath,circuitpath,logpath,cfa,p,m,true)
+    (p,m,circuitfilearray) = parsecircuitfile(circuitpath)
+    new(executablepath,circuitpath,logpath,circuitfilearray,p,m,true)
   end
 end
 
@@ -199,7 +199,7 @@ end
 """
 Parses circuit file and returns Dict of parameters, Dict of measurements, circuit file array.
 """
-function parseCircuitFile(circuitpath::ASCIIString)
+function parsecircuitfile(circuitpath::ASCIIString)
   # reads circuit file and returns a tuple of
   # Dict of parameters
   # Dict of measurements, values N/A
@@ -208,21 +208,24 @@ function parseCircuitFile(circuitpath::ASCIIString)
   #     The elements of the array split the file around parameter values to avoid parsing the file
   #     every time a parameter is modified
 
-  LTspiceFile = readall(circuitpath)            # read the circuit file
+  ltspicefile = readall(circuitpath)            # read the circuit file
 
   # create empty dictionarys to be filled as file is parsed
   parameters = Dict{ASCIIString,(Float64,Float64,Int)}()     # Dict of parameters.  key = parameter, value = (parameter value, multiplier, circuit file array index)
   measurements = Dict{ASCIIString,Float64}()                  # Dict of measurements
-  CFA = Array(ASCIIString,1)
-  CFA[1] = ""
+  circuitfilearray = Array(ASCIIString,1)
+  circuitfilearray[1] = ""
   # regex used to parse file.  I know this is a bad comment.
-  match_tags = r"(TEXT .*?(!|;)|.(param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\\n|$)|.(measure|MEASURE|meas|MEAS)[ ]+(?:ac|AC|dc|DC|op|OP|tran|TRAN|tf|TF|noise|NOISE)[ ]+(\S+)[ ]+|.(step|STEP))"m
+  match_tags = r"(TEXT .*?(!|;)|
+                 .(param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\\n|$)|
+                 .(measure|MEASURE|meas|MEAS)[ ]+(?:ac|AC|dc|DC|op|OP|tran|TRAN|tf|TF|noise|NOISE)[ ]+(\S+)[ ]+|
+                 .(step|STEP))"mx
 
   # parse the file
   directive = false   # true for directives, false for comments
-  m = match(match_tags,LTspiceFile)
+  m = match(match_tags,ltspicefile)
   i = 1  # index for circuit file array
-  position = 1   # pointer into LTspiceFile
+  position = 1   # pointer into ltspicefile
   old_position = 1
   while m!=nothing
     commentordirective = m.captures[2]    # ";" starts a comment, "!" starts a directive
@@ -253,9 +256,9 @@ function parseCircuitFile(circuitpath::ASCIIString)
         end
         old_position = position
         position = m.offsets[5]   # offset of the begining if the value in the circuit file
-        CFA = vcat(CFA,LTspiceFile[old_position:position-1])  # text before the value
+        circuitfilearray = vcat(circuitfilearray,ltspicefile[old_position:position-1])  # text before the value
         i += 1
-        CFA = vcat(CFA,LTspiceFile[position:position+length(parametervalue)-1])  # text of the value
+        circuitfilearray = vcat(circuitfilearray,ltspicefile[position:position+length(parametervalue)-1])  # text of the value
         i += 1
         parameters[parametername] = (valuenounit * multiplier, multiplier, i)
         position = position+length(parametervalue)
@@ -268,10 +271,10 @@ function parseCircuitFile(circuitpath::ASCIIString)
         error(".step directive not supported")
       end
     end
-    m = match(match_tags,LTspiceFile,m.offset+length(m.match))   # find next match
+    m = match(match_tags,ltspicefile,m.offset+length(m.match))   # find next match
   end
-  CFA = vcat(CFA,LTspiceFile[position:end])  # the rest of the circuit
-  return(parameters, measurements, CFA)
+  circuitfilearray = vcat(circuitfilearray,ltspicefile[position:end])  # the rest of the circuit
+  return(parameters, measurements, circuitfilearray)
 end
 
 function haskey(x::LTspiceSimulation!, key::ASCIIString)

@@ -56,7 +56,7 @@ dict_of_measurements = getmeasurements(example1)
 dict_of_parameters = getparameters(example1)
 ```
 
-```getcircuitpath``` returns the simulation path. 
+```getcircuitpath``` returns the circuit file path. 
 ```
 filepath = getcircuitpath(example1)
 ```

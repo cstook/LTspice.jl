@@ -1,6 +1,6 @@
 # copy test3 files to temp so we can test writing to them
-cp("test3.asc","temp\\test3.asc")
-cp("test3.log","temp\\test3.log")
+cp("test3.asc","temp\\test3.asc",remove_destination = true)
+cp("test3.log","temp\\test3.log",remove_destination = true)
 
 filename = "temp\\test3.asc"
 exc = ""  # null string will not run LTspice.exe.  Test parsing only.

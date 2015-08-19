@@ -13,7 +13,7 @@ type LTspiceSimulation!
   circuitpath ::  ASCIIString                           # include full path and extention
   logpath :: ASCIIString                               # include full path and extention
   circuitfilearray ::Array{ASCIIString,1}               # text of circuit file
-  parameters :: Dict{ASCIIString,(Float64,Float64,Int)} # dictionay of parameters (value, multiplier, index)
+  parameters :: Dict{ASCIIString,Tuple{Float64,Float64,Int}} # dictionay of parameters (value, multiplier, index)
   measurements :: Dict{ASCIIString,Float64}              # dictionary of measurements
   measurements_invalid :: Bool                           # true if simulation needs to be run
 
@@ -21,6 +21,7 @@ type LTspiceSimulation!
   Returns an instance of LTspiceSimulation!.  Changes to parameters will update
   the circuit file.
   """
+  
   function LTspiceSimulation!(circuitpath::ASCIIString, executablepath::ASCIIString)
     (everythingbeforedot,e) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
@@ -36,7 +37,7 @@ a temporary working directory.  Original circuit file is not modified.
 function LTspiceSimulation(circuitpath::ASCIIString, executablepath::ASCIIString)
   td = mktempdir()
   (d,f) = splitdir(circuitpath)
-  workingcircuitpath = joinpath(td,f)
+  workingcircuitpath = convert(ASCIIString, joinpath(td,f))
   cp(circuitpath,workingcircuitpath)
   LTspiceSimulation!(workingcircuitpath, executablepath)
 end
@@ -108,7 +109,7 @@ function show(io::IO, x::LTspiceSimulation!)
   println(io,"measurements")
   for (key,value) in x.measurements
     if x.measurements_invalid
-      value = nan(Float64)
+      value = convert(Float64,NaN)
     end
     println(io,"$(rpad(key,25,' ')) = $value")
   end
@@ -178,9 +179,9 @@ function readlog!(x::LTspiceSimulation!)
   for measure in allMeasures
     m =  match(r"^(\S+):.*=([0-9e\-+.]+)"m,measure)
     value = try
-      parsefloat(m.captures[2])
+      parse(Float64,m.captures[2])
     catch
-      nan(Float64)
+      (Float64)
     end
     x.measurements[lowercase(m.captures[1])] = value
   end
@@ -211,13 +212,13 @@ function parsecircuitfile(circuitpath::ASCIIString)
   ltspicefile = readall(circuitpath)            # read the circuit file
 
   # create empty dictionarys to be filled as file is parsed
-  parameters = Dict{ASCIIString,(Float64,Float64,Int)}()     # Dict of parameters.  key = parameter, value = (parameter value, multiplier, circuit file array index)
+  parameters = Dict{ASCIIString,Tuple{Float64,Float64,Int}}()     # Dict of parameters.  key = parameter, value = (parameter value, multiplier, circuit file array index)
   measurements = Dict{ASCIIString,Float64}()                  # Dict of measurements
   circuitfilearray = Array(ASCIIString,1)
   circuitfilearray[1] = ""
   # regex used to parse file.  I know this is a bad comment.
   match_tags = r"(TEXT .*?(!|;)|
-                 .(param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\\n|$)|
+                 .(param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\r|\\n|$)|
                  .(measure|MEASURE|meas|MEAS)[ ]+(?:ac|AC|dc|DC|op|OP|tran|TRAN|tf|TF|noise|NOISE)[ ]+(\S+)[ ]+|
                  .(step|STEP))"mx
 
@@ -250,9 +251,9 @@ function parsecircuitfile(circuitpath::ASCIIString)
           multiplier = 1.0 # if no unit, multiplier is 1.0
         end
         valuenounit = try  # try to convert the value.  might just want to let the exception happen...
-          parsefloat(parametervalue)
+          parse(Float64,parametervalue)
         catch
-          nan(Float64)
+          convert(Float64,NaN)
         end
         old_position = position
         position = m.offsets[5]   # offset of the begining if the value in the circuit file
@@ -265,7 +266,7 @@ function parsecircuitfile(circuitpath::ASCIIString)
       end
       if ismeasure  # this is a measurement card
         key = lowercase(measurementname)  # measurements are all lower case in log file
-        measurements[key] = nan(Float64)  # fill out the Dict with nan's
+        measurements[key] = convert(Float64,NaN)  # fill out the Dict with 's
       end
       if isstep # this is a step card
         error(".step directive not supported")

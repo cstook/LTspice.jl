@@ -1,7 +1,7 @@
 # overloard parse for the CircuitFile type
 # used to parse LTspice circuit files *.asc
 
-import Base: parse, show, getindex, setindex!,start, next, done, length, eltype
+import Base: parse, show, getindex, setindex!,start, next, done, length, eltype, haskey
 
 export CircuitFile
 
@@ -14,6 +14,9 @@ type CircuitFile
   	needsupdate			:: Bool # true if any parameter has been changed
 end
 
+getcircuitpath(x::CircuitFile) = x.circuitpath
+getmeasurmentnames(x::CircuitFile) = x.measurementnames
+getsweeps(x::CircuitFile) = x.sweeps
 
 function show(io::IO, x::CircuitFile)
 	println(io,x.circuitpath)
@@ -151,12 +154,12 @@ eltype(x::CircuitFile) = lenght(x.parameters)
 haskey(x::CircuitFile) = haskey(x.parameters)
 
 function getindex(x::CircuitFile, key::ASCIIString)
-	(v,m,i) =  x.parameters[key]
+	(v,m,i) =  x.parameters[key]  # just want the value.  Hide internal stuff
 	return v
 end
 
 function setindex!(x::CircuitFile, value:: Float64, key:: ASCIIString)
-	(v,m,i) = x.parameter[key]
+	(v,m,i) = x.parameters[key]
 	x.parameters[key] = (value,m,i)
     x.circuitfilearray[i] = "$(value/m)"
     x.needsupdate = true
@@ -172,4 +175,5 @@ function update(x::CircuitFile)
   		close(io)
   		x.needsupdate = false
   	end
+  	return nothing
 end

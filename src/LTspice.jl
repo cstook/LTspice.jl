@@ -300,7 +300,7 @@ end
 
 function values(x::LTspiceSimulation!)
   # returns an array of all values (param and meas)
-  vcat(collect(values(x.parameters)),collect(values(x.measurements)))
+  vcat(collect(values(x.parameters)),collect(values(x.measurements))) # this is wrong
 end
 
 function getindex(x::LTspiceSimulation!, key::ASCIIString)

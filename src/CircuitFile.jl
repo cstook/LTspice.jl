@@ -1,13 +1,17 @@
 # overloard parse for the CircuitFile type
 # used to parse LTspice circuit files *.asc
-import Base: parse, show
+
+import Base: parse, show, getindex, setindex!,start, next, done, length, eltype
+
+export CircuitFile
 
 type CircuitFile
 	circuitpath			:: ASCIIString
 	circuitfilearray 	:: Array{ASCIIString,1}    # text of circuit file
 	parameters 			:: Dict{ASCIIString,Tuple{Float64,Float64,Int}} # dictionay of parameters (value, multiplier, index)
   	measurementnames    :: Array{ASCIIString,1}              # measurment names
-  	sweeps				:: Dict{ASCIIString,Int}   # dictionary of number of points in each sweep
+  	sweeps				:: Array{Tuple{ASCIIString,Int},1}   # number of points in each sweep
+  	needsupdate			:: Bool # true if any parameter has been changed
 end
 
 
@@ -71,7 +75,7 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   # create empty dictionarys to be filled as file is parsed
   parameters = Dict{ASCIIString,Tuple{Float64,Float64,Int}}()     # Dict of parameters.  key = parameter, value = (parameter value, multiplier, circuit file array index)
   measurementnames = Array(ASCIIString,0)
-  sweeps	= Dict{ASCIIString,Int}()
+  sweeps	= Array(Tuple{ASCIIString,Int},0)
   circuitfilearray = Array(ASCIIString,1)
   circuitfilearray[1] = ""
   # regex used to parse file.  I know this is a bad comment.
@@ -133,6 +137,39 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
     m = match(match_tags,ltspicefile,m.offset+length(m.match))   # find next match
   end
   circuitfilearray = vcat(circuitfilearray,ltspicefile[position:end])  # the rest of the circuit
-  return CircuitFile(circuitpath, circuitfilearray, parameters, measurementnames, sweeps)
+  return CircuitFile(circuitpath, circuitfilearray, parameters, measurementnames, sweeps, false)
 end
 
+# CircuitFile iterates over its parameters
+start(x::CircuitFile) = start(x.parameters)
+next(x::CircuitFile, state) = next(x.parameters, state)
+done(x::CircuitFile, state) = done(x.parameters, state)
+length(x::CircuitFile) = length(x.parameters)
+eltype(x::CircuitFile) = lenght(x.parameters)
+
+# CircuitFile is a dict of its parameters
+haskey(x::CircuitFile) = haskey(x.parameters)
+
+function getindex(x::CircuitFile, key::ASCIIString)
+	(v,m,i) =  x.parameters[key]
+	return v
+end
+
+function setindex!(x::CircuitFile, value:: Float64, key:: ASCIIString)
+	(v,m,i) = x.parameter[key]
+	x.parameters[key] = (value,m,i)
+    x.circuitfilearray[i] = "$(value/m)"
+    x.needsupdate = true
+end
+
+"writes circuit file back to disk if any parameters have changed"
+function update(x::CircuitFile)
+	if x.needsupdate
+		io = open(x.circuitpath,false,true,false,false,false)  # open circuit file to be overwritten
+  		for text in x.circuitfilearray
+    		print(io,text)
+  		end
+  		close(io)
+  		x.needsupdate = false
+  	end
+end

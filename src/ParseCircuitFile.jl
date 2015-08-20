@@ -85,10 +85,12 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   circuitfilearray = Array(ASCIIString,1)
   circuitfilearray[1] = ""
   # regex used to parse file.  I know this is a bad comment.
-  match_tags = r"(TEXT .*?(!|;)|
-                 .(param|PARAM)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)(.*?)(?:\r|\\n|$)|
-                 .(measure|MEASURE|meas|MEAS)[ ]+(?:ac|AC|dc|DC|op|OP|tran|TRAN|tf|TF|noise|NOISE)[ ]+(\S+)[ ]+|
-                 .(step|STEP))"mx
+  match_tags = r"""(
+                ^TEXT .*?(!|;)|
+                [.](param)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)([a-z]*)|
+                [.](measure|meas)[ ]+(?:ac|dc|op|tran|tf|noise)[ ]+(\w)[ ]+|
+                [.](step)[ ]+(oct |param ){0,1}[ ]*(\w)[ ]+(list ){0,1}[ ]*(([0-9.e+-]*([a-z])[ ]*)*)
+                )"""imx
 
   # parse the file
   directive = false   # true for directives, false for comments
@@ -105,6 +107,11 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
     ismeasure = m.captures[7]!=nothing   # true for measurement card
     measurementname = m.captures[8]
     isstep = m.captures[9]!=nothing
+    oct_or_param_or_nothing = m.captures[10]
+    steppedname = m.captures[11]
+    islist = m.captures[12]!=nothing
+    stepparameterlist = m.captures[13] # all the values and units.  Needs additional parsing.
+
     # determine if we are processign a comment or directive
     if commentordirective == "!"
       directive = true

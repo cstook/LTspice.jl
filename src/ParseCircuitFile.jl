@@ -1,22 +1,25 @@
 # overloard parse for the CircuitFile type
 # used to parse LTspice circuit files *.asc
+module ParseCircuitFile
 
 import Base: parse, show, getindex, setindex!,start, next, done, length, eltype, haskey
 
-export CircuitFile
+export CircuitFile, getcircuitpath, getmeasurmentnames, getsweeps
+export isneedsupdate
 
 type CircuitFile
 	circuitpath			:: ASCIIString
-	circuitfilearray 	:: Array{ASCIIString,1}    # text of circuit file
+	circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
 	parameters 			:: Dict{ASCIIString,Tuple{Float64,Float64,Int}} # dictionay of parameters (value, multiplier, index)
-  	measurementnames    :: Array{ASCIIString,1}              # measurment names
-  	sweeps				:: Array{Tuple{ASCIIString,Int},1}   # number of points in each sweep
-  	needsupdate			:: Bool # true if any parameter has been changed
+  measurementnames:: Array{ASCIIString,1}              # measurment names
+  sweeps				  :: Array{Tuple{ASCIIString,Int},1}   # number of points in each sweep
+  needsupdate			:: Bool # true if any parameter has been changed
 end
 
 getcircuitpath(x::CircuitFile) = x.circuitpath
 getmeasurmentnames(x::CircuitFile) = x.measurementnames
 getsweeps(x::CircuitFile) = x.sweeps
+isneedsupdate(x::CircuitFile) = x.needsupdate
 
 function show(io::IO, x::CircuitFile)
 	println(io,x.circuitpath)
@@ -177,3 +180,5 @@ function update(x::CircuitFile)
   	end
   	return nothing
 end
+
+end # module

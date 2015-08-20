@@ -3,6 +3,8 @@
 
 module LTspice
 
+using ParseCircuitFile
+
 import Base: show, haskey, get, keys, values, getindex, setindex!, start, next, done, length, eltype
 
 export LTspiceSimulation!, LTspiceSimulation, getmeasurements
@@ -25,7 +27,7 @@ type LTspiceSimulation!
   function LTspiceSimulation!(circuitpath::ASCIIString, executablepath::ASCIIString)
     (everythingbeforedot,e) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
-    (p,m,circuitfilearray) = parsecircuitfile(circuitpath)
+    (p,m,circuitfilearray) = parsecircuitfileOLD(circuitpath)
     new(executablepath,circuitpath,logpath,circuitfilearray,p,m,true)
   end
 end
@@ -200,7 +202,7 @@ end
 """
 Parses circuit file and returns Dict of parameters, Dict of measurements, circuit file array.
 """
-function parsecircuitfile(circuitpath::ASCIIString)
+function parsecircuitfileOLD(circuitpath::ASCIIString)
   # reads circuit file and returns a tuple of
   # Dict of parameters
   # Dict of measurements, values N/A

@@ -1,15 +1,14 @@
 # this module provided an interface to treat the parameters and measurements
 # of an LTspice simulation as a dictionary like type
 
-
 module LTspice
-
-using ParseCircuitFile
 
 import Base: show, haskey, get, keys, values, getindex, setindex!, start, next, done, length, eltype
 
 export LTspiceSimulation!, LTspiceSimulation, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
+
+include("ParseCircuitFile.jl")
 
 type LTspiceSimulation!
   executablepath :: ASCIIString                          # include full path and extention

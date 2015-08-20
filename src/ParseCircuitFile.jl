@@ -1,11 +1,10 @@
 # overloard parse for the CircuitFile type
 # used to parse LTspice circuit files *.asc
-module ParseCircuitFile
 
 import Base: parse, show, getindex, setindex!,start, next, done, length, eltype, haskey
 
-export CircuitFile, getcircuitpath, getmeasurmentnames, getsweeps
-export isneedsupdate
+#export CircuitFile, getcircuitpath, getmeasurmentnames, getsweeps
+#export isneedsupdate
 
 type CircuitFile
 	circuitpath			:: ASCIIString
@@ -187,5 +186,3 @@ function update(x::CircuitFile)
   	end
   	return nothing
 end
-
-end # module

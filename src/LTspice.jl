@@ -1,6 +1,7 @@
 # this module provided an interface to treat the parameters and measurements
 # of an LTspice simulation as a dictionary like type
 
+
 module LTspice
 
 using ParseCircuitFile

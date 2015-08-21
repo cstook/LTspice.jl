@@ -3,14 +3,14 @@
 
 
 type LogFile
-  logpath         :: ASCIIString  # path to log file
-  circuitpath     :: ASCIIString  # path to circuit file in the log file
-  timestamp       :: DateTime
-  duration        :: Float64  # simulation time in seconds
-  stepnames      :: Array{ASCIIString,1}
-  steps          :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
-  measurementnames:: Array{ASCIIString,1}   
-  measurements     :: Array{Float64,4}
+  logpath           :: ASCIIString  # path to log file
+  circuitpath       :: ASCIIString  # path to circuit file in the log file
+  timestamp         :: DateTime
+  duration          :: Float64  # simulation time in seconds
+  stepnames         :: Array{ASCIIString,1}
+  steps             :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
+  measurementnames  :: Array{ASCIIString,1}   
+  measurements      :: Array{Float64,4}
 end
 
 getlogpath(x::LogFile) = x.logpath
@@ -34,10 +34,11 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
   steps = (Array(Float64,0),Array(Float64,0),Array(Float64,0))
   state = 0
   isstep = false
+  foundmeasurement = false
   for line in lines
     if state == 0  # looking for "Circuit:"
 #      println("state = 0")
-      m = match(r"^Circuit: \*\s*(.+)",line)
+      m = match(r"^Circuit: \*\s*([\w\:\\/. ]+)",line)
       if m!=nothing
         circuitpath = m.captures[1]
 #        println("found circuit file  $circuitpath")
@@ -52,6 +53,7 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
       m = match(regex,line)
       if m!=nothing  
         if m.captures[1]!=nothing # we have a measurement
+          foundmeasurement = true
           println("found measurment $(m.captures[1])")
           push!(measurementnames,m.captures[1]) # save the name
         elseif m.captures[2]!=nothing # we have a step
@@ -73,7 +75,7 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
           end
           isstep = true
         end
-      elseif isstep # if we are seeing .step's and then see a blank line
+      elseif isstep | foundmeasurement # if we are seeing .step's measurments and then see a blank line
         state = 2 # start looking for stepped measurements
       end
     elseif state ==  2 # look for stepped measurements or date or time

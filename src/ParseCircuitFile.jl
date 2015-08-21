@@ -11,7 +11,7 @@ type CircuitFile
 	circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
 	parameters 			:: Dict{ASCIIString,Tuple{Float64,Float64,Int}} # dictionay of parameters (value, multiplier, index)
   measurementnames:: Array{ASCIIString,1}              # measurment names
-  sweeps				  :: Array{Tuple{ASCIIString,Int},1}   # number of points in each sweep
+  sweeps				  :: Array{ASCIIString,1}   # number of points in each sweep
   needsupdate			:: Bool # true if any parameter has been changed
 end
 
@@ -22,26 +22,27 @@ isneedsupdate(x::CircuitFile) = x.needsupdate
 
 function show(io::IO, x::CircuitFile)
 	println(io,x.circuitpath)
+  if length(x.parameters)>0
   	println(io,"")
   	println(io,"Parameters")
   	for (key,(value,m,i)) in x.parameters
-    	println(io,"$(rpad(key,25,' ')) = $value")
+    	println(io,"  $(rpad(key,25,' ')) = $value")
   	end
+  end
  	if length(x.measurementnames)>0 
  		println(io,"")
  		println(io,"Measurments")
- 	end
- 	for m in x.measurementnames
- 		println(io,m)
- 	end
+ 	  for name in x.measurementnames
+ 		 println(io,"  $name")
+ 	  end
+  end
  	if length(x.sweeps)>0
  		println(io,"")
  		println(io,"Sweeps")
- 	end
- 	println(io,"")
- 	for (s,p) in x.sweeps
- 		println(io,"$(rpad(s,25,' '))  $p steps")
- 	end
+ 	  for name in x.sweeps
+ 		 println(io,"  $name")
+ 	  end
+  end
 end
  	
 # units as defined in LTspice
@@ -81,7 +82,7 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   #key = parameter, value = (parameter value, multiplier, circuit file array index)
   parameters = Dict{ASCIIString,Tuple{Float64,Float64,Int}}() 
   measurementnames = Array(ASCIIString,0)
-  sweeps	= Array(Tuple{ASCIIString,Int},0)
+  sweeps	= Array(ASCIIString,0)
   circuitfilearray = Array(ASCIIString,1)
   circuitfilearray[1] = ""
   # regex used to parse file.  I know this is a bad comment.
@@ -89,7 +90,7 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
                 ^TEXT .*?(!|;)|
                 [.](param)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)([a-z]*)|
                 [.](measure|meas)[ ]+(?:ac|dc|op|tran|tf|noise)[ ]+(\w+)[ ]+|
-                [.](step)[ ]+(oct |param ){0,1}[ ]*(\w+)[ ]+[0-9.e+-]+[a-z]*[ ]+|
+                [.](step)[ ]+(oct|param){0,1}[ ]+(\w+)[ ]+[0-9.e+-]+[a-z]*[ ]+|
                 [.](step)[ ]+(\w+)[ ]+([\w()]+)[ ]+
                 )"""imx
 
@@ -106,13 +107,13 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
     parametervalue = m.captures[5]
     parameterunit = m.captures[6]
     ismeasure = m.captures[7]!=nothing   # true for measurement card
-    measurementname = m.captures[8]
+    measurementname = m.captures[8] # name in .log
     isstep = m.captures[9]!=nothing
     oct_or_param_or_nothing = m.captures[10]
-    steppedname = m.captures[11]
+    steppedname = m.captures[11] # name in .log
     issteppedmodel = m.captures[12]!=nothing
     modeltype = m.captures[13] # for example NPN
-    modelname = m.captures[14]
+    modelname = m.captures[14] # name in .log
 
     # determine if we are processign a comment or directive
     if commentordirective == "!"
@@ -140,13 +141,13 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
         i += 1
         parameters[parametername] = (valuenounit * multiplier, multiplier, i)
         position = position+length(parametervalue)
-      end
-      if ismeasure  # this is a measurement card
+      elseif ismeasure  # this is a measurement card
         key = lowercase(measurementname)  # measurements are all lower case in log file
         push!(measurementnames,key)
-      end
-      if isstep # this is a step card
-        error(".step directive not supported")
+      elseif isstep # this is a step card
+        push!(sweeps,steppedname)
+      elseif issteppedmodel
+        push!(sweeps,modelname)
       end
     end
     m = match(match_tags,ltspicefile,m.offset+length(m.match))   # find next match

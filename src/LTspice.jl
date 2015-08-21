@@ -223,7 +223,7 @@ function parsecircuitfileOLD(circuitpath::ASCIIString)
                 ^TEXT .*?(!|;)|
                 [.](param)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)([a-z]*)|
                 [.](measure|meas)[ ]+(?:ac|dc|op|tran|tf|noise)[ ]+(\w)[ ]+|
-                [.](step)[ ]+(oct |param ){0,1}[ ]*(\w)[ ]+(list ){0,1}[ ]*(([0-9.e+-]*([a-z])[ ]*)*)
+                [.](step)[ ]+(oct |param ){0,1}[ ]*(\w)[ ]+(list ){0,1}[ ]*(([0-9.e+-]*([a-z])*[ ]*)*)
                 )"""imx
 
   # parse the file

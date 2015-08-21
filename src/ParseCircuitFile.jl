@@ -67,18 +67,19 @@ units["f"] = 1.0e-15
 
 
 function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
-  # reads circuit file and returns a tuple of
-  # Dict of parameters
-  # Dict of measurements, values N/A
-  # circuit file array
-  #     The circuit file array is an array of strings which when concatenated produce the circuit file
-  #     The elements of the array split the file around parameter values to avoid parsing the file
-  #     every time a parameter is modified
-
+  #= reads circuit file and returns a tuple of
+  Dict of parameters
+  Dict of measurements, values N/A
+  circuit file array
+    The circuit file array is an array of strings which when concatenated
+    produce the circuit file.  The elements of the array split the file 
+    around parameter values to avoid parsing the file every time a parameter
+    is modified
+  =#
   ltspicefile = readall(circuitpath)            # read the circuit file
-
   # create empty dictionarys to be filled as file is parsed
-  parameters = Dict{ASCIIString,Tuple{Float64,Float64,Int}}()     # Dict of parameters.  key = parameter, value = (parameter value, multiplier, circuit file array index)
+  #key = parameter, value = (parameter value, multiplier, circuit file array index)
+  parameters = Dict{ASCIIString,Tuple{Float64,Float64,Int}}() 
   measurementnames = Array(ASCIIString,0)
   sweeps	= Array(Tuple{ASCIIString,Int},0)
   circuitfilearray = Array(ASCIIString,1)
@@ -87,8 +88,9 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   match_tags = r"""(
                 ^TEXT .*?(!|;)|
                 [.](param)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)([a-z]*)|
-                [.](measure|meas)[ ]+(?:ac|dc|op|tran|tf|noise)[ ]+(\w)[ ]+|
-                [.](step)[ ]+(oct |param ){0,1}[ ]*(\w)[ ]+(list ){0,1}[ ]*(([0-9.e+-]*([a-z])[ ]*)*)
+                [.](measure|meas)[ ]+(?:ac|dc|op|tran|tf|noise)[ ]+(\w+)[ ]+|
+                [.](step)[ ]+(oct |param ){0,1}[ ]*(\w+)[ ]+[0-9.e+-]+[a-z]*[ ]+|
+                [.](step)[ ]+(\w+)[ ]+([\w()]+)[ ]+
                 )"""imx
 
   # parse the file
@@ -98,7 +100,7 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   position = 1   # pointer into ltspicefile
   old_position = 1
   while m!=nothing
-    commentordirective = m.captures[2]    # ";" starts a comment, "!" starts a directive
+    commentordirective = m.captures[2] # ";" starts a comment, "!" starts a directive
     isparamater = m.captures[3]!=nothing  # true for parameter card
     parametername = m.captures[4]
     parametervalue = m.captures[5]
@@ -108,8 +110,9 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
     isstep = m.captures[9]!=nothing
     oct_or_param_or_nothing = m.captures[10]
     steppedname = m.captures[11]
-    islist = m.captures[12]!=nothing
-    stepparameterlist = m.captures[13] # all the values and units.  Needs additional parsing.
+    issteppedmodel = m.captures[12]!=nothing
+    modeltype = m.captures[13] # for example NPN
+    modelname = m.captures[14]
 
     # determine if we are processign a comment or directive
     if commentordirective == "!"

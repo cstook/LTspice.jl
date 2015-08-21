@@ -9,6 +9,7 @@ export LTspiceSimulation!, LTspiceSimulation, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
 
 include("ParseCircuitFile.jl")
+include("ParseLogFile.jl")
 
 type LTspiceSimulation!
   executablepath :: ASCIIString                          # include full path and extention

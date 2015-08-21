@@ -1,6 +1,7 @@
 # overload parse for LogFile type
 # used to parse LTspice log files
 
+import Base:show, parse
 
 type LogFile
   logpath           :: ASCIIString  # path to log file
@@ -20,6 +21,27 @@ getsteps(x::LogFile) = x.steps
 getmeasurementnames(x::LogFile) = x.measurementnames
 getmeasurement(x::LogFile) = x.measurementnames
 
+function show(io::IO, x::LogFile)
+  println(io,x.logpath)  
+  println(io,x.circuitpath)
+  println(io,x.timestamp)
+  println(io,"$(x.duration) seconds")
+  if length(x.measurementnames)>0
+    println(io,"")
+    println(io,"Measurements")
+    for name in x.measurementnames
+      println(io,"  $name")
+    end
+  end
+   if length(x.stepnames)>0
+    println(io,"")
+    println(io,"Step")
+    for name in x.stepnames
+      println(io,"  $name")
+    end
+  end
+end
+
 function parse(::Type{LogFile}, logpath::ASCIIString)
   IOlog = open(logpath,true,false,false,false,false) # open log file read only
   lines = eachline(IOlog)
@@ -37,15 +59,12 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
   foundmeasurement = false
   for line in lines
     if state == 0  # looking for "Circuit:"
-#      println("state = 0")
       m = match(r"^Circuit: \*\s*([\w\:\\/. ]+)",line)
       if m!=nothing
         circuitpath = m.captures[1]
-#        println("found circuit file  $circuitpath")
         state = 1
       end
     elseif state == 1 # look for either ".step" or measurement
-#      println("state = 1")
       regex = r"^(?:(\w+):|(\.step)
         (?:\s+(.*?)=(.*?))
         (?:\s+(.*?)=(.*?)){0,1}
@@ -54,10 +73,8 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
       if m!=nothing  
         if m.captures[1]!=nothing # we have a measurement
           foundmeasurement = true
-          println("found measurment $(m.captures[1])")
           push!(measurementnames,m.captures[1]) # save the name
         elseif m.captures[2]!=nothing # we have a step
-#          println("found step")
           if ~isstep # grab the names from the first line
             for i in (3,5,7)
               if m.captures[i] != nothing  # we have a step name
@@ -84,14 +101,11 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
         Total[ ]elapsed[ ]time:\s*([\w.]+)\s+seconds.\s*$)"x
       m = match(regex,line)
       if m!= nothing
-        if m.captures[1]!=nothing
-          println("found stepped measurment")
+        if m.captures[1]!=nothing # found a measurement
           push!(measurementnames,m.captures[1]) # save the name
-        elseif m.captures[2]!=nothing
-          println("found time date")
+        elseif m.captures[2]!=nothing # found time stamp
           timestamp = DateTime(m.captures[2],"e u d HH:MM:SS yyyy")
-        else 
-          println("found duration")
+        else # found duration
           duration = parse(Float64,m.captures[3])
         end
       end

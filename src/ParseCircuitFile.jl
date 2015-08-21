@@ -86,12 +86,13 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   circuitfilearray = Array(ASCIIString,1)
   circuitfilearray[1] = ""
   # regex used to parse file.  I know this is a bad comment.
-  match_tags = r"""(
+match_tags = r"""(
                 ^TEXT .*?(!|;)|
                 [.](param)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)([a-z]*)|
                 [.](measure|meas)[ ]+(?:ac|dc|op|tran|tf|noise)[ ]+(\w+)[ ]+|
-                [.](step)[ ]+(oct|param){0,1}[ ]+(\w+)[ ]+[0-9.e+-]+[a-z]*[ ]+|
-                [.](step)[ ]+(\w+)[ ]+([\w()]+)[ ]+
+                [.](step)[ ]+(oct |param ){0,1}[ ]*
+                (\w+)[ ]+(?:list ){0,1}[ ]*[0-9.e+-]+[a-z]*[ ]+|
+                [.](step)[ ]+(\w+)[ ]+(\w+[(]\w+[)])[ ]+
                 )"""imx
 
   # parse the file

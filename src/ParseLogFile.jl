@@ -2,7 +2,9 @@
 # used to parse LTspice log files
 
 include("MultiLevelIterator.jl")
+
 import Base:show, parse
+
 
 type LogFile
   logpath           :: ASCIIString  # path to log file
@@ -22,6 +24,31 @@ getstepnames(x::LogFile) = x.stepnames
 getsteps(x::LogFile) = x.steps
 getmeasurementnames(x::LogFile) = x.measurementnames
 getmeasurements(x::LogFile) = x.measurements
+isstep(x::LogFile) = x.isstep
+
+function haskey(x::LogFile,key::ASCIIString)
+  if x.isstep
+    return false  # Dict interface only for non stepped simulations
+  else
+    return issubset(key,x.measurementnames)
+  end
+end
+
+function keys(x::Logfile)
+  if x.isstep 
+    return false
+  else 
+    return x.measurementnames
+  end
+end
+
+function values(x::LogFile)
+  if x.isstep 
+    return false
+  else
+    return x.measurement[:,1,1,1]
+  end
+end
 
 function show(io::IO, x::LogFile)
   println(io,x.logpath)  
@@ -167,7 +194,7 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
         line = readline(IOlog)
       end
       if eof(IOlog) 
-        error("log file parse error.  EOF before allmeasurements found.")
+        error("log file parse error.  EOF before all measurements found.")
       end
     end
   else 

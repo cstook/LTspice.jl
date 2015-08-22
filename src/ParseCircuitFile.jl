@@ -165,7 +165,9 @@ length(x::CircuitFile) = length(x.parameters)
 eltype(::CircuitFile) = Float64
 
 # CircuitFile is a dict of its parameters
-haskey(x::CircuitFile) = haskey(x.parameters)
+haskey(x::CircuitFile,key::ASCIIString) = haskey(x.parameters,key::ASCIIString
+keys(x::CircuitFile) = keys(x.parameters)
+values(x::CircuitFile) = values(x.parameters)
 
 function getindex(x::CircuitFile, key::ASCIIString)
 	(v,m,i) =  x.parameters[key]  # just want the value.  Hide internal stuff

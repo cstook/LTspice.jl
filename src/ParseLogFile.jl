@@ -1,6 +1,7 @@
 # overload parse for LogFile type
 # used to parse LTspice log files
 
+include("MultiLevelIterator.jl")
 import Base:show, parse
 
 type LogFile
@@ -125,20 +126,20 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
   l2 = length(steps[1])
   l3 = length(steps[2])
   l4 = length(steps[3])
-  numberofmeasurements = l1*l2*l3*l4
-  linearmeasurements = Array(Float64,numberofmeasurements)
+  measurementsiterator = MultiLevelIterator([l2,l3,l4,l1])
+  measurements = Array(Float64,l1,l2,l3,l4)
   # restart at beginning of file
   IOlog = open(logpath,true,false,false,false,false) # open log file read only
-  i = 1
   ismeasurementblock = false
-  while i<numberofmeasurements
+  state = start(measurementsiterator)
+  while ~done(measurementsiterator,state)
     line = readline(IOlog)
     if ismeasurementblock
       m = match(r"^\s*[0-9]+\s+([0-9.eE+-]+)",line)
       if m != nothing
         value = parse(Float64,m.captures[1])
-        linearmeasurements[i] = value 
-        i += 1
+        (i,state) = next(measurementsiterator,state)
+        measurements[i[4],i[1],i[2],i[3]] = value
       else 
         ismeasurementblock = false 
       end
@@ -149,7 +150,6 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
       end
     end
   end
-  measurements = reshape(linearmeasurements,l1,l2,l3,l4)
   return LogFile(logpath, circuitpath, timestamp, duration, stepnames, steps, measurementnames, measurements)
 end
 

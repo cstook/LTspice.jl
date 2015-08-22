@@ -162,7 +162,7 @@ start(x::CircuitFile) = start(x.parameters)
 next(x::CircuitFile, state) = next(x.parameters, state)
 done(x::CircuitFile, state) = done(x.parameters, state)
 length(x::CircuitFile) = length(x.parameters)
-eltype(x::CircuitFile) = lenght(x.parameters)
+eltype(::CircuitFile) = Float64
 
 # CircuitFile is a dict of its parameters
 haskey(x::CircuitFile) = haskey(x.parameters)

@@ -13,6 +13,7 @@ type LogFile
   steps             :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
   measurementnames  :: Array{ASCIIString,1}   
   measurements      :: Array{Float64,4}
+  isstep            :: Bool
 end
 
 getlogpath(x::LogFile) = x.logpath
@@ -93,7 +94,7 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
           end
           isstep = true
         end
-      elseif isstep | foundmeasurement # if we are seeing .step's measurments and then see a blank line
+      elseif isstep | foundmeasurement # if we are seeing .step's measurements and then see a blank line
         state = 2 # start looking for stepped measurements
       end
     elseif state ==  2 # look for stepped measurements or date or time
@@ -117,40 +118,64 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
   now that we know the size of the data 
   we can create and fill in measurements array
   dimensions
-    1 - measurmentnames is header
+    1 - measurementnames is header
     2 - inner sweep.  steps[1] is header. stepname[1] is name.
     3 - middle sweep. steps[2] is header. stepname[2] is name.
     4 - outer sweep.  steps[3] is header. stepname[3] is name.
   =#
-  l1 = length(measurementnames)
-  l2 = length(steps[1])
-  l3 = length(steps[2])
-  l4 = length(steps[3])
-  measurementsiterator = MultiLevelIterator([l2,l3,l4,l1])
-  measurements = Array(Float64,l1,l2,l3,l4)
   # restart at beginning of file
-  IOlog = open(logpath,true,false,false,false,false) # open log file read only
-  ismeasurementblock = false
-  state = start(measurementsiterator)
-  while ~done(measurementsiterator,state)
-    line = readline(IOlog)
-    if ismeasurementblock
-      m = match(r"^\s*[0-9]+\s+([0-9.eE+-]+)",line)
-      if m != nothing
-        value = parse(Float64,m.captures[1])
-        (i,state) = next(measurementsiterator,state)
-        measurements[i[4],i[1],i[2],i[3]] = value
-      else 
-        ismeasurementblock = false 
-      end
-    else 
-      if ismatch(r"^Measurement:",line)
+  l1 = length(measurementnames)
+  if l1 > 0 
+    IOlog = open(logpath,true,false,false,false,false) # open log file read only
+    if isstep
+      l2 = length(steps[1])
+      l3 = length(steps[2])
+      l4 = length(steps[3])
+      measurementsiterator = MultiLevelIterator([l2,l3,l4,l1])
+      measurements = Array(Float64,l1,l2,l3,l4)
+      ismeasurementblock = false
+      state = start(measurementsiterator)
+      while ~done(measurementsiterator,state) & ~eof(IOlog)
         line = readline(IOlog)
-        ismeasurementblock = true
+        if ismeasurementblock
+          m = match(r"^\s*[0-9]+\s+([0-9.eE+-]+)",line)
+          if m != nothing
+            value = parse(Float64,m.captures[1])
+            (i,state) = next(measurementsiterator,state)
+            measurements[i[4],i[1],i[2],i[3]] = value
+          else 
+            ismeasurementblock = false 
+          end
+        else 
+          if ismatch(r"^Measurement:",line)
+            line = readline(IOlog)
+            ismeasurementblock = true
+          end
+        end
+      end
+    else
+      measurements = Array(Float64,l1,1,1,1)
+      measurementsrange = 1:l1  
+      line = readline(IOlog)
+      line = readline(IOlog)
+      while ~ismatch(r"^\w+:",line)
+        line = readline(IOlog)
+      end
+      for i in measurementsrange
+        m = match(r"^\w+:.*?=([0-9.eE+-]+)",line)
+        measurements[i,1,1,1] = parse(Float64,m.captures[1])
+        line = readline(IOlog)
+      end
+      if eof(IOlog) 
+        error("log file parse error.  EOF before allmeasurements found.")
       end
     end
+  else 
+    measurements = Array(Float64,0,0,0,0)
   end
-  return LogFile(logpath, circuitpath, timestamp, duration, stepnames, steps, measurementnames, measurements)
+  return LogFile(logpath, circuitpath, timestamp, duration,
+                 stepnames, steps, measurementnames,
+                 measurements, isstep)
 end
 
 

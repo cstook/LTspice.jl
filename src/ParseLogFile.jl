@@ -19,7 +19,7 @@ getcircuitpath(x::LogFile) = x.circuitpath
 getstepnames(x::LogFile) = x.stepnames
 getsteps(x::LogFile) = x.steps
 getmeasurementnames(x::LogFile) = x.measurementnames
-getmeasurement(x::LogFile) = x.measurementnames
+getmeasurements(x::LogFile) = x.measurements
 
 function show(io::IO, x::LogFile)
   println(io,x.logpath)  
@@ -111,14 +111,45 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
       end
     end
   end
-  # now that we know the size of the data arrays
-  # we can create and fill them in
+  close(IOlog)  # do I need to do this?
   #=
-  IOlog = open(logpath,true,false,false,false,false) # open log file read only
-  lines = eachline(IOlog)
-  if isstep 
+  now that we know the size of the data 
+  we can create and fill in measurements array
+  dimensions
+    1 - measurmentnames is header
+    2 - inner sweep.  steps[1] is header. stepname[1] is name.
+    3 - middle sweep. steps[2] is header. stepname[2] is name.
+    4 - outer sweep.  steps[3] is header. stepname[3] is name.
   =#
-  measurements = Array(Float64,1,1,1,1)
+  l1 = length(measurementnames)
+  l2 = length(steps[1])
+  l3 = length(steps[2])
+  l4 = length(steps[3])
+  numberofmeasurements = l1*l2*l3*l4
+  linearmeasurements = Array(Float64,numberofmeasurements)
+  # restart at beginning of file
+  IOlog = open(logpath,true,false,false,false,false) # open log file read only
+  i = 1
+  ismeasurementblock = false
+  while i<numberofmeasurements
+    line = readline(IOlog)
+    if ismeasurementblock
+      m = match(r"^\s*[0-9]+\s+([0-9.eE+-]+)",line)
+      if m != nothing
+        value = parse(Float64,m.captures[1])
+        linearmeasurements[i] = value 
+        i += 1
+      else 
+        ismeasurementblock = false 
+      end
+    else 
+      if ismatch(r"^Measurement:",line)
+        line = readline(IOlog)
+        ismeasurementblock = true
+      end
+    end
+  end
+  measurements = reshape(linearmeasurements,l1,l2,l3,l4)
   return LogFile(logpath, circuitpath, timestamp, duration, stepnames, steps, measurementnames, measurements)
 end
 

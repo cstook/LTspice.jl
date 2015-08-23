@@ -34,9 +34,9 @@ function haskey(x::LogFile,key::ASCIIString)
   end
 end
 
-function keys(x::Logfile)
+function keys(x::LogFile)
   if x.isstep 
-    return false
+    throw(KeyError("Dict interface only for non stepped simulations"))
   else 
     return x.measurementnames
   end
@@ -44,9 +44,21 @@ end
 
 function values(x::LogFile)
   if x.isstep 
-    return false
+    throw(KeyError("Dict interface only for non stepped simulations"))
   else
     return x.measurement[:,1,1,1]
+  end
+end
+
+function getindex(x::LogFile, key::ASCIIString)
+  if x.isstep
+    throw(KeyError("Dict interface only for non stepped simulations"))
+  else 
+    i = findfirst(key,x.mesurmentnames)
+    if i == 0
+      throw(KeyError(key))
+    end
+    return measurments[i,1,1,1]
   end
 end
 

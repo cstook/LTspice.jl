@@ -47,7 +47,7 @@ function LTspiceSimulation!(circuitpath::ASCIIString)
 end
 
 function show(io::IO, x::LTspiceSimulation!)
-  println(io,x.circuitpath)
+  println(io,getcircuitpath(x.circuit))
   println(io,"")
   println(io,"Parameters")
   for (key,value) in x.circuit
@@ -124,7 +124,7 @@ function getindex(x::LTspiceSimulation!, key::ASCIIString)
       run!(x)
     end
     v = x.log[key]
-  else
+  elseif haskey(x.circuit)
     v = x.circuit[key]
   else
     throw(KeyError(key))
@@ -138,7 +138,7 @@ function setindex!(x::LTspiceSimulation!, value:: Float64, key::ASCIIString)
   # meas Dict cannot be set.  It is the result of a simulation
   if haskey(x.circuit,key)
     x.circuit[key] = value
-  elseif haskey(x.measurements,key)
+  elseif haskey(x.log,key)
     error("measurements cannot be set.")
   else
     throw(KeyError(key))

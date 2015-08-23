@@ -31,6 +31,7 @@ getsteps(x::LogFile) = x.steps
 getmeasurementnames(x::LogFile) = x.measurementnames
 getmeasurements(x::LogFile) = x.measurements
 isstep(x::LogFile) = x.isstep
+length(x::LogFile) = length(getmeasurementnames(x))
 
 function haskey(x::LogFile,key::ASCIIString)
   if x.isstep

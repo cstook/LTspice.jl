@@ -16,6 +16,7 @@ type CircuitFile
 end
 
 getcircuitpath(x::CircuitFile) = x.circuitpath
+getparameters(x::CircuitFile) = values(x.parameters)
 getmeasurementnames(x::CircuitFile) = x.measurementnames
 getsweepnames(x::CircuitFile) = x.sweepnames
 isneedsupdate(x::CircuitFile) = x.needsupdate
@@ -170,14 +171,14 @@ eltype(::CircuitFile) = Float64
 # CircuitFile is a dict of its parameters
 haskey(x::CircuitFile,key::ASCIIString) = haskey(x.parameters,key::ASCIIString)
 keys(x::CircuitFile) = keys(x.parameters)
+
 function values(x::CircuitFile)
-  result = Array(ASCIIString,0)
-  for (v,m,i) in values(x.parameters)
-    push!(result,v)
+  result = Array(Float64,0)
+  for (key,(value,m,i)) in x.parameters
+    push!(result,value)
   end
   return result
 end
-
 
 function getindex(x::CircuitFile, key::ASCIIString)
 	(v,m,i) =  x.parameters[key]  # just want the value.  Hide internal stuff

@@ -5,7 +5,6 @@ cp("test3.log","temp\\test3.log",remove_destination = true)
 filename = "temp\\test3.asc"
 exc = ""  # null string will not run LTspice.exe.  Test parsing only.
 test3 = LTspiceSimulation!(filename, exc)
-LTspice.readlog!(test3)
 
 @test_approx_eq(test3["a"],10.0)
 @test_approx_eq(test3["b"],8.0)

@@ -82,7 +82,7 @@ function defaultltspiceexecutable()
   error("Could not find scad.exe")
 end
 
-getmeasurements(x::LTspiceSimulation!) = getmeasurments(x.log)
+getmeasurements(x::LTspiceSimulation!) = getmeasurements(x.log)
 getparameters(x::LTspiceSimulation!) = getparameters(x.circuit)
 getcircuitpath(x::LTspiceSimulation!) = getcircuitpath(x.circuit)
 getltspiceexecutablepath(x::LTspiceSimulation!) = x.executablepath

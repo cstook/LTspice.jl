@@ -16,7 +16,7 @@ type CircuitFile
 end
 
 getcircuitpath(x::CircuitFile) = x.circuitpath
-getmeasurmentnames(x::CircuitFile) = x.measurementnames
+getmeasurementnames(x::CircuitFile) = x.measurementnames
 getsweepnames(x::CircuitFile) = x.sweepnames
 isneedsupdate(x::CircuitFile) = x.needsupdate
 
@@ -86,7 +86,7 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   circuitfilearray = Array(ASCIIString,1)
   circuitfilearray[1] = ""
   # regex used to parse file.  I know this is a bad comment.
-match_tags = r"""(
+  match_tags = r"""(
                 ^TEXT .*?(!|;)|
                 [.](param)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)([a-z]*)|
                 [.](measure|meas)[ ]+(?:ac|dc|op|tran|tf|noise)[ ]+(\w+)[ ]+|
@@ -154,12 +154,15 @@ match_tags = r"""(
     m = match(match_tags,ltspicefile,m.offset+length(m.match))   # find next match
   end
   circuitfilearray = vcat(circuitfilearray,ltspicefile[position:end])  # the rest of the circuit
-  return CircuitFile(circuitpath, circuitfilearray, parameters, measurementnames, sweepnames, false)
+  return CircuitFile(circuitpath, circuitfilearray, parameters, measurementnames, sweepnames, true)
 end
 
 # CircuitFile iterates over its parameters
 start(x::CircuitFile) = start(x.parameters)
-next(x::CircuitFile, state) = next(x.parameters, state)
+function next(x::CircuitFile, state)
+  ((key,(value,m,i)),state) = next(x.parameters, state)
+  return ((key=>value),state)
+end
 done(x::CircuitFile, state) = done(x.parameters, state)
 length(x::CircuitFile) = length(x.parameters)
 eltype(::CircuitFile) = Float64
@@ -168,7 +171,7 @@ eltype(::CircuitFile) = Float64
 haskey(x::CircuitFile,key::ASCIIString) = haskey(x.parameters,key::ASCIIString)
 keys(x::CircuitFile) = keys(x.parameters)
 function values(x::CircuitFile)
-  result = Array(ASCIIstring,0)
+  result = Array(ASCIIString,0)
   for (v,m,i) in values(x.parameters)
     push!(result,v)
   end

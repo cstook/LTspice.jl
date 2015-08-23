@@ -11,7 +11,7 @@ export getparameters, getcircuitpath, getltspiceexecutablepath
 include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
 
-type LTspiceSimulation! <: AbstractArray{Float64,1}
+type LTspiceSimulation!
   circuit         :: CircuitFile
   log             :: LogFile
   executablepath  :: ASCIIString   
@@ -19,8 +19,8 @@ type LTspiceSimulation! <: AbstractArray{Float64,1}
     (everythingbeforedot,e) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
     circuit = parse(CircuitFile,circuitpath)
-    log = parse(LogFile,logpath)
-    new(circuit,log,executablepath,true)
+    log = LogFile(logpath)
+    new(circuit,log,executablepath)
   end
 end
 
@@ -55,9 +55,13 @@ function show(io::IO, x::LTspiceSimulation!)
   end
   println(io,"")
   println(io,"measurements")
-  for (key,value) in getmeasurmentnames(log)
-    if isneedsupdate(circuit)
+  for (i,key) in enumerate(getmeasurementnames(x.circuit))
+    if isneedsupdate(x.circuit) #| length(getmeasurements(x.log))==0
       value = convert(Float64,NaN)
+    elseif ~isstep(x.log)
+      value = getmeasurements(x.log)[i,1,1,1]
+    else 
+      value = "stepped simulation"
     end
     println(io,"$(rpad(key,25,' ')) = $value")
   end
@@ -82,14 +86,15 @@ getmeasurements(x::LTspiceSimulation!) = getmeasurments(x.log)
 getparameters(x::LTspiceSimulation!) = getparameters(x.circuit)
 getcircuitpath(x::LTspiceSimulation!) = getcircuitpath(x.circuit)
 getltspiceexecutablepath(x::LTspiceSimulation!) = x.executablepath
+getlogpath(x::LTspiceSimulation!) = getlogpath(x.log)
 
 function run!(x::LTspiceSimulation!)
   # runs simulation and updates measurment values
   update(x.circuit)
   if x.executablepath != ""
-    run(`$(x.executablepath) -b -Run $(x.circuitpath)`)
+    run(`$(getltspiceexecutablepath(x)) -b -Run $(getcircuitpath(x))`)
   end
-  parse(LogFile,x.log)
+  x.log = parse(LogFile, getlogpath(x))
   return(nothing)
 end
 
@@ -119,12 +124,12 @@ function getindex(x::LTspiceSimulation!, key::ASCIIString)
   # returns value for key in either param or meas
   # value = x[key]
   # dosen't handle multiple keys, but neither does standard julia library for Dict
-  if haskey(x.log,key)
-    if isneedupdate(x.circuit)
+  if findfirst(getmeasurementnames(x.circuit),key) != 0
+    if isneedsupdate(x.circuit)
       run!(x)
     end
     v = x.log[key]
-  elseif haskey(x.circuit)
+  elseif haskey(x.circuit,key)
     v = x.circuit[key]
   else
     throw(KeyError(key))
@@ -144,5 +149,8 @@ function setindex!(x::LTspiceSimulation!, value:: Float64, key::ASCIIString)
     throw(KeyError(key))
   end
 end
+
+eltype(x::LTspiceSimulation!) = Float64 
+length(x::LTspiceSimulation!) = length(x.log) + length(x.circuit)
 
 end  # module

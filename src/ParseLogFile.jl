@@ -18,6 +18,12 @@ type LogFile
   isstep            :: Bool
 end
 
+function LogFile(logpath::ASCIIString)
+  LogFile(logpath,"",DateTime(2015),0.0,[],
+         ([],Array(Float64,0),Array(Float64,0))
+         ,[],Array(Float64,0,0,0,0),false)
+end
+
 getlogpath(x::LogFile) = x.logpath
 getcircuitpath(x::LogFile) = x.circuitpath
 getstepnames(x::LogFile) = x.stepnames
@@ -46,7 +52,7 @@ function values(x::LogFile)
   if x.isstep 
     throw(KeyError("Dict interface only for non stepped simulations"))
   else
-    return x.measurement[:,1,1,1]
+    return x.measurements[:,1,1,1]
   end
 end
 
@@ -54,13 +60,15 @@ function getindex(x::LogFile, key::ASCIIString)
   if x.isstep
     throw(KeyError("Dict interface only for non stepped simulations"))
   else 
-    i = findfirst(key,x.mesurmentnames)
+    i = findfirst(x.measurementnames,key)
     if i == 0
       throw(KeyError(key))
     end
-    return measurments[i,1,1,1]
+    return x.measurements[i,1,1,1]
   end
 end
+
+eltype(x::LogFile) = Float64 
 
 function show(io::IO, x::LogFile)
   println(io,x.logpath)  

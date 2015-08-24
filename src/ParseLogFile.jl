@@ -225,8 +225,3 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
                  stepnames, steps, measurementnames,
                  measurements, isstep)
 end
-
-
-
-
-

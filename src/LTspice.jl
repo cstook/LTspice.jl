@@ -157,3 +157,4 @@ eltype(x::LTspiceSimulation!) = Float64
 length(x::LTspiceSimulation!) = length(x.log) + length(x.circuit)
 
 end  # module
+

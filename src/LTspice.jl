@@ -58,15 +58,30 @@ function show(io::IO, x::LTspiceSimulation!)
     println(io,"$(rpad(key,25,' ')) = $value")
   end
   println(io,"")
-  println(io,"measurements")
+  println(io,"Measurements")
   for (i,key) in enumerate(getmeasurementnames(x.circuit))
-    if x.logneedsupdate #| length(getmeasurements(x.log))==0
-      value = convert(Float64,NaN)
-    elseif ~isstep(x.log)
-      value = getmeasurements(x.log)[i,1,1,1]
+    if getstepnames(x.circuit) == []
+      if x.logneedsupdate
+        value = convert(Float64,NaN)
+      else
+        value = getmeasurements(x.log)[i,1,1,1]
+      end
       println(io,"$(rpad(key,25,' ')) = $value")
     else 
       println(io,"$(rpad(key,25,' ')) stepped simulation")
+    end
+  end
+  if getstepnames(x.circuit) != []
+    println(io,"")
+    println(io,"Sweeps")
+    if x.logneedsupdate
+      for stepname in getstepnames(x.circuit)
+        println(io,"$(rpad(stepname,25,' '))")
+      end
+    else 
+      for (i,stepname) in enumerate(getstepnames(x.circuit))
+        println(io,"$(rpad(stepname,25,' ')) $(length(getsteps(x.log)[i])) steps")
+      end
     end
   end
 end
@@ -93,19 +108,9 @@ function getmeasurements(x::LTspiceSimulation!)
   getmeasurements(x.log)
 end
 
-function getmeasurementnames(x::LTspiceSimulation!)
-  if x.logneedsupdate
-    run!(x)
-  end
-  getmeasurementnames(x.log) 
-end
+getmeasurementnames(x::LTspiceSimulation!) = getmeasurementnames(x.circuit) 
 
-function getstepnames(x::LTspiceSimulation!)
-  if x.logneedsupdate
-    run!(x)
-  end
-  getstepnames(x.log)
-end
+getstepnames(x::LTspiceSimulation!) = getstepnames(x.circuit)
 
 function getsteps(x::LTspiceSimulation!)
   if x.logneedsupdate
@@ -127,6 +132,7 @@ function run!(x::LTspiceSimulation!)
     run(`$(getltspiceexecutablepath(x)) -b -Run $(getcircuitpath(x))`)
   end
   x.log = parse(LogFile, getlogpath(x))
+  x.logneedsupdate = false
   return(nothing)
 end
 
@@ -174,6 +180,7 @@ function setindex!(x::LTspiceSimulation!, value:: Float64, key::ASCIIString)
   # x[key] = value
   # meas Dict cannot be set.  It is the result of a simulation
   if haskey(x.circuit,key)
+    x.logneedsupdate = true
     x.circuit[key] = value
   elseif haskey(x.log,key)
     error("measurements cannot be set.")

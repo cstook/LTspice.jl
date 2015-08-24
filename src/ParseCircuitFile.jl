@@ -4,7 +4,7 @@
 import Base: parse, show, getindex, setindex!,start,
        next, done, length, eltype, haskey
 
-#export CircuitFile, getcircuitpath, getmeasurmentnames, getsweepnames
+#export CircuitFile, getcircuitpath, getmeasurmentnames, getstepnames
 #export isneedsupdate
 
 type CircuitFile
@@ -12,7 +12,7 @@ type CircuitFile
 	circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
 	parameters 			:: Dict{ASCIIString,Tuple{Float64,Float64,Int}} # dictionay of parameters (value, multiplier, index)
   measurementnames:: Array{ASCIIString,1}              # measurment names
-  sweepnames			:: Array{ASCIIString,1}   # number of points in each sweep
+  stepnames			:: Array{ASCIIString,1}  
   needsupdate			:: Bool # true if any parameter has been changed
 end
 
@@ -25,7 +25,7 @@ function getparameters(x::CircuitFile)
 end
 
 getmeasurementnames(x::CircuitFile) = x.measurementnames
-getsweepnames(x::CircuitFile) = x.sweepnames
+getstepnames(x::CircuitFile) = x.stepnames
 isneedsupdate(x::CircuitFile) = x.needsupdate
 
 function show(io::IO, x::CircuitFile)
@@ -44,10 +44,10 @@ function show(io::IO, x::CircuitFile)
  		 println(io,"  $name")
  	  end
   end
- 	if length(x.sweepnames)>0
+ 	if length(x.stepnames)>0
  		println(io,"")
  		println(io,"Sweeps")
- 	  for name in x.sweepnames
+ 	  for name in x.stepnames
  		 println(io,"  $name")
  	  end
   end
@@ -90,7 +90,7 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   #key = parameter, value = (parameter value, multiplier, circuit file array index)
   parameters = Dict{ASCIIString,Tuple{Float64,Float64,Int}}() 
   measurementnames = Array(ASCIIString,0)
-  sweepnames	= Array(ASCIIString,0)
+  stepnames	= Array(ASCIIString,0)
   circuitfilearray = Array(ASCIIString,1)
   circuitfilearray[1] = ""
   # regex used to parse file.  I know this is a bad comment.
@@ -154,16 +154,16 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
         key = lowercase(measurementname)  # measurements are all lower case in log file
         push!(measurementnames,key)
       elseif isstep # this is a step card
-        push!(sweepnames,steppedname)
+        push!(stepnames,steppedname)
       elseif issteppedmodel
-        push!(sweepnames,modelname)
+        push!(stepnames,modelname)
       end
     end
     m = match(match_tags,ltspicefile,m.offset+length(m.match))   # find next match
   end
   circuitfilearray = vcat(circuitfilearray,ltspicefile[position:end])  # the rest of the circuit
   return CircuitFile(circuitpath, circuitfilearray, parameters,
-                     measurementnames, sweepnames, false)
+                     measurementnames, stepnames, false)
 end
 
 # CircuitFile iterates over its parameters

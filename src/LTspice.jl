@@ -3,7 +3,8 @@
 
 module LTspice
 
-import Base: show, haskey, get, keys, values, getindex, setindex!, start, next, done, length, eltype
+import Base: show, haskey, get, keys, values, getindex, setindex!,
+             start, next, done, length, eltype
 
 export LTspiceSimulation!, LTspiceSimulation, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
@@ -14,13 +15,15 @@ include("ParseLogFile.jl")
 type LTspiceSimulation!
   circuit         :: CircuitFile
   log             :: LogFile
-  executablepath  :: ASCIIString   
+  executablepath  :: ASCIIString
+  logneedsupdate  :: bool
+
   function LTspiceSimulation!(circuitpath::ASCIIString, executablepath::ASCIIString)
     (everythingbeforedot,e) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
     circuit = parse(CircuitFile,circuitpath)
     log = LogFile(logpath)
-    new(circuit,log,executablepath)
+    new(circuit,log,executablepath,true)
   end
 end
 
@@ -56,14 +59,14 @@ function show(io::IO, x::LTspiceSimulation!)
   println(io,"")
   println(io,"measurements")
   for (i,key) in enumerate(getmeasurementnames(x.circuit))
-    if isneedsupdate(x.circuit) #| length(getmeasurements(x.log))==0
+    if x.logneedsupdate #| length(getmeasurements(x.log))==0
       value = convert(Float64,NaN)
     elseif ~isstep(x.log)
       value = getmeasurements(x.log)[i,1,1,1]
+      println(io,"$(rpad(key,25,' ')) = $value")
     else 
-      value = "stepped simulation"
+      println(io,"$(rpad(key,25,' ')) stepped simulation")
     end
-    println(io,"$(rpad(key,25,' ')) = $value")
   end
 end
 
@@ -125,7 +128,7 @@ function getindex(x::LTspiceSimulation!, key::ASCIIString)
   # value = x[key]
   # dosen't handle multiple keys, but neither does standard julia library for Dict
   if findfirst(getmeasurementnames(x.circuit),key) != 0
-    if isneedsupdate(x.circuit)
+    if x.logneedsupdate
       run!(x)
     end
     v = x.log[key]

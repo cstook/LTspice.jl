@@ -17,11 +17,13 @@ type CircuitFile
 end
 
 getcircuitpath(x::CircuitFile) = x.circuitpath
+
 function getparameters(x::CircuitFile)
-  result = Dict()
-  [result[y] = x.parameters[y] for y in keys(x.parameters)]
+  result = Dict{ASCIIString,Float64}()
+  [result[y] = x.parameters[y][1] for y in keys(x.parameters)]
   return result
 end
+
 getmeasurementnames(x::CircuitFile) = x.measurementnames
 getsweepnames(x::CircuitFile) = x.sweepnames
 isneedsupdate(x::CircuitFile) = x.needsupdate

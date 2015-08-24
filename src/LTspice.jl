@@ -8,6 +8,7 @@ import Base: show, haskey, get, keys, values, getindex, setindex!,
 
 export LTspiceSimulation!, LTspiceSimulation, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
+export getlogpath, getmeasurementnames, getstepnames, getsteps
 
 include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
@@ -85,7 +86,35 @@ function defaultltspiceexecutable()
   error("Could not find scad.exe")
 end
 
-getmeasurements(x::LTspiceSimulation!) = getmeasurements(x.log)
+function getmeasurements(x::LTspiceSimulation!)
+  if x.logneedsupdate
+    run!(x)
+  end
+  getmeasurements(x.log)
+end
+
+function getmeasurementnames(x::LTspiceSimulation!)
+  if x.logneedsupdate
+    run!(x)
+  end
+  getmeasurementnames(x.log) 
+end
+
+function getstepnames(x::LTspiceSimulation!)
+  if x.logneedsupdate
+    run!(x)
+  end
+  getstepnames(x.log)
+end
+
+function getsteps(x::LTspiceSimulation!)
+  if x.logneedsupdate
+    run!(x)
+  end
+  getsteps(x.log)
+end
+
+getlogpath(x::LTspiceSimulation!) = getlogpath(x.log)
 getparameters(x::LTspiceSimulation!) = getparameters(x.circuit)
 getcircuitpath(x::LTspiceSimulation!) = getcircuitpath(x.circuit)
 getltspiceexecutablepath(x::LTspiceSimulation!) = x.executablepath

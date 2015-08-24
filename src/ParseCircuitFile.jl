@@ -194,8 +194,8 @@ end
 function setindex!(x::CircuitFile, value:: Float64, key:: ASCIIString)
 	(v,m,i) = x.parameters[key]
 	x.parameters[key] = (value,m,i)
-    x.circuitfilearray[i] = "$(value/m)"
-    x.needsupdate = true
+  x.circuitfilearray[i] = "$(value/m)"
+  x.needsupdate = true
 end
 
 "writes circuit file back to disk if any parameters have changed"

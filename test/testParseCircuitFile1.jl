@@ -1,7 +1,7 @@
 using LTspice
 using Base.Test
 
-PCF_test1file = "ParseCircuitFileTests/PCF_test1.asc"
+PCF_test1file = "PCF_test1.asc"
 exc = ""
 PCF_test1 = LTspiceSimulation!(PCF_test1file,exc)
 

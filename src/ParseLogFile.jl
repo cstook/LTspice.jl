@@ -20,7 +20,7 @@ end
 
 function LogFile(logpath::ASCIIString)
   LogFile(logpath,"",DateTime(2015),0.0,[],
-         ([],Array(Float64,0),Array(Float64,0))
+         (Array(Float64,0),Array(Float64,0),Array(Float64,0))
          ,[],Array(Float64,0,0,0,0),false)
 end
 

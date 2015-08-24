@@ -16,13 +16,13 @@ type LTspiceSimulation!
   circuit         :: CircuitFile
   log             :: LogFile
   executablepath  :: ASCIIString
-  logneedsupdate  :: bool
+  logneedsupdate  :: Bool
 
   function LTspiceSimulation!(circuitpath::ASCIIString, executablepath::ASCIIString)
     (everythingbeforedot,e) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
     circuit = parse(CircuitFile,circuitpath)
-    log = LogFile(logpath)
+    log = LogFile(logpath)  # a blank log object
     new(circuit,log,executablepath,true)
   end
 end

@@ -1,7 +1,8 @@
 # overloard parse for the CircuitFile type
 # used to parse LTspice circuit files *.asc
 
-import Base: parse, show, getindex, setindex!,start, next, done, length, eltype, haskey
+import Base: parse, show, getindex, setindex!,start,
+       next, done, length, eltype, haskey
 
 #export CircuitFile, getcircuitpath, getmeasurmentnames, getsweepnames
 #export isneedsupdate
@@ -16,7 +17,11 @@ type CircuitFile
 end
 
 getcircuitpath(x::CircuitFile) = x.circuitpath
-getparameters(x::CircuitFile) = values(x.parameters)
+function getparameters(x::CircuitFile)
+  result = Dict()
+  [result[y] = x.parameters[y] for y in keys(x.parameters)]
+  return result
+end
 getmeasurementnames(x::CircuitFile) = x.measurementnames
 getsweepnames(x::CircuitFile) = x.sweepnames
 isneedsupdate(x::CircuitFile) = x.needsupdate
@@ -155,7 +160,8 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
     m = match(match_tags,ltspicefile,m.offset+length(m.match))   # find next match
   end
   circuitfilearray = vcat(circuitfilearray,ltspicefile[position:end])  # the rest of the circuit
-  return CircuitFile(circuitpath, circuitfilearray, parameters, measurementnames, sweepnames, true)
+  return CircuitFile(circuitpath, circuitfilearray, parameters,
+                     measurementnames, sweepnames, false)
 end
 
 # CircuitFile iterates over its parameters

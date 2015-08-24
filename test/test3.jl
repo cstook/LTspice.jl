@@ -28,7 +28,8 @@ for (key,value) in p
   test3[key] = 1.0
 end
 
-LTspice.writecircuitfile(test3)
+dummyread = test3["x"]  # will force parameters to write to file
+                        # sim will not run since exc = ""
 
 test3b = LTspiceSimulation(filename, exc)
 p = LTspice.getparameters(test3b)

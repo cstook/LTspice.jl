@@ -36,3 +36,5 @@ p = LTspice.getparameters(test3b)
 for (key,value) in p
   @test_approx_eq(test3b[key],1.0)
 end
+
+

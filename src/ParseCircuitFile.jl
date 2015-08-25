@@ -1,8 +1,9 @@
 # overloard parse for the CircuitFile type
 # used to parse LTspice circuit files *.asc
 
-import Base: parse, show, getindex, setindex!,start,
-       next, done, length, eltype, haskey
+import Base: parse, show
+import Base: getindex, setindex!, length, eltype, haskey, keys, values
+import Base: start, next, done 
 
 #export CircuitFile, getcircuitpath, getmeasurmentnames, getstepnames
 #export isneedsupdate
@@ -82,7 +83,6 @@ function next(x::CircuitFile, state)
 end
 done(x::CircuitFile, state) = done(x.parameters, state)
 
-# The reason Type CircuitFile exists
 function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   #= reads circuit file and returns a tuple of
   Dict of parameters

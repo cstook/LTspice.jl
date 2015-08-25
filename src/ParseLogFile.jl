@@ -3,7 +3,9 @@
 
 include("MultiLevelIterator.jl")
 
-import Base:show, parse
+import Base: parse, show
+import Base: getindex, setindex!, length, eltype, haskey, keys, values
+import Base: start, next, done 
 
 ### BEGIN Type LogFile and constructors ###
 
@@ -51,6 +53,7 @@ function show(io::IO, x::LogFile)
   end
 end
 
+# LogFile is a Dict of its measurements for non stepped simulations
 function haskey(x::LogFile,key::ASCIIString)
   if x.isstep
     return false  # Dict interface only for non stepped simulations
@@ -58,7 +61,6 @@ function haskey(x::LogFile,key::ASCIIString)
     return issubset(key,x.measurementnames)
   end
 end
-
 function keys(x::LogFile)
   if x.isstep 
     throw(KeyError("Dict interface only for non stepped simulations"))
@@ -66,7 +68,6 @@ function keys(x::LogFile)
     return x.measurementnames
   end
 end
-
 function values(x::LogFile)
   if x.isstep 
     throw(KeyError("Dict interface only for non stepped simulations"))
@@ -74,7 +75,6 @@ function values(x::LogFile)
     return x.measurements[:,1,1,1]
   end
 end
-
 function getindex(x::LogFile, key::ASCIIString)
   if x.isstep
     throw(KeyError("Dict interface only for non stepped simulations"))
@@ -86,13 +86,29 @@ function getindex(x::LogFile, key::ASCIIString)
     return x.measurements[i,1,1,1]
   end
 end
+function length(x::LogFile)
+  if x.isstep 
+    return 0
+  else
+    return length(getmeasurementnames(x))
+  end
+end
+eltype(x::LogFile) = Float64
 
-length(x::LogFile) = length(getmeasurementnames(x))
-eltype(x::LogFile) = Float64 
+# LogFile iterates over its Dict for non stepped simulations
+function start(x::LogFile)
+  if x.isstep
+    error("Iterator only for non stepped measurements")
+  else 
+    return 1
+  end
+end
+function next(x::LogFile,state)
+  return (measurmentnames[i]=>measurements[i,1,1,1])
+  state += 1
+end
+done(x::LogFile, state) = state > length(measurementnames)
 
-### END overloading Base ###
-
-# the reason Type LogFile exists
 function parse(::Type{LogFile}, logpath::ASCIIString)
   IOlog = open(logpath,true,false,false,false,false) # open log file read only
   lines = eachline(IOlog)
@@ -226,6 +242,8 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
                  measurementnames, measurements, stepnames,
                  steps, isstep)
 end
+
+### END overloading Base ###
 
 ### BEGIN LogFile specific methods ###
 

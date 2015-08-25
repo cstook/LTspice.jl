@@ -89,7 +89,9 @@ function show(io::IO, x::LTspiceSimulation!)
   end
 end
 
-# LTspiceSimulation! is a Dict of it's parameters
+# LTspiceSimulation! is a Dict 
+#   of its parameters and measurements for non stepped simulations (measurements read only)
+#   of its parameters for stepped simulations
 haskey(x::LTspiceSimulation!, key::ASCIIString) = haskey(x.circuit,key) | haskey(x.log,key)
 
 function keys(x::LTspiceSimulation!)
@@ -149,8 +151,7 @@ length(x::LTspiceSimulation!) = length(x.log) + length(x.circuit)
 ### END overloading Base ###
 
 ### BEGIN LTspiceSimulation! specific methods ###
-
-
+ 
 getcircuitpath(x::LTspiceSimulation!) = getcircuitpath(x.circuit)
 getlogpath(x::LTspiceSimulation!) = getlogpath(x.log)
 getltspiceexecutablepath(x::LTspiceSimulation!) = x.executablepath

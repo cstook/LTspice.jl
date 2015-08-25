@@ -3,8 +3,10 @@
 
 module LTspice
 
-import Base: show, haskey, get, keys, values, getindex, setindex!,
-             start, next, done, length, eltype
+import Base: parse, show
+import Base: haskey, keys, values
+import Base: getindex, setindex!, endof
+import Base: start, next, done, length, eltype
 
 export LTspiceSimulation!, LTspiceSimulation, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
@@ -12,7 +14,6 @@ export getlogpath, getmeasurementnames, getstepnames, getsteps
 
 include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
-
 
 ### BEGIN Type LTspiceSimulation and constructors ###
 

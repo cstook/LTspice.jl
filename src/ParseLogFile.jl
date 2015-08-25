@@ -4,8 +4,9 @@
 include("MultiLevelIterator.jl")
 
 import Base: parse, show
-import Base: getindex, setindex!, length, eltype, haskey, keys, values
-import Base: start, next, done 
+import Base: haskey, keys, values
+import Base: getindex, setindex!, endof
+import Base: start, next, done, length, eltype
 
 ### BEGIN Type LogFile and constructors ###
 

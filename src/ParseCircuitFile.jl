@@ -7,26 +7,20 @@ import Base: parse, show, getindex, setindex!,start,
 #export CircuitFile, getcircuitpath, getmeasurmentnames, getstepnames
 #export isneedsupdate
 
+### BEGIN Type CircuitFile and constructors ###
+
 type CircuitFile
 	circuitpath			:: ASCIIString
 	circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
 	parameters 			:: Dict{ASCIIString,Tuple{Float64,Float64,Int}} # dictionay of parameters (value, multiplier, index)
   measurementnames:: Array{ASCIIString,1}              # measurment names
-  stepnames			:: Array{ASCIIString,1}  
+  stepnames			  :: Array{ASCIIString,1}  
   needsupdate			:: Bool # true if any parameter has been changed
 end
 
-getcircuitpath(x::CircuitFile) = x.circuitpath
+### END Type CircuitFile and constructors ###
 
-function getparameters(x::CircuitFile)
-  result = Dict{ASCIIString,Float64}()
-  [result[y] = x.parameters[y][1] for y in keys(x.parameters)]
-  return result
-end
-
-getmeasurementnames(x::CircuitFile) = x.measurementnames
-getstepnames(x::CircuitFile) = x.stepnames
-isneedsupdate(x::CircuitFile) = x.needsupdate
+### BEGIN overloading Base ###
 
 function show(io::IO, x::CircuitFile)
 	println(io,x.circuitpath)
@@ -52,29 +46,43 @@ function show(io::IO, x::CircuitFile)
  	  end
   end
 end
- 	
-# units as defined in LTspice
-units = Dict()
-units["K"] = 1.0e3
-units["k"] = 1.0e3
-units["MEG"] = 1.0e6
-units["meg"] = 1.0e6
-units["G"] = 1.0e9
-units["g"] = 1.0e9
-units["T"] = 1.0e12
-units["t"] = 1.0e12
-units["M"] = 1.0e-3
-units["m"] = 1.0e-3
-units["U"] = 1.0e-6
-units["u"] = 1.0e-6
-units["N"] = 1.0e-9
-units["n"] = 1.0e-9
-units["P"] = 1.0e-12
-units["p"] = 1.0e-12
-units["F"] = 1.0e-15
-units["f"] = 1.0e-15
 
+# CircuitFile is a Dict of its parameters
+haskey(x::CircuitFile,key::ASCIIString) = haskey(x.parameters,key::ASCIIString)
+keys(x::CircuitFile) = keys(x.parameters)
 
+function values(x::CircuitFile)
+  result = Array(Float64,0)
+  for (key,(value,m,i)) in x.parameters
+    push!(result,value)
+  end
+  return result
+end
+
+function getindex(x::CircuitFile, key::ASCIIString)
+  (v,m,i) =  x.parameters[key]  # just want the value.  Hide internal stuff
+  return v
+end
+
+function setindex!(x::CircuitFile, value:: Float64, key:: ASCIIString)
+  (v,m,i) = x.parameters[key]
+  x.parameters[key] = (value,m,i)
+  x.circuitfilearray[i] = "$(value/m)"
+  x.needsupdate = true
+end
+
+length(x::CircuitFile) = length(x.parameters)
+eltype(::CircuitFile) = Float64
+
+# CircuitFile iterates over its parameters
+start(x::CircuitFile) = start(x.parameters)
+function next(x::CircuitFile, state)
+  ((key,(value,m,i)),state) = next(x.parameters, state)
+  return ((key=>value),state)
+end
+done(x::CircuitFile, state) = done(x.parameters, state)
+
+# The reason Type CircuitFile exists
 function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   #= reads circuit file and returns a tuple of
   Dict of parameters
@@ -166,39 +174,9 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
                      measurementnames, stepnames, false)
 end
 
-# CircuitFile iterates over its parameters
-start(x::CircuitFile) = start(x.parameters)
-function next(x::CircuitFile, state)
-  ((key,(value,m,i)),state) = next(x.parameters, state)
-  return ((key=>value),state)
-end
-done(x::CircuitFile, state) = done(x.parameters, state)
-length(x::CircuitFile) = length(x.parameters)
-eltype(::CircuitFile) = Float64
+### END overloading Base ###
 
-# CircuitFile is a dict of its parameters
-haskey(x::CircuitFile,key::ASCIIString) = haskey(x.parameters,key::ASCIIString)
-keys(x::CircuitFile) = keys(x.parameters)
-
-function values(x::CircuitFile)
-  result = Array(Float64,0)
-  for (key,(value,m,i)) in x.parameters
-    push!(result,value)
-  end
-  return result
-end
-
-function getindex(x::CircuitFile, key::ASCIIString)
-	(v,m,i) =  x.parameters[key]  # just want the value.  Hide internal stuff
-	return v
-end
-
-function setindex!(x::CircuitFile, value:: Float64, key:: ASCIIString)
-	(v,m,i) = x.parameters[key]
-	x.parameters[key] = (value,m,i)
-  x.circuitfilearray[i] = "$(value/m)"
-  x.needsupdate = true
-end
+### BEGIN CircuitFile specific methods ###
 
 "writes circuit file back to disk if any parameters have changed"
 function update(x::CircuitFile)
@@ -212,3 +190,42 @@ function update(x::CircuitFile)
   	end
   	return nothing
 end
+
+getcircuitpath(x::CircuitFile) = x.circuitpath
+
+function getparameters(x::CircuitFile)
+  result = Dict{ASCIIString,Float64}()
+  [result[y] = x.parameters[y][1] for y in keys(x.parameters)]
+  return result
+end
+
+getmeasurementnames(x::CircuitFile) = x.measurementnames
+getstepnames(x::CircuitFile) = x.stepnames
+isneedsupdate(x::CircuitFile) = x.needsupdate
+
+### END CircuitFile specific methods ###
+
+### Begin other ###
+
+# units as defined in LTspice
+units = Dict()
+units["K"] = 1.0e3
+units["k"] = 1.0e3
+units["MEG"] = 1.0e6
+units["meg"] = 1.0e6
+units["G"] = 1.0e9
+units["g"] = 1.0e9
+units["T"] = 1.0e12
+units["t"] = 1.0e12
+units["M"] = 1.0e-3
+units["m"] = 1.0e-3
+units["U"] = 1.0e-6
+units["u"] = 1.0e-6
+units["N"] = 1.0e-9
+units["n"] = 1.0e-9
+units["P"] = 1.0e-12
+units["p"] = 1.0e-12
+units["F"] = 1.0e-15
+units["f"] = 1.0e-15
+
+### END other ###

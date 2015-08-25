@@ -5,33 +5,51 @@ include("MultiLevelIterator.jl")
 
 import Base:show, parse
 
+### BEGIN Type LogFile and constructors ###
 
 type LogFile
   logpath           :: ASCIIString  # path to log file
   circuitpath       :: ASCIIString  # path to circuit file in the log file
   timestamp         :: DateTime
   duration          :: Float64  # simulation time in seconds
+  measurementnames  :: Array{ASCIIString,1}   
+  measurements      :: Array{Float64,4}  
   stepnames         :: Array{ASCIIString,1}
   steps             :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
-  measurementnames  :: Array{ASCIIString,1}   
-  measurements      :: Array{Float64,4}
   isstep            :: Bool
 end
 
 function LogFile(logpath::ASCIIString)
   LogFile(logpath,"",DateTime(2015),0.0,[],
-         (Array(Float64,0),Array(Float64,0),Array(Float64,0))
-         ,[],Array(Float64,0,0,0,0),false)
+          Array(Float64,0,0,0,0),[],
+          (Array(Float64,0),Array(Float64,0),
+          Array(Float64,0)),false)
 end
 
-getlogpath(x::LogFile) = x.logpath
-getcircuitpath(x::LogFile) = x.circuitpath
-getstepnames(x::LogFile) = x.stepnames
-getsteps(x::LogFile) = x.steps
-getmeasurementnames(x::LogFile) = x.measurementnames
-getmeasurements(x::LogFile) = x.measurements
-isstep(x::LogFile) = x.isstep
-length(x::LogFile) = length(getmeasurementnames(x))
+### END Type LogFile and constructors ###
+
+### BEGIN overloading Base ###
+
+function show(io::IO, x::LogFile)
+  println(io,x.logpath)  
+  println(io,x.circuitpath)
+  println(io,x.timestamp)
+  println(io,"$(x.duration) seconds")
+  if length(x.measurementnames)>0
+    println(io,"")
+    println(io,"Measurements")
+    for name in x.measurementnames
+      println(io,"  $name")
+    end
+  end
+   if length(x.stepnames)>0
+    println(io,"")
+    println(io,"Step")
+    for name in x.stepnames
+      println(io,"  $name")
+    end
+  end
+end
 
 function haskey(x::LogFile,key::ASCIIString)
   if x.isstep
@@ -69,29 +87,12 @@ function getindex(x::LogFile, key::ASCIIString)
   end
 end
 
+length(x::LogFile) = length(getmeasurementnames(x))
 eltype(x::LogFile) = Float64 
 
-function show(io::IO, x::LogFile)
-  println(io,x.logpath)  
-  println(io,x.circuitpath)
-  println(io,x.timestamp)
-  println(io,"$(x.duration) seconds")
-  if length(x.measurementnames)>0
-    println(io,"")
-    println(io,"Measurements")
-    for name in x.measurementnames
-      println(io,"  $name")
-    end
-  end
-   if length(x.stepnames)>0
-    println(io,"")
-    println(io,"Step")
-    for name in x.stepnames
-      println(io,"  $name")
-    end
-  end
-end
+### END overloading Base ###
 
+# the reason Type LogFile exists
 function parse(::Type{LogFile}, logpath::ASCIIString)
   IOlog = open(logpath,true,false,false,false,false) # open log file read only
   lines = eachline(IOlog)
@@ -221,7 +222,19 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
   else 
     measurements = Array(Float64,0,0,0,0)
   end
-  return LogFile(logpath, circuitpath, timestamp, duration,
-                 stepnames, steps, measurementnames,
-                 measurements, isstep)
+  return LogFile(logpath, circuitpath, timestamp, duration, 
+                 measurementnames, measurements, stepnames,
+                 steps, isstep)
 end
+
+### BEGIN LogFile specific methods ###
+
+getlogpath(x::LogFile) = x.logpath
+getcircuitpath(x::LogFile) = x.circuitpath
+getmeasurementnames(x::LogFile) = x.measurementnames
+getmeasurements(x::LogFile) = x.measurements
+getstepnames(x::LogFile) = x.stepnames
+getsteps(x::LogFile) = x.steps
+isstep(x::LogFile) = x.isstep
+
+### END LogFile specific methods ###

@@ -13,6 +13,9 @@ export getlogpath, getmeasurementnames, getstepnames, getsteps
 include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
 
+
+### BEGIN Type LTspiceSimulation and constructors ###
+
 type LTspiceSimulation!
   circuit         :: CircuitFile
   log             :: LogFile
@@ -28,10 +31,6 @@ type LTspiceSimulation!
   end
 end
 
-"""
-Returns an instance of LTspiceSimulation! after copying the circuit file to
-a temporary working directory.  Original circuit file is not modified.
-"""
 function LTspiceSimulation(circuitpath::ASCIIString, executablepath::ASCIIString)
   td = mktempdir()
   (d,f) = splitdir(circuitpath)
@@ -49,6 +48,10 @@ function LTspiceSimulation!(circuitpath::ASCIIString)
   # look up default executable if not specified
   LTspiceSimulation!(circuitpath, defaultltspiceexecutable())
 end
+
+### END Type LTspice and constructors ###
+
+### BEGIN Overloading Base ###
 
 function show(io::IO, x::LTspiceSimulation!)
   println(io,getcircuitpath(x.circuit))
@@ -86,67 +89,8 @@ function show(io::IO, x::LTspiceSimulation!)
   end
 end
 
-"""
-returns path to LTspice executable
-"""
-function defaultltspiceexecutable()
-  possibleltspiceexecutablelocations = [
-  "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe"
-  ]
-  for canidatepath in possibleltspiceexecutablelocations
-    if ispath(canidatepath)
-      return canidatepath
-    end
-  end
-  error("Could not find scad.exe")
-end
-
-function getmeasurements(x::LTspiceSimulation!)
-  if x.logneedsupdate
-    run!(x)
-  end
-  getmeasurements(x.log)
-end
-
-getmeasurementnames(x::LTspiceSimulation!) = getmeasurementnames(x.circuit) 
-
-getstepnames(x::LTspiceSimulation!) = getstepnames(x.circuit)
-
-function getsteps(x::LTspiceSimulation!)
-  if x.logneedsupdate
-    run!(x)
-  end
-  getsteps(x.log)
-end
-
-getlogpath(x::LTspiceSimulation!) = getlogpath(x.log)
-getparameters(x::LTspiceSimulation!) = getparameters(x.circuit)
-getcircuitpath(x::LTspiceSimulation!) = getcircuitpath(x.circuit)
-getltspiceexecutablepath(x::LTspiceSimulation!) = x.executablepath
-getlogpath(x::LTspiceSimulation!) = getlogpath(x.log)
-
-function run!(x::LTspiceSimulation!)
-  # runs simulation and updates measurment values
-  update(x.circuit)
-  if x.executablepath != ""
-    run(`$(getltspiceexecutablepath(x)) -b -Run $(getcircuitpath(x))`)
-  end
-  x.log = parse(LogFile, getlogpath(x))
-  x.logneedsupdate = false
-  return(nothing)
-end
-
+# LTspiceSimulation! is a Dict of it's parameters
 haskey(x::LTspiceSimulation!, key::ASCIIString) = haskey(x.circuit,key) | haskey(x.log,key)
-
-function get(x::LTspiceSimulation!, key::ASCIIString, default::Float64)
-  # returns value for key in either param or meas
-  # returns default if key not found
-  if haskey(x,key)
-    return(x[key])
-  else
-    return(default)
-  end
-end
 
 function keys(x::LTspiceSimulation!)
   # returns an array all keys (param and meas)
@@ -175,6 +119,16 @@ function getindex(x::LTspiceSimulation!, key::ASCIIString)
   return(v)
 end
 
+function get(x::LTspiceSimulation!, key::ASCIIString, default::Float64)
+  # returns value for key in either param or meas
+  # returns default if key not found
+  if haskey(x,key)
+    return(x[key])
+  else
+    return(default)
+  end
+end
+
 function setindex!(x::LTspiceSimulation!, value:: Float64, key::ASCIIString)
   # sets the value of param specified by key
   # x[key] = value
@@ -191,6 +145,61 @@ end
 
 eltype(x::LTspiceSimulation!) = Float64 
 length(x::LTspiceSimulation!) = length(x.log) + length(x.circuit)
+
+### END overloading Base ###
+
+### BEGIN LTspiceSimulation! specific methods ###
+
+
+getcircuitpath(x::LTspiceSimulation!) = getcircuitpath(x.circuit)
+getlogpath(x::LTspiceSimulation!) = getlogpath(x.log)
+getltspiceexecutablepath(x::LTspiceSimulation!) = x.executablepath
+getparameters(x::LTspiceSimulation!) = getparameters(x.circuit)
+getmeasurementnames(x::LTspiceSimulation!) = getmeasurementnames(x.circuit)
+getstepnames(x::LTspiceSimulation!) = getstepnames(x.circuit)
+
+function getmeasurements(x::LTspiceSimulation!)
+  if x.logneedsupdate
+    run!(x)
+  end
+  getmeasurements(x.log)
+end
+
+function getsteps(x::LTspiceSimulation!)
+  if x.logneedsupdate
+    run!(x)
+  end
+  getsteps(x.log)
+end
+
+function run!(x::LTspiceSimulation!)
+  # runs simulation and updates measurment values
+  update(x.circuit)
+  if x.executablepath != ""
+    run(`$(getltspiceexecutablepath(x)) -b -Run $(getcircuitpath(x))`)
+  end
+  x.log = parse(LogFile, getlogpath(x))
+  x.logneedsupdate = false
+  return(nothing)
+end
+
+### END LTspicesSimulation! specific methods
+
+### BEGIN other
+
+function defaultltspiceexecutable()
+  possibleltspiceexecutablelocations = [
+  "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe"
+  ]
+  for canidatepath in possibleltspiceexecutablelocations
+    if ispath(canidatepath)
+      return canidatepath
+    end
+  end
+  error("Could not find scad.exe")
+end
+
+### END other
 
 end  # module
 

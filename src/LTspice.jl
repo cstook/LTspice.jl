@@ -30,7 +30,7 @@ type LTspiceSimulation!
     if isstep(circuit)
       log = SteppedLogFile(logpath)  # a blank stepped log object
     else 
-      log = NonSteppedLogFile(logpath)
+      log = NonSteppedLogFile(logpath) # a blank non stepped log object
     end
     new(circuit,log,executablepath,true)
   end
@@ -184,7 +184,7 @@ function run!(x::LTspiceSimulation!)
   if x.executablepath != ""
     run(`$(getltspiceexecutablepath(x)) -b -Run $(getcircuitpath(x))`)
   end
-  x.log = parse(LogFile, getlogpath(x))
+  x.log = parse(LogFile)
   x.logneedsupdate = false
   return(nothing)
 end

@@ -39,7 +39,7 @@ end
 
 ### BEGIN overloading Base ###
 
-function show(io::IO, x::LogFile)
+function show(io,IO, x:NonSteppedLogFile)
   println(io,x.logpath)  
   println(io,x.circuitpath)
   println(io,x.timestamp)
@@ -51,6 +51,10 @@ function show(io::IO, x::LogFile)
       println(io,"  $name")
     end
   end
+end
+
+function show(io,IO, x:NSteppedLogFile)
+   show(io,x.nonsteppedlogfile) 
    if length(x.stepnames)>0
     println(io,"")
     println(io,"Step")
@@ -60,63 +64,35 @@ function show(io::IO, x::LogFile)
   end
 end
 
-# LogFile is a Dict of its measurements for non stepped simulations
-function haskey(x::LogFile,key::ASCIIString)
-  if x.isstep
-    return false  # Dict interface only for non stepped simulations
-  else
-    return issubset(key,x.measurementnames)
+# NonSteppedLogFile is a read only Dict of its measurements
+haskey(x::NonSteppedLogFile) = issubset(key,x.measurementnames)
+keys(x::NonSteppedLogFile)   = x.measurementnames
+values(x::NonSteppedLogFile) = x.measurements[:,1,1,1]
+length(x::NonSteppedLogFile) = length(getmeasurementnames(x))
+eltype(x::NonSteppedLogFile) = Float64
+function getindex(x::NonSteppedLogFile, key::ASCIIString)
+  i = findfirst(x.measurementnames,key)
+  if i == 0
+    throw(KeyError(key))
   end
+  return x.measurements[i,1,1,1]
 end
-function keys(x::LogFile)
-  if x.isstep 
-    throw(KeyError("Dict interface only for non stepped simulations"))
-  else 
-    return x.measurementnames
-  end
-end
-function values(x::LogFile)
-  if x.isstep 
-    throw(KeyError("Dict interface only for non stepped simulations"))
-  else
-    return x.measurements[:,1,1,1]
-  end
-end
-function getindex(x::LogFile, key::ASCIIString)
-  if x.isstep
-    throw(KeyError("Dict interface only for non stepped simulations"))
-  else 
-    i = findfirst(x.measurementnames,key)
-    if i == 0
-      throw(KeyError(key))
-    end
-    return x.measurements[i,1,1,1]
-  end
-end
-function length(x::LogFile)
-  if x.isstep 
-    return 0
-  else
-    return length(getmeasurementnames(x))
-  end
-end
-eltype(x::LogFile) = Float64
 
-# LogFile iterates over its Dict for non stepped simulations
-function start(x::LogFile)
-  if x.isstep
-    error("Iterator only for non stepped measurements")
-  else 
-    return 1
-  end
+# LogFile can acces its measurments as a read only array
+getindex(x::NonSteppedLogFile, index::Int) = x.measurements[index,1,1,1]
+function getindex(x::SteppedLogFile, i1::Int, i2::Int, i3::Int, i4::Int)
+  getmeaurements(x.nonsteppedlogfile)[i1,i2,i3,i4]
 end
-function next(x::LogFile,state)
-  return (measurmentnames[i]=>measurements[i,1,1,1])
+
+# NonSteppedLogFile iterates over its Dict
+start(x::NonSteppedLogFile) = 1
+function next(x::NonSteppedLogFile,state)
+  return (x.measurmentnames[i]=>x.measurements[i,1,1,1])
   state += 1
 end
-done(x::LogFile, state) = state > length(measurementnames)
+done(x::NonSteppedLogFile, state) = state > length(x.measurementnames)
 
-function parse(::Type{LogFile}, logpath::ASCIIString)
+function parse(::Type{LogFile}, logpath::ASCIIString)  
   IOlog = open(logpath,true,false,false,false,false) # open log file read only
   lines = eachline(IOlog)
   # scan file once to get measurement names, step names
@@ -253,6 +229,13 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
   end
 end
 
+function parse{T<:LogFile}(x::T)
+  # reread log file from disk
+  # should not change type (steppped, non stepped)
+  lf::T = parse(LogFile, getlogpath(x))  
+  return lf
+end
+
 ### END overloading Base ###
 
 ### BEGIN LogFile specific methods ###
@@ -268,11 +251,6 @@ getmeasurements(x::SteppedLogFile) = getmeasurements(x.nonsteppedlogfile)
 getstepnames(x::SteppedLogFile) = x.stepnames
 getsteps(x::SteppedLogFile) = x.steps
 
-function update(x::NonSteppedLogFile)
-  # read log file from disk
-  # should not change type (steppped, non stepped)
-  nslf::NonSteppedLogFile = parse(LogFile, getlogpath(x))  
-  return nslf
-end
+
 
 ### END LogFile specific methods ###

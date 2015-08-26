@@ -180,7 +180,7 @@ end
 ### BEGIN CircuitFile specific methods ###
 
 "writes circuit file back to disk if any parameters have changed"
-function update(x::CircuitFile)
+function update!(x::CircuitFile)
 	if x.needsupdate
 		io = open(x.circuitpath,false,true,false,false,false)  # open circuit file to be overwritten
   		for text in x.circuitfilearray
@@ -204,6 +204,7 @@ getmeasurementnames(x::CircuitFile) = x.measurementnames
 getstepnames(x::CircuitFile) = x.stepnames
 isneedsupdate(x::CircuitFile) = x.needsupdate
 isstep(x::CircuitFile) = lenght(x.stepnames) == 0
+hasmeasurements(x::CircuitFile) = length(x.measurementnames) != 0
 
 ### END CircuitFile specific methods ###
 

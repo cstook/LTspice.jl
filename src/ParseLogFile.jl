@@ -66,6 +66,7 @@ end
 
 # NonSteppedLogFile is a read only Dict of its measurements
 haskey(x::NonSteppedLogFile) = issubset(key,x.measurementnames)
+haskey(x::SteppedLogFile) = false
 keys(x::NonSteppedLogFile)   = x.measurementnames
 values(x::NonSteppedLogFile) = x.measurements[:,1,1,1]
 length(x::NonSteppedLogFile) = length(getmeasurementnames(x))
@@ -78,7 +79,7 @@ function getindex(x::NonSteppedLogFile, key::ASCIIString)
   return x.measurements[i,1,1,1]
 end
 
-# LogFile can acces its measurments as a read only array
+# LogFile can access its measurments as a read only array
 getindex(x::NonSteppedLogFile, index::Int) = x.measurements[index,1,1,1]
 function getindex(x::SteppedLogFile, i1::Int, i2::Int, i3::Int, i4::Int)
   getmeaurements(x.nonsteppedlogfile)[i1,i2,i3,i4]

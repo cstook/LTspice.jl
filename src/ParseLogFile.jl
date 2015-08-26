@@ -8,28 +8,34 @@ import Base: haskey, keys, values
 import Base: getindex, setindex!, endof
 import Base: start, next, done, length, eltype
 
-### BEGIN Type LogFile and constructors ###
+### BEGIN abstract type LogFile, subtypes and constructors ###
 
-type LogFile
+abstract LogFile
+
+type NonSteppedLogFile <: LogFile
   logpath           :: ASCIIString  # path to log file
   circuitpath       :: ASCIIString  # path to circuit file in the log file
   timestamp         :: DateTime
   duration          :: Float64  # simulation time in seconds
   measurementnames  :: Array{ASCIIString,1}   
-  measurements      :: Array{Float64,4}  
+  measurements      :: Array{Float64,4}
+  
+  function NonSteppedLogFile(logpath::ASCIIString)
+  new(logpath,"",DateTime(2015),0.0,[],Array(Float64,0,0,0,0))
+  end
+end
+
+type SteppedLogFile <: LogFile
+  nonsteppedlogfile :: NonSteppedLogFile
   stepnames         :: Array{ASCIIString,1}
   steps             :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
-  isstep            :: Bool
+  
+  function SteppedLogFile(logpath::ASCIIString)
+        new(NonSteppedLogFile(logpath),[],([],[],[]))
+  end
 end
 
-function LogFile(logpath::ASCIIString)
-  LogFile(logpath,"",DateTime(2015),0.0,[],
-          Array(Float64,0,0,0,0),[],
-          (Array(Float64,0),Array(Float64,0),
-          Array(Float64,0)),false)
-end
-
-### END Type LogFile and constructors ###
+### END abstract type LogFile, subtypes and constructors ###
 
 ### BEGIN overloading Base ###
 
@@ -239,21 +245,34 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
   else 
     measurements = Array(Float64,0,0,0,0)
   end
-  return LogFile(logpath, circuitpath, timestamp, duration, 
-                 measurementnames, measurements, stepnames,
-                 steps, isstep)
+  nslf = NonSteppedLogFile(logpath, circuitpath, timestamp, duration, measurementnames, measurements)
+  if isstep
+    return SteppedLogFile(nslf, stepnames, steps, isstep)
+  else 
+    retutn nslf 
+  end
 end
 
 ### END overloading Base ###
 
 ### BEGIN LogFile specific methods ###
 
-getlogpath(x::LogFile) = x.logpath
-getcircuitpath(x::LogFile) = x.circuitpath
-getmeasurementnames(x::LogFile) = x.measurementnames
-getmeasurements(x::LogFile) = x.measurements
-getstepnames(x::LogFile) = x.stepnames
-getsteps(x::LogFile) = x.steps
-isstep(x::LogFile) = x.isstep
+getlogpath(x::NonSteppedLogFile) = x.logpath
+getlogpath(x::SteppedLogFile) = getcircuitpath(x.nonsteppedlogfile)
+getcircuitpath(x::NonSteppedLogFile) = x.circuitpath
+getcircuitpath(x::SteppedLogFile) = getcircuitpath(x.nonsteppedlogfile)
+getmeasurementnames(x::NonSteppedLogFile) = x.measurementnames
+getmeasurementnames(x::SteppedLogFile) = getmeasurementnames(x.nonsteppedlogfile)
+getmeasurements(x::NonSteppedLogFile) = x.measurements
+getmeasurements(x::SteppedLogFile) = getmeasurements(x.nonsteppedlogfile)
+getstepnames(x::SteppedLogFile) = x.stepnames
+getsteps(x::SteppedLogFile) = x.steps
+
+function update(x::NonSteppedLogFile)
+  # read log file from disk
+  # should not change type (steppped, non stepped)
+  nslf::NonSteppedLogFile = parse(LogFile, getlogpath(x))  
+  return nslf
+end
 
 ### END LogFile specific methods ###

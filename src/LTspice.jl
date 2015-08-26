@@ -27,7 +27,11 @@ type LTspiceSimulation!
     (everythingbeforedot,e) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
     circuit = parse(CircuitFile,circuitpath)
-    log = LogFile(logpath)  # a blank log object
+    if isstep(circuit)
+      log = SteppedLogFile(logpath)  # a blank stepped log object
+    else 
+      log = NonSteppedLogFile(logpath)
+    end
     new(circuit,log,executablepath,true)
   end
 end

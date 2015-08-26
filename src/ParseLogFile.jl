@@ -39,7 +39,7 @@ end
 
 ### BEGIN overloading Base ###
 
-function show(io,IO, x:NonSteppedLogFile)
+function show(io,IO, x::NonSteppedLogFile)
   println(io,x.logpath)  
   println(io,x.circuitpath)
   println(io,x.timestamp)
@@ -53,7 +53,7 @@ function show(io,IO, x:NonSteppedLogFile)
   end
 end
 
-function show(io,IO, x:NSteppedLogFile)
+function show(io,IO, x::SteppedLogFile)
    show(io,x.nonsteppedlogfile) 
    if length(x.stepnames)>0
     println(io,"")
@@ -65,8 +65,8 @@ function show(io,IO, x:NSteppedLogFile)
 end
 
 # NonSteppedLogFile is a read only Dict of its measurements
-haskey(x::NonSteppedLogFile) = issubset(key,x.measurementnames)
-haskey(x::SteppedLogFile) = false
+haskey(x::NonSteppedLogFile,key::ASCIIString) = issubset(key,x.measurementnames)
+haskey(x::SteppedLogFile,   key::ASCIIString) = false
 keys(x::NonSteppedLogFile)   = x.measurementnames
 values(x::NonSteppedLogFile) = x.measurements[:,1,1,1]
 length(x::NonSteppedLogFile) = length(getmeasurementnames(x))
@@ -84,6 +84,7 @@ getindex(x::NonSteppedLogFile, index::Int) = x.measurements[index,1,1,1]
 function getindex(x::SteppedLogFile, i1::Int, i2::Int, i3::Int, i4::Int)
   getmeaurements(x.nonsteppedlogfile)[i1,i2,i3,i4]
 end
+lenght(x::SteppedLogFile) = length(getmeasurements(x))
 
 # NonSteppedLogFile iterates over its Dict
 start(x::NonSteppedLogFile) = 1
@@ -222,11 +223,12 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
   else 
     measurements = Array(Float64,0,0,0,0)
   end
-  nslf = NonSteppedLogFile(logpath, circuitpath, timestamp, duration, measurementnames, measurements)
+  cp = convert(ASCIIString,copy(circuitpath))
+  nslf = NonSteppedLogFile(logpath, cp, timestamp, duration, measurementnames, measurements)
   if isstep
     return SteppedLogFile(nslf, stepnames, steps, isstep)
   else 
-    retutn nslf 
+    return nslf 
   end
 end
 

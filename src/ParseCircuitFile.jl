@@ -203,7 +203,7 @@ end
 getmeasurementnames(x::CircuitFile) = x.measurementnames
 getstepnames(x::CircuitFile) = x.stepnames
 isneedsupdate(x::CircuitFile) = x.needsupdate
-isstep(x::CircuitFile) = lenght(x.stepnames) == 0
+isstep(x::CircuitFile) = length(x.stepnames) != 0
 hasmeasurements(x::CircuitFile) = length(x.measurementnames) != 0
 
 ### END CircuitFile specific methods ###

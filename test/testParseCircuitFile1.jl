@@ -24,6 +24,7 @@ clist = [100.0,200.0,300.0]
 @test getmeasurements(PCF_test1)[1,1,1,1] == 111.0
 @test getltspiceexecutablepath(PCF_test1) == ""
 @test haskey(PCF_test1,"sum") == false  # measurments in stepped files are not a Dict
+@test length(PCF_test1.log) == 48
 
 
 verify = zeros(Float64,2,2,4,3)

@@ -16,3 +16,6 @@ test2 = LTspiceSimulation!(filename, exc)
 @test(length(keys(test2))==7)
 @test(length(values(test2))==7)
 @test(length(test2)==7)
+
+@test keys(test2.log) == getmeasurementnames(test2)
+@test eltype(test2.log) == Type(Float64)

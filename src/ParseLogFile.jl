@@ -99,8 +99,7 @@ lenght(x::SteppedLogFile) = length(getmeasurements(x))
 # NonSteppedLogFile iterates over its Dict
 start(x::NonSteppedLogFile) = 1
 function next(x::NonSteppedLogFile,state)
-  return (x.measurmentnames[i]=>x.measurements[i,1,1,1])
-  state += 1
+  return (x.measurementnames[state]=>x.measurements[state,1,1,1],state+1)
 end
 done(x::NonSteppedLogFile, state) = state > length(x.measurementnames)
 

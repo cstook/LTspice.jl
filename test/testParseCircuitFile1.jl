@@ -5,6 +5,8 @@ PCF_test1file = "PCF_test1.asc"
 exc = ""
 PCF_test1 = LTspiceSimulation!(PCF_test1file,exc)
 show(PCF_test1)
+show(PCF_test1.circuit)
+show(PCF_test1.log)
 
 alist = [1.0,2.0]
 blist = [10.0,15.0,20.0,25.0]
@@ -32,3 +34,6 @@ for (i,a) in enumerate(alist)
 end
 @test getmeasurements(PCF_test1) == verify
 show(PCF_test1)
+show(PCF_test1.circuit)
+show(PCF_test1.log)
+

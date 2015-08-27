@@ -45,7 +45,7 @@ end
 
 ### BEGIN overloading Base ###
 
-function show(io,IO, x::NonSteppedLogFile)
+function show(io::IO, x::NonSteppedLogFile)
   println(io,x.logpath)  
   println(io,x.circuitpath)
   println(io,x.timestamp)
@@ -59,7 +59,7 @@ function show(io,IO, x::NonSteppedLogFile)
   end
 end
 
-function show(io,IO, x::SteppedLogFile)
+function show(io::IO, x::SteppedLogFile)
    show(io,x.nonsteppedlogfile) 
    if length(x.stepnames)>0
     println(io,"")
@@ -91,7 +91,7 @@ function getindex(x::NonSteppedLogFile, i1::Int, i2::Int, i3::Int, i4::Int)
   x.measurements[i1,i2,i3,i4]
 end
 function getindex(x::SteppedLogFile, i1::Int, i2::Int, i3::Int, i4::Int)
-  getmeaurements(x.nonsteppedlogfile)[i1,i2,i3,i4]
+  getmeasurements(x.nonsteppedlogfile)[i1,i2,i3,i4]
 end
 
 lenght(x::SteppedLogFile) = length(getmeasurements(x))

@@ -28,7 +28,9 @@ for (i,a) in enumerate(alist)
     for (j,b) in enumerate(blist)
         for (k,c) in enumerate(clist)
             verify[1,i,j,k] = a+b+c
+            @test PCF_test1[1,i,j,k] == verify[1,i,j,k]
             verify[2,i,j,k] = a+b+c+1000
+            @test PCF_test1[2,i,j,k] == verify[2,i,j,k]
         end
     end
 end

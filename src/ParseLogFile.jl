@@ -21,7 +21,7 @@ type NonSteppedLogFile <: LogFile
   measurements      :: Array{Float64,4}
   
   function NonSteppedLogFile(logpath::ASCIIString)
-  new(logpath,"",DateTime(2015),0.0,[],Array(Float64,0,0,0,0))
+    new(logpath,"",DateTime(2015),0.0,[],Array(Float64,0,0,0,0))
   end
 end
 
@@ -31,7 +31,7 @@ type SteppedLogFile <: LogFile
   steps             :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
   
   function SteppedLogFile(logpath::ASCIIString)
-        new(NonSteppedLogFile(logpath),[],([],[],[]))
+    new(NonSteppedLogFile(logpath),[],([],[],[]))
   end
 end
 
@@ -65,7 +65,7 @@ function show(io,IO, x::SteppedLogFile)
 end
 
 # NonSteppedLogFile is a read only Dict of its measurements
-haskey(x::NonSteppedLogFile,key::ASCIIString) = issubset(key,x.measurementnames)
+haskey(x::NonSteppedLogFile,key::ASCIIString) = findfirst(x.measurementnames,key) > 0
 haskey(x::SteppedLogFile,   key::ASCIIString) = false
 keys(x::NonSteppedLogFile)   = x.measurementnames
 values(x::NonSteppedLogFile) = x.measurements[:,1,1,1]

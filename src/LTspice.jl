@@ -114,7 +114,7 @@ function getindex(x::LTspiceSimulation!, key::ASCIIString)
   # returns value for key in either param or meas
   # value = x[key]
   # dosen't handle multiple keys, but neither does standard julia library for Dict
-  if haskey(x.log[key])
+  if findfirst(getmeasurementnames(x),key) > 0
     println("A")
     run!(x)
     v = x.log[key]

@@ -5,7 +5,7 @@ module LTspice
 
 import Base: parse, show
 import Base: haskey, keys, values
-import Base: getindex, setindex!, endof
+import Base: getindex, setindex!, get, endof
 import Base: start, next, done, length, eltype
 
 export LTspiceSimulation!, LTspiceSimulation, getmeasurements

@@ -94,7 +94,7 @@ function getindex(x::SteppedLogFile, i1::Int, i2::Int, i3::Int, i4::Int)
   getmeasurements(x.nonsteppedlogfile)[i1,i2,i3,i4]
 end
 
-lenght(x::SteppedLogFile) = length(getmeasurements(x))
+length(x::SteppedLogFile) = length(getmeasurements(x))
 
 # NonSteppedLogFile iterates over its Dict
 start(x::NonSteppedLogFile) = 1

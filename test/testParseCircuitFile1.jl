@@ -14,13 +14,16 @@ clist = [100.0,200.0,300.0]
 
 @test getsteps(PCF_test1) == (alist,blist,clist)
 @test getmeasurementnames(PCF_test1) == ["sum","sump1000"]
+@test getmeasurementnames(PCF_test1.log) == getmeasurementnames(PCF_test1)
 @test getstepnames(PCF_test1) == ["a","b","c"]
+@test getstepnames(PCF_test1.log) == getstepnames(PCF_test1)
 @test getlogpath(PCF_test1) != ""
 @test getcircuitpath(PCF_test1) == PCF_test1file
+@test typeof(getcircuitpath(PCF_test1.log)) == Type(ASCIIString)
 @test typeof(getparameters(PCF_test1)) == Dict{ASCIIString,Float64}
 @test getmeasurements(PCF_test1)[1,1,1,1] == 111.0
 @test getltspiceexecutablepath(PCF_test1) == ""
-
+@test haskey(PCF_test1,"sum") == false  # measurments in stepped files are not a Dict
 
 
 verify = zeros(Float64,2,2,4,3)

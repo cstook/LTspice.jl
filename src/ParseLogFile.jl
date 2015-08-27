@@ -19,9 +19,12 @@ type NonSteppedLogFile <: LogFile
   duration          :: Float64  # simulation time in seconds
   measurementnames  :: Array{ASCIIString,1}   
   measurements      :: Array{Float64,4}
-  
+
   function NonSteppedLogFile(logpath::ASCIIString)
     new(logpath,"",DateTime(2015),0.0,[],Array(Float64,0,0,0,0))
+  end
+  function NonSteppedLogFile(logpath, circuitpath, timestamp, duration, measurementnames, measurements)
+    new(logpath, circuitpath, timestamp, duration, measurementnames, measurements)
   end
 end
 
@@ -29,9 +32,12 @@ type SteppedLogFile <: LogFile
   nonsteppedlogfile :: NonSteppedLogFile
   stepnames         :: Array{ASCIIString,1}
   steps             :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
-  
+
   function SteppedLogFile(logpath::ASCIIString)
     new(NonSteppedLogFile(logpath),[],([],[],[]))
+  end
+  function SteppedLogFile(nslf, stepnames,steps)
+    new(nslf, stepnames,steps)
   end
 end
 
@@ -226,7 +232,7 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
   cp = convert(ASCIIString,copy(circuitpath))
   nslf = NonSteppedLogFile(logpath, cp, timestamp, duration, measurementnames, measurements)
   if isstep
-    return SteppedLogFile(nslf, stepnames, steps, isstep)
+    return SteppedLogFile(nslf, stepnames, steps)
   else 
     return nslf 
   end
@@ -244,7 +250,7 @@ end
 ### BEGIN LogFile specific methods ###
 
 getlogpath(x::NonSteppedLogFile) = x.logpath
-getlogpath(x::SteppedLogFile) = getcircuitpath(x.nonsteppedlogfile)
+getlogpath(x::SteppedLogFile) = getlogpath(x.nonsteppedlogfile)
 getcircuitpath(x::NonSteppedLogFile) = x.circuitpath
 getcircuitpath(x::SteppedLogFile) = getcircuitpath(x.nonsteppedlogfile)
 getmeasurementnames(x::NonSteppedLogFile) = x.measurementnames

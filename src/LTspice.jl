@@ -115,14 +115,11 @@ function getindex(x::LTspiceSimulation!, key::ASCIIString)
   # value = x[key]
   # dosen't handle multiple keys, but neither does standard julia library for Dict
   if findfirst(getmeasurementnames(x),key) > 0
-    println("A")
     run!(x)
     v = x.log[key]
   elseif haskey(x.circuit,key)
-    println("B")
     v = x.circuit[key]
   else
-    println("C")
     throw(KeyError(key))
   end
   return(v)
@@ -131,7 +128,6 @@ end
 function get(x::LTspiceSimulation!, key::ASCIIString, default::Float64)
   # returns value for key in either param or meas
   # returns default if key not found
-  println("H")
   if haskey(x,key)
     return(x[key])
   else
@@ -157,12 +153,10 @@ end
 # Intended for use in interactive sessions only.
 # For type stablity use getmeasurements()
 function getindex(x::LTspiceSimulation!,index::Int)
-  println("F")
   run!(x)
   x.log[index]
 end
 function getindex(x::LTspiceSimulation!,i1::Int, i2::Int, i3::Int, i4::Int)
-  println("G")
   run!(x)
   x.log[i1,i2,i3,i4] 
 end
@@ -192,10 +186,8 @@ function getsteps(x::LTspiceSimulation!)
 end
 
 function run!(x::LTspiceSimulation!)
-  println("D")
   # runs simulation and updates measurement values
   if x.logneedsupdate
-    println("E")
     update!(x.circuit)
     if (x.executablepath != "") & hasmeasurements(x.circuit)  # so travis dosen't need to load LTspice
       run(`$(getltspiceexecutablepath(x)) -b -Run $(getcircuitpath(x))`)

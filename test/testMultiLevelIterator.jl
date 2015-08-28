@@ -3,7 +3,7 @@ using LTspice
 
 levels = []
 l = 1
-for i in 1:10
+for i in 1:4
   push!(levels,i)
   mli = LTspice.MultiLevelIterator(levels)
   l *= i

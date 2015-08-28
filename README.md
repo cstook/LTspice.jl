@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/cstook/LTspice.jl.svg?branch=master)](https://travis-ci.org/cstook/LTspice.jl)
 [![Coverage Status](https://coveralls.io/repos/cstook/LTspice.jl/badge.svg?branch=v0r4_working&service=github)](https://coveralls.io/github/cstook/LTspice.jl?branch=v0r4_working)
 
-LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice) simulation parameters and measurements.  Parameters and measurements are accessed as a dictionary like type.  .step directive is not supported.
+LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice) simulation parameters and measurements.  Parameters and measurements are accessed as a dictionary like type.
 
 ## Example 1
 

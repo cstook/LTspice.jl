@@ -40,7 +40,7 @@ function next(x :: PerLineIterator, state :: Array{Int,1})
   nextstate = next(x.mli,state)
   k = [1,1,1]
   for (i,si) in enumerate(x.stepindexes)
-    k[si] = i
+    k[i] = si 
   end
 
   # gather the data into a line of output

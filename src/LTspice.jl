@@ -83,11 +83,11 @@ function show(io::IO, x::LTspiceSimulation!)
     println(io,"")
     println(io,"Sweeps")
     if x.logneedsupdate
-      for stepname in getstepnames(x.circuit)
+      for stepname in getstepnames(x)
         println(io,"$(rpad(stepname,25,' '))")
       end
     else 
-      for (i,stepname) in enumerate(getstepnames(x.circuit))
+      for (i,stepname) in enumerate(getstepnames(x))
         println(io,"$(rpad(stepname,25,' ')) $(length(getsteps(x.log)[i])) steps")
       end
     end
@@ -101,13 +101,13 @@ haskey(x::LTspiceSimulation!, key::ASCIIString) = haskey(x.circuit,key) | haskey
 
 function keys(x::LTspiceSimulation!)
   # returns an array all keys (param and meas)
-  vcat(collect(keys(x.circuit)),getmeasurementnames(x.circuit))
+  vcat(collect(keys(x.circuit)),getmeasurementnames(x))
 end
 
   # returns an array of all values (param and meas)
 function values(x::LTspiceSimulation!)
   run!(x)
-  vcat(collect(values(x.circuit)),collect(values(x.log))) # this is wrong
+  vcat(collect(values(x.circuit)),collect(values(x.log)))
 end
 
 function getindex(x::LTspiceSimulation!, key::ASCIIString)
@@ -172,8 +172,12 @@ getcircuitpath(x::LTspiceSimulation!) = getcircuitpath(x.circuit)
 getlogpath(x::LTspiceSimulation!) = getlogpath(x.log)
 getltspiceexecutablepath(x::LTspiceSimulation!) = x.executablepath
 getparameters(x::LTspiceSimulation!) = getparameters(x.circuit)
-getmeasurementnames(x::LTspiceSimulation!) = getmeasurementnames(x.circuit)
-getstepnames(x::LTspiceSimulation!) = getstepnames(x.circuit)
+function getmeasurementnames(x::LTspiceSimulation!)
+  [lowercase(measurementname) for measurementname in getmeasurementnames(x.circuit)]
+end
+function getstepnames(x::LTspiceSimulation!)
+  [lowercase(stepname) for stepname in getstepnames(x.circuit)]
+end
 
 function getmeasurements(x::LTspiceSimulation!)
   run!(x)

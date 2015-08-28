@@ -1,4 +1,4 @@
-Circuit: * C:\Users\Chris\.julia\v0.4\LTspice\test\ParseCircuitFileTests\PCF_test3.asc
+Circuit: * C:\Users\Chris\.julia\v0.4\LTspice\test\PCF_test3.asc
 
 Direct Newton iteration for .op point succeeded.
 .step 2n2222(vaf)=50 v2=10 v1=1
@@ -100,8 +100,8 @@ Measurement: b43
     30	0.00133776	1
 
 
-Date: Fri Aug 21 06:38:22 2015
-Total elapsed time: 1.232 seconds.
+Date: Thu Aug 27 21:55:26 2015
+Total elapsed time: 1.523 seconds.
 
 tnom = 27
 temp = 27
@@ -114,7 +114,7 @@ rejected = 0
 matrix size = 9
 fillins = 0
 solver = Normal
-Matrix Compiler1: 394 bytes object code size  0.1/0.1/[0.0]
-Matrix Compiler2: 667 bytes object code size  0.1/0.1/[0.0]
+Matrix Compiler1: 394 bytes object code size  0.1/0.0/[0.0]
+Matrix Compiler2: 667 bytes object code size  0.1/0.1/[0.1]
 
 

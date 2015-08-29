@@ -4,6 +4,7 @@ test1 = LTspiceSimulation!(filename,exc)
 show(test1)
 show(test1.circuit)
 show(test1.log)
+loadlog!(test1)
 @test test1["Vin"] == 5
 @test test1["load"] == 2
 @test test1["current"] == 2.5

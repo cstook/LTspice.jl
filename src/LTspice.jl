@@ -13,6 +13,7 @@ export LTspiceSimulation!, LTspiceSimulation, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
 export getlogpath, getmeasurementnames, getstepnames, getsteps
 export PerLineIterator, getparameternames, getparameters
+export loadlog!
 
 include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
@@ -30,11 +31,7 @@ type LTspiceSimulation!
     (everythingbeforedot,e) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
     circuit = parse(CircuitFile,circuitpath)
-    if isstep(circuit)
-      log = SteppedLogFile(logpath)  # a blank stepped log object
-    else 
-      log = NonSteppedLogFile(logpath) # a blank non stepped log object
-    end
+    log = blanklog(circuit,logpath) # creates a blank log object
     new(circuit,log,executablepath,true)
   end
 end
@@ -200,6 +197,14 @@ getparameters(x::LTspiceSimulation!) = getparameters(x.circuit)
 getmeasurementnames(x::LTspiceSimulation!) = getmeasurementnames(x.circuit)
 getstepnames(x::LTspiceSimulation!) = getstepnames(x.circuit)
 
+function loadlog!(x::LTspiceSimulation!)
+# loads log file without running simulation
+# sets logneedsupdate to false
+  x.log = parse(x.log)
+  x.logneedsupdate = false
+  return nothing
+end
+
 function getmeasurements(x::LTspiceSimulation!)
   run!(x)
   getmeasurements(x.log)
@@ -226,6 +231,16 @@ end
 ### END LTspicesSimulation! specific methods
 
 ### BEGIN other
+
+function blanklog(circuit::CircuitFile, logpath::ASCIIString)
+# creates a blank log object of appropiate type for circuitfile
+  if isstep(circuit)
+    log = SteppedLogFile(logpath)  # a blank stepped log object
+  else 
+    log = NonSteppedLogFile(logpath) # a blank non stepped log object
+  end
+  return log
+end
 
 function defaultltspiceexecutable()
   possibleltspiceexecutablelocations = [

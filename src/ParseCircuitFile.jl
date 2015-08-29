@@ -62,16 +62,21 @@ function getindex(x::CircuitFile, key::ASCIIString)
     return x.parameters[k][1]
   end
 end
+
 function setindex!(x::CircuitFile, value:: Float64, key:: ASCIIString)
   k = findfirst(x.parameternames, key)
   if k == 0 
     throw(KeyError(key))
   else
-    (v,m,i) = x.parameters[k]
-    x.parameters[k] = (value,m,i)
-    x.circuitfilearray[i] = "$(value/m)"
-    x.needsupdate = true
+    x[k] = value
   end
+end
+
+function setindex!(x::CircuitFile, value:: Float64, index:: Int)
+  (v,m,i) = x.parameters[index]
+  x.parameters[index] = (value,m,i)
+  x.circuitfilearray[i] = "$(value/m)"
+  x.needsupdate = true
 end
 
 length(x::CircuitFile) = length(x.parameters)

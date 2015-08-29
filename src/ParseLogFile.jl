@@ -74,7 +74,9 @@ end
 haskey(x::NonSteppedLogFile,key::ASCIIString) = findfirst(x.measurementnames,key) > 0
 haskey(x::SteppedLogFile,   key::ASCIIString) = false
 keys(x::NonSteppedLogFile)   = x.measurementnames
+keys(x::SteppedLogFile)      = []
 values(x::NonSteppedLogFile) = x.measurements[:,1,1,1]
+values(x::SteppedLogFile)    = []
 length(x::NonSteppedLogFile) = length(getmeasurementnames(x))
 eltype(x::NonSteppedLogFile) = Float64
 function getindex(x::NonSteppedLogFile, key::ASCIIString)

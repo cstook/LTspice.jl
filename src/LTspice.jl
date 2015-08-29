@@ -7,6 +7,7 @@ import Base: parse, show
 import Base: haskey, keys, values
 import Base: getindex, setindex!, get, endof
 import Base: start, next, done, length, eltype
+import Base: call
 
 export LTspiceSimulation!, LTspiceSimulation, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
@@ -106,7 +107,7 @@ haskey(x::LTspiceSimulation!, key::ASCIIString) = haskey(x.circuit,key) | haskey
 
 function keys(x::LTspiceSimulation!)
   # returns an array all keys (param and meas)
-  vcat(collect(keys(x.circuit)),getmeasurementnames(x))  # might not want to include measurement names for stepped
+  vcat(collect(keys(x.circuit)),collect(keys(x.log)))
 end
 
   # returns an array of all values (param and meas)
@@ -154,6 +155,11 @@ function setindex!(x::LTspiceSimulation!, value:: Float64, key::ASCIIString)
   end
 end
 
+function setindex!(x::LTspiceSimulation!, value:: Float64, index:: Int)
+  x.logneedsupdate = true 
+  x.circuit[index] = value 
+end
+
 # LTspiceSimulation is an read only array of its measurements
 # Intended for use in interactive sessions only.
 # For type stablity use getmeasurements()
@@ -161,13 +167,27 @@ function getindex(x::LTspiceSimulation!,index::Int)
   run!(x)
   x.log[index]
 end
-function getindex(x::LTspiceSimulation!,i1::Int, i2::Int, i3::Int, i4::Int)
+function getindex(x::LTspiceSimulation!, i1::Int, i2::Int, i3::Int, i4::Int)
   run!(x)
   x.log[i1,i2,i3,i4] 
 end
 
 eltype(x::LTspiceSimulation!) = Float64 
 length(x::LTspiceSimulation!) = length(x.log) + length(x.circuit)
+
+function call(x::LTspiceSimulation!, args...)
+  if length(args) != length(x.circuit)
+    throw(ArgumentError("number of arguments must match number of parameters"))
+  end
+  if typeof(x.log) == Type(SteppedLogFile)
+    error("call only for non stepped simulations")
+  end
+  for (i,arg) in enumerate(args)
+    x[i] = arg::Float64 
+  end
+  x.logneedsupdate = true
+  return getmeasurements(x)[:,1,1,1]
+end
 
 ### END overloading Base ###
 

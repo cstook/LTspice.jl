@@ -18,7 +18,6 @@ show(test1.log)
 @test getltspiceexecutablepath(test1) == ""
 @test eltype(test1.circuit) == Type(Float64)
 
-
 t = try
   LTspiceSimulation(filename)
 catch
@@ -51,9 +50,7 @@ end
 
 @test eltype(test1) == Type(Float64)
 
-
 for (key,value) in test1.log
   i = findfirst(keyss,key)
   @test value == valuess[i]
 end
-

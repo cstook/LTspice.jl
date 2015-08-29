@@ -1,0 +1,226 @@
+        - # this module provided an interface to treat the parameters and measurements
+        - # of an LTspice simulation as a dictionary like type
+        - 
+        - module LTspice
+        - 
+        - import Base: parse, show
+        - import Base: haskey, keys, values
+        - import Base: getindex, setindex!, get, endof
+        - import Base: start, next, done, length, eltype
+        - 
+        - export LTspiceSimulation!, LTspiceSimulation, getmeasurements
+        - export getparameters, getcircuitpath, getltspiceexecutablepath
+        - export getlogpath, getmeasurementnames, getstepnames, getsteps
+        - export PerLineIterator, getparameternames, getparameters
+        - 
+        - include("ParseCircuitFile.jl")
+        - include("ParseLogFile.jl")
+        - 
+        - 
+        - ### BEGIN Type LTspiceSimulation and constructors ###
+        - 
+        - type LTspiceSimulation!
+        -   circuit         :: CircuitFile
+        -   log             :: LogFile
+        -   executablepath  :: ASCIIString
+        -   logneedsupdate  :: Bool
+        - 
+        -   function LTspiceSimulation!(circuitpath::ASCIIString, executablepath::ASCIIString)
+        5     (everythingbeforedot,e) = splitext(circuitpath)
+        5     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
+        5     circuit = parse(CircuitFile,circuitpath)
+        5     if isstep(circuit)
+        0       log = SteppedLogFile(logpath)  # a blank stepped log object
+        -     else 
+        5       log = NonSteppedLogFile(logpath) # a blank non stepped log object
+        -     end
+        5     new(circuit,log,executablepath,true)
+        -   end
+        - end
+        - 
+        - function LTspiceSimulation(circuitpath::ASCIIString, executablepath::ASCIIString)
+        1   td = mktempdir()
+        1   (d,f) = splitdir(circuitpath)
+        1   workingcircuitpath = convert(ASCIIString, joinpath(td,f))
+        1   cp(circuitpath,workingcircuitpath)
+        1   LTspiceSimulation!(workingcircuitpath, executablepath)
+        - end
+        - 
+        - function LTspiceSimulation(circuitpath::ASCIIString)
+        -   # look up default executable if not specified
+        1   LTspiceSimulation(circuitpath, defaultltspiceexecutable())
+        - end
+        - 
+        - function LTspiceSimulation!(circuitpath::ASCIIString)
+        -   # look up default executable if not specified
+        1   LTspiceSimulation!(circuitpath, defaultltspiceexecutable())
+        - end
+        - 
+        - ### END Type LTspice and constructors ###
+        - 
+        - include("PerLineIterator.jl")  # for delimited output
+        - 
+        - ### BEGIN Overloading Base ###
+        - 
+        - function show(io::IO, x::LTspiceSimulation!)
+        2   println(io,getcircuitpath(x.circuit))
+        2   println(io,"")
+        2   println(io,"Parameters")
+        2   for (key,value) in x.circuit
+        4     println(io,"$(rpad(key,25,' ')) = $value")
+        -   end
+        2   println(io,"")
+        2   println(io,"Measurements")
+        2   for (i,key) in enumerate(getmeasurementnames(x.circuit))
+        2     if getstepnames(x.circuit) == []
+        2       if x.logneedsupdate
+        1         value = convert(Float64,NaN)
+        -       else
+        1         value = getmeasurements(x.log)[i,1,1,1]
+        -       end
+        2       println(io,"$(rpad(key,25,' ')) = $value")
+        -     else 
+        0       println(io,"$(rpad(key,25,' ')) stepped simulation")
+        -     end
+        -   end
+        2   if isstep(x.circuit)
+        0     println(io,"")
+        0     println(io,"Sweeps")
+        0     if x.logneedsupdate
+        0       for stepname in getstepnames(x)
+        0         println(io,"$(rpad(stepname,25,' '))")
+        -       end
+        -     else 
+        0       for (i,stepname) in enumerate(getstepnames(x))
+        0         println(io,"$(rpad(stepname,25,' ')) $(length(getsteps(x.log)[i])) steps")
+        -       end
+        -     end
+        -   end
+        - end
+        - 
+        - # LTspiceSimulation! is a Dict 
+        - #   of its parameters and measurements for non stepped simulations (measurements read only)
+        - #   of its parameters for stepped simulations
+        4 haskey(x::LTspiceSimulation!, key::ASCIIString) = haskey(x.circuit,key) | haskey(x.log,key)
+        - 
+        - function keys(x::LTspiceSimulation!)
+        -   # returns an array all keys (param and meas)
+        1   vcat(collect(keys(x.circuit)),getmeasurementnames(x))  # might not want to include measurement names for stepped
+        - end
+        - 
+        -   # returns an array of all values (param and meas)
+        - function values(x::LTspiceSimulation!)
+        1   run!(x)
+        1   vcat(collect(values(x.circuit)),collect(values(x.log)))
+        - end
+        - 
+        - function getindex(x::LTspiceSimulation!, key::ASCIIString)
+        -   # returns value for key in either param or meas
+        -   # value = x[key]
+        -   # dosen't handle multiple keys, but neither does standard julia library for Dict
+       14   if findfirst(getmeasurementnames(x),key) > 0
+        5     run!(x)
+        5     v = x.log[key]
+        9   elseif haskey(x.circuit,key)
+        8     v = x.circuit[key]
+        -   else
+        1     throw(KeyError(key))
+        -   end
+       13   return(v)
+        - end
+        - 
+        - function get(x::LTspiceSimulation!, key::ASCIIString, default:: Real)
+        -   # returns value for key in either param or meas
+        -   # returns default if key not found
+        4   if haskey(x,key)
+        3     return(x[key])
+        -   else
+        1     return(default)
+        -   end
+        - end
+        - 
+        - function setindex!(x::LTspiceSimulation!, value:: Real, key::ASCIIString)
+        -   # sets the value of param specified by key
+        -   # x[key] = value
+        -   # meas Dict cannot be set.  It is the result of a simulation
+        -   if haskey(x.circuit,key)
+        -     x.logneedsupdate = true
+        -     x.circuit[key] = value
+        -   elseif haskey(x.log,key)
+        -     error("measurements cannot be set.")
+        -   else
+        -     throw(KeyError(key))
+        -   end
+        - end
+        - 
+        - # LTspiceSimulation is an read only array of its measurements
+        - # Intended for use in interactive sessions only.
+        - # For type stablity use getmeasurements()
+        - function getindex(x::LTspiceSimulation!,index::Int)
+        1   run!(x)
+        1   x.log[index]
+        - end
+        - function getindex(x::LTspiceSimulation!,i1::Int, i2::Int, i3::Int, i4::Int)
+        1   run!(x)
+        1   x.log[i1,i2,i3,i4] 
+        - end
+        - 
+        1 eltype(x::LTspiceSimulation!) = Float64 
+        1 length(x::LTspiceSimulation!) = length(x.log) + length(x.circuit)
+        - 
+        - ### END overloading Base ###
+        - 
+        - ### BEGIN LTspiceSimulation! specific methods ###
+        -  
+        1 getcircuitpath(x::LTspiceSimulation!) = getcircuitpath(x.circuit)
+        1 getlogpath(x::LTspiceSimulation!) = getlogpath(x.log)
+        1 getltspiceexecutablepath(x::LTspiceSimulation!) = x.executablepath
+        1 getparameternames(x::LTspiceSimulation!) = getparameternames(x.circuit)
+        3 getparameters(x::LTspiceSimulation!) = getparameters(x.circuit)
+       17 getmeasurementnames(x::LTspiceSimulation!) = getmeasurementnames(x.circuit)
+        0 getstepnames(x::LTspiceSimulation!) = getstepnames(x.circuit)
+        - 
+        - function getmeasurements(x::LTspiceSimulation!)
+        2   run!(x)
+        2   getmeasurements(x.log)
+        - end
+        - 
+        - function getsteps(x::LTspiceSimulation!)
+        -   run!(x)
+        -   getsteps(x.log)
+        - end
+        - 
+        - function run!(x::LTspiceSimulation!)
+        -   # runs simulation and updates measurement values
+       10   if x.logneedsupdate
+        2     update!(x.circuit)
+        2     if (x.executablepath != "") & hasmeasurements(x.circuit)  # so travis dosen't need to load LTspice
+        0       run(`$(getltspiceexecutablepath(x)) -b -Run $(getcircuitpath(x))`)
+        -     end
+        2     x.log = parse(x.log)
+        2     x.logneedsupdate = false
+        2     return(nothing)
+        -   end
+        - end
+        - 
+        - ### END LTspicesSimulation! specific methods
+        - 
+        - ### BEGIN other
+        - 
+        - function defaultltspiceexecutable()
+        2   possibleltspiceexecutablelocations = [
+        -   "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe"
+        -   ]
+        2   for canidatepath in possibleltspiceexecutablelocations
+        2     if ispath(canidatepath)
+        2       return canidatepath
+        -     end
+        -   end
+        0   error("Could not find scad.exe")
+        - end
+        - 
+        - ### END other ###
+        - 
+        - end  # module
+        - 
+        - 

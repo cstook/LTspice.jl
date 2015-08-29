@@ -1,0 +1,268 @@
+        - # overload parse for LogFile type
+        - # used to parse LTspice log files
+        - 
+        - include("MultiLevelIterator.jl")
+        - 
+        - import Base: parse, show
+        - import Base: haskey, keys, values
+        - import Base: getindex, setindex!, endof
+        - import Base: start, next, done, length, eltype
+        - 
+        - ### BEGIN abstract type LogFile, subtypes and constructors ###
+        - 
+        - abstract LogFile
+        - 
+        - type NonSteppedLogFile <: LogFile
+        -   logpath           :: ASCIIString  # path to log file
+        -   circuitpath       :: ASCIIString  # path to circuit file in the log file
+        -   timestamp         :: DateTime
+        -   duration          :: Float64  # simulation time in seconds
+        -   measurementnames  :: Array{ASCIIString,1}   
+        -   measurements      :: Array{Float64,4}
+        - 
+        -   function NonSteppedLogFile(logpath::ASCIIString)
+        5     new(logpath,"",DateTime(2015),0.0,[],Array(Float64,0,0,0,0))
+        -   end
+        -   function NonSteppedLogFile(logpath, circuitpath, timestamp, duration, measurementnames, measurements)
+        2     new(logpath, circuitpath, timestamp, duration, measurementnames, measurements)
+        -   end
+        - end
+        - 
+        - type SteppedLogFile <: LogFile
+        -   nonsteppedlogfile :: NonSteppedLogFile
+        -   stepnames         :: Array{ASCIIString,1}
+        -   steps             :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
+        - 
+        -   function SteppedLogFile(logpath::ASCIIString)
+        -     new(NonSteppedLogFile(logpath),[],([],[],[]))
+        -   end
+        -   function SteppedLogFile(nslf, stepnames,steps)
+        0     new(nslf, stepnames,steps)
+        -   end
+        - end
+        - 
+        - ### END abstract type LogFile, subtypes and constructors ###
+        - 
+        - ### BEGIN overloading Base ###
+        - 
+        - function show(io::IO, x::NonSteppedLogFile)
+        2   println(io,x.logpath)  
+        2   println(io,x.circuitpath)
+        2   println(io,x.timestamp)
+        2   println(io,"$(x.duration) seconds")
+        2   if length(x.measurementnames)>0
+        1     println(io,"")
+        1     println(io,"Measurements")
+        1     for name in x.measurementnames
+        1       println(io,"  $name")
+        -     end
+        -   end
+        - end
+        - 
+        - function show(io::IO, x::SteppedLogFile)
+        -    show(io,x.nonsteppedlogfile) 
+        -    if length(x.stepnames)>0
+        -     println(io,"")
+        -     println(io,"Step")
+        -     for name in x.stepnames
+        -       println(io,"  $name")
+        -     end
+        -   end
+        - end
+        - 
+        - # NonSteppedLogFile is a read only Dict of its measurements
+        4 haskey(x::NonSteppedLogFile,key::ASCIIString) = findfirst(x.measurementnames,key) > 0
+        - haskey(x::SteppedLogFile,   key::ASCIIString) = false
+        1 keys(x::NonSteppedLogFile)   = x.measurementnames
+        1 values(x::NonSteppedLogFile) = x.measurements[:,1,1,1]
+        1 length(x::NonSteppedLogFile) = length(getmeasurementnames(x))
+        1 eltype(x::NonSteppedLogFile) = Float64
+        - function getindex(x::NonSteppedLogFile, key::ASCIIString)
+        5   i = findfirst(x.measurementnames,key)
+        5   if i == 0
+        0     throw(KeyError(key))
+        -   end
+        5   return x.measurements[i,1,1,1]
+        - end
+        - 
+        - # LogFile can access its measurments as a read only array
+        1 getindex(x::NonSteppedLogFile, index::Int) = x.measurements[index,1,1,1]
+        - function getindex(x::NonSteppedLogFile, i1::Int, i2::Int, i3::Int, i4::Int)
+        1   x.measurements[i1,i2,i3,i4]
+        - end
+        - function getindex(x::SteppedLogFile, i1::Int, i2::Int, i3::Int, i4::Int)
+        -   getmeasurements(x.nonsteppedlogfile)[i1,i2,i3,i4]
+        - end
+        - 
+        - length(x::SteppedLogFile) = length(getmeasurements(x))
+        - 
+        - # NonSteppedLogFile iterates over its Dict
+        1 start(x::NonSteppedLogFile) = 1
+        - function next(x::NonSteppedLogFile,state)
+        1   return (x.measurementnames[state]=>x.measurements[state,1,1,1],state+1)
+        - end
+        2 done(x::NonSteppedLogFile, state) = state > length(x.measurementnames)
+        - 
+        - function parse(::Type{LogFile}, logpath::ASCIIString)  
+        2   IOlog = open(logpath,true,false,false,false,false) # open log file read only
+        2   lines = eachline(IOlog)
+        -   # scan file once to get measurement names, step names
+        -   # and a few other items
+        -   # data will be read on second scan
+        2   measurementnames = Array(ASCIIString,0)
+        2   stepnames = Array(ASCIIString,0)
+        2   circuitpath = ""
+        2   timestamp = DateTime(2015)
+        2   duration = 0.0
+        2   steps = (Array(Float64,0),Array(Float64,0),Array(Float64,0))
+        2   state = 0
+        2   isstep = false
+        2   foundmeasurement = false
+        2   for line in lines
+       52     if state == 0  # looking for "Circuit:"
+        2       m = match(r"^Circuit: \*\s*([\w\:\\/. ]+)",line)
+        2       if m!=nothing
+        2         circuitpath = m.captures[1]
+        2         state = 1
+        -       end
+       50     elseif state == 1 # look for either ".step" or measurement
+       12       regex = r"^(?:(\w+):|(\.step)
+        -         (?:\s+(.*?)=(.*?))
+        -         (?:\s+(.*?)=(.*?)){0,1}
+        -         (?:\s+(.*?)=(.*?)){0,1}\s*$)"x
+       12       m = match(regex,line)
+       12       if m!=nothing  
+        4         if m.captures[1]!=nothing # we have a measurement
+        4           foundmeasurement = true
+        4           push!(measurementnames,m.captures[1]) # save the name
+        0         elseif m.captures[2]!=nothing # we have a step
+        0           if ~isstep # grab the names from the first line
+        0             for i in (3,5,7)
+        0               if m.captures[i] != nothing  # we have a step name
+        0                 push!(stepnames,m.captures[i]) # save the name
+        -               end
+        -             end
+        -           end
+        0           for (i,k) in ((4,1),(6,2),(8,3))
+        0             if m.captures[i] != nothing # we have a value
+        0               value = parse(Float64,m.captures[i])
+        0               if ~issubset(value,steps[k]) # if we haven't seen this value yet
+        0                 push!(steps[k],value) # add it to the list
+        -               end 
+        -             end
+        -           end
+        0           isstep = true
+        -         end
+        8       elseif isstep | foundmeasurement # if we are seeing .step's measurements and then see a blank line
+        2         state = 2 # start looking for stepped measurements
+        -       end
+       38     elseif state ==  2 # look for stepped measurements or date or time
+       38       regex = r"^(?:Measurement:\s*(\w+)\s*$|
+        -         Date:\s*(.*?)\s*$|
+        -         Total[ ]elapsed[ ]time:\s*([\w.]+)\s+seconds.\s*$)"x
+       38       m = match(regex,line)
+       38       if m!= nothing
+        4         if m.captures[1]!=nothing # found a measurement
+        0           push!(measurementnames,m.captures[1]) # save the name
+        4         elseif m.captures[2]!=nothing # found time stamp
+        2           timestamp = DateTime(m.captures[2],"e u d HH:MM:SS yyyy")
+        -         else # found duration
+        2           duration = parse(Float64,m.captures[3])
+        -         end
+        -       end
+        -     end
+        -   end
+        2   close(IOlog)  # do I need to do this?
+        -   #=
+        -   now that we know the size of the data 
+        -   we can create and fill in measurements array
+        -   dimensions
+        -     1 - measurementnames is header
+        -     2 - inner sweep.  steps[1] is header. stepname[1] is name.
+        -     3 - middle sweep. steps[2] is header. stepname[2] is name.
+        -     4 - outer sweep.  steps[3] is header. stepname[3] is name.
+        -   =#
+        -   # restart at beginning of file
+        2   l1 = length(measurementnames)
+        2   if l1 > 0 
+        2     IOlog = open(logpath,true,false,false,false,false) # open log file read only
+        2     if isstep
+        0       l2 = length(steps[1])
+        0       l3 = length(steps[2])
+        0       l4 = length(steps[3])
+        0       measurementsiterator = MultiLevelIterator([l2,l3,l4,l1])
+        0       measurements = Array(Float64,l1,l2,l3,l4)
+        0       ismeasurementblock = false
+        0       state = start(measurementsiterator)
+        0       while ~done(measurementsiterator,state) & ~eof(IOlog)
+        0         line = readline(IOlog)
+        0         if ismeasurementblock
+        0           m = match(r"^\s*[0-9]+\s+([0-9.eE+-]+)",line)
+        0           if m != nothing
+        0             value = parse(Float64,m.captures[1])
+        0             (i,state) = next(measurementsiterator,state)
+        0             measurements[i[4],i[1],i[2],i[3]] = value
+        -           else 
+        0             ismeasurementblock = false 
+        -           end
+        -         else 
+        0           if ismatch(r"^Measurement:",line)
+        0             line = readline(IOlog)
+        0             ismeasurementblock = true
+        -           end
+        -         end
+        -       end
+        -     else
+        2       measurements = Array(Float64,l1,1,1,1)
+        2       measurementsrange = 1:l1  
+        2       line = readline(IOlog)
+        2       line = readline(IOlog)
+        2       while ~ismatch(r"^\w+:",line)
+        6         line = readline(IOlog)
+        -       end
+        2       for i in measurementsrange
+        4         m = match(r"^\w+:.*?=([0-9.eE+-]+)",line)
+        4         measurements[i,1,1,1] = parse(Float64,m.captures[1])
+        4         line = readline(IOlog)
+        -       end
+        2       if eof(IOlog) 
+        0         throw(ParseError("log file EOF before all measurements found."))
+        -       end
+        -     end
+        -   else 
+        0     measurements = Array(Float64,0,0,0,0)
+        -   end
+        2   cp = convert(ASCIIString,copy(circuitpath))
+        2   nslf = NonSteppedLogFile(logpath, cp, timestamp, duration, measurementnames, measurements)
+        2   if isstep
+        0     return SteppedLogFile(nslf, stepnames, steps)
+        -   else 
+        2     return nslf 
+        -   end
+        - end
+        - 
+        - function parse{T<:LogFile}(x::T)
+        -   # reread log file from disk
+        -   # should not change type (steppped, non stepped)
+        2   lf::T = parse(LogFile, getlogpath(x))  
+        2   return lf
+        - end
+        - 
+        - ### END overloading Base ###
+        - 
+        - ### BEGIN LogFile specific methods ###
+        - 
+        3 getlogpath(x::NonSteppedLogFile) = x.logpath
+        - getlogpath(x::SteppedLogFile) = getlogpath(x.nonsteppedlogfile)
+        - getcircuitpath(x::NonSteppedLogFile) = x.circuitpath
+        - getcircuitpath(x::SteppedLogFile) = getcircuitpath(x.nonsteppedlogfile)
+        1 getmeasurementnames(x::NonSteppedLogFile) = x.measurementnames
+        - getmeasurementnames(x::SteppedLogFile) = getmeasurementnames(x.nonsteppedlogfile)
+        3 getmeasurements(x::NonSteppedLogFile) = x.measurements
+        - getmeasurements(x::SteppedLogFile) = getmeasurements(x.nonsteppedlogfile)
+        - getstepnames(x::SteppedLogFile) = x.stepnames
+        - getsteps(x::SteppedLogFile) = x.steps
+        - 
+        - 
+        - 
+        - ### END LogFile specific methods ###

@@ -6,8 +6,11 @@ filename = "temp\\test3.asc"
 exc = ""  # null string will not run LTspice.exe.  Test parsing only.
 test3 = LTspiceSimulation!(filename, exc)
 
-pn = ["a","b","c","d","e","f","g","h","i","j","k","l"]
-
+parameternamesverify = ["a","b","c","d","e","f","g","h","i","j","k","l"]
+for (verify,parameter,value) in zip(parameternamesverify,getparameternames(test3),getparameters(test3))
+  @test parameter == verify
+  @test value == test3[parameter]
+end
 
 @test_approx_eq(test3["a"],10.0)
 @test_approx_eq(test3["b"],8.0)

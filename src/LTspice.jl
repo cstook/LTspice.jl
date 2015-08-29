@@ -129,7 +129,7 @@ function getindex(x::LTspiceSimulation!, key::ASCIIString)
   return(v)
 end
 
-function get(x::LTspiceSimulation!, key::ASCIIString, default:: Real)
+function get(x::LTspiceSimulation!, key::ASCIIString, default:: Float64)
   # returns value for key in either param or meas
   # returns default if key not found
   if haskey(x,key)
@@ -139,7 +139,7 @@ function get(x::LTspiceSimulation!, key::ASCIIString, default:: Real)
   end
 end
 
-function setindex!(x::LTspiceSimulation!, value:: Real, key::ASCIIString)
+function setindex!(x::LTspiceSimulation!, value:: Float64, key::ASCIIString)
   # sets the value of param specified by key
   # x[key] = value
   # meas Dict cannot be set.  It is the result of a simulation

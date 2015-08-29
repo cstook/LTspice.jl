@@ -14,7 +14,6 @@ import Base: start, next, done, length, eltype
 type CircuitFile
 	circuitpath			:: ASCIIString
 	circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
-#	parameters 			:: Dict{ASCIIString,Tuple{Float64,Float64,Int}} # dictionay of parameters (value, multiplier, index)
   parameternames  :: Array{ASCIIString,1}
   parameters      :: Array{Tuple{Float64,Float64,Int},1}  # array of parameters (value, multiplier, index)
   measurementnames:: Array{ASCIIString,1}              # measurment names
@@ -52,30 +51,9 @@ function show(io::IO, x::CircuitFile)
 end
 
 # CircuitFile is a Dict of its parameters
-#haskey(x::CircuitFile,key::ASCIIString) = haskey(x.parameters,key::ASCIIString)
 haskey(x::CircuitFile,key::ASCIIString) = findfirst(x.parameternames, key) != 0
-#keys(x::CircuitFile) = keys(x.parameters)
 keys(x::CircuitFile) = [key for key in x.parameternames]
-
-#=
-function values(x::CircuitFile)
-  result = Array(Float64,0)
-  for (key,(value,m,i)) in x.parameters
-    push!(result,value)
-  end
-  return result
-end
-=#
-
 values(x::CircuitFile) = [parameter[1] for parameter in x.parameters]
-
-#=
-function getindex(x::CircuitFile, key::ASCIIString)
-  (v,m,i) =  x.parameters[key]  # just want the value.  Hide internal stuff
-  return v
-end
-=#
-
 function getindex(x::CircuitFile, key::ASCIIString)
   k = findfirst(x.parameternames, key)
   if k == 0 
@@ -84,16 +62,6 @@ function getindex(x::CircuitFile, key::ASCIIString)
     return x.parameters[k][1]
   end
 end
-
-#=
-function setindex!(x::CircuitFile, value:: Float64, key:: ASCIIString)
-  (v,m,i) = x.parameters[key]
-  x.parameters[key] = (value,m,i)
-  x.circuitfilearray[i] = "$(value/m)"
-  x.needsupdate = true
-end
-=#
-
 function setindex!(x::CircuitFile, value:: Float64, key:: ASCIIString)
   k = findfirst(x.parameternames, key)
   if k == 0 
@@ -109,15 +77,7 @@ end
 length(x::CircuitFile) = length(x.parameters)
 eltype(::CircuitFile) = Float64
 
-# CircuitFile iterates over its parameters
-#=
-start(x::CircuitFile) = start(x.parameters)
-function next(x::CircuitFile, state)
-  ((key,(value,m,i)),state) = next(x.parameters, state)
-  return ((key=>value),state)
-end
-done(x::CircuitFile, state) = done(x.parameters, state)
-=#
+# CircuitFile iterates over its Dict
 start(x::CircuitFile) = 0
 function next(x::CircuitFile, state)
   state +=1
@@ -200,7 +160,6 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
         i += 1
         circuitfilearray = vcat(circuitfilearray,ltspicefile[position:position+length(parametervalue)-1])  # text of the value
         i += 1
-        # parameters[parametername] = (valuenounit * multiplier, multiplier, i)
         push!(parameternames, parametername)
         push!(parameters, (valuenounit * multiplier, multiplier, i))
         position = position+length(parametervalue)
@@ -237,13 +196,6 @@ function update!(x::CircuitFile)
 end
 
 getcircuitpath(x::CircuitFile) = x.circuitpath
-#=
-function getparameters(x::CircuitFile)
-  result = Dict{ASCIIString,Float64}()
-  [result[y] = x.parameters[y][1] for y in keys(x.parameters)]
-  return result
-end
-=#
 getparameternames(x::CircuitFile) = x.parameternames
 getparameters(x::CircuitFile) = [parameter[1] for parameter in x.parameters]
 getmeasurementnames(x::CircuitFile) = x.measurementnames

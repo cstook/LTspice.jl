@@ -226,7 +226,7 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
         line = readline(IOlog)
       end
       if eof(IOlog) 
-        error("log file parse error.  EOF before all measurements found.")
+        throw(ParseError("log file EOF before all measurements found."))
       end
     end
   else 

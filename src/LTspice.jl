@@ -185,7 +185,6 @@ function call(x::LTspiceSimulation!, args...)
   for (i,arg) in enumerate(args)
     x[i] = arg::Float64 
   end
-  x.logneedsupdate = true
   return getmeasurements(x)[:,1,1,1]
 end
 

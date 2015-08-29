@@ -20,7 +20,7 @@ clist = [100.0,200.0,300.0]
 @test getlogpath(PCF_test1) != ""
 @test getcircuitpath(PCF_test1) == PCF_test1file
 @test typeof(getcircuitpath(PCF_test1.log)) == Type(ASCIIString)
-@test typeof(getparameters(PCF_test1)) == Dict{ASCIIString,Float64}
+@test typeof(getparameters(PCF_test1)) == Array{Float64,1}
 @test getmeasurements(PCF_test1)[1,1,1,1] == 111.0
 @test getltspiceexecutablepath(PCF_test1) == ""
 @test haskey(PCF_test1,"sum") == false  # measurments in stepped files are not a Dict

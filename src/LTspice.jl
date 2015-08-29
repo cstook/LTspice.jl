@@ -11,7 +11,7 @@ import Base: start, next, done, length, eltype
 export LTspiceSimulation!, LTspiceSimulation, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
 export getlogpath, getmeasurementnames, getstepnames, getsteps
-export PerLineIterator
+export PerLineIterator, getparameternames, getparameters
 
 include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
@@ -129,7 +129,7 @@ function getindex(x::LTspiceSimulation!, key::ASCIIString)
   return(v)
 end
 
-function get(x::LTspiceSimulation!, key::ASCIIString, default::Float64)
+function get(x::LTspiceSimulation!, key::ASCIIString, default:: Real)
   # returns value for key in either param or meas
   # returns default if key not found
   if haskey(x,key)
@@ -139,7 +139,7 @@ function get(x::LTspiceSimulation!, key::ASCIIString, default::Float64)
   end
 end
 
-function setindex!(x::LTspiceSimulation!, value:: Float64, key::ASCIIString)
+function setindex!(x::LTspiceSimulation!, value:: Real, key::ASCIIString)
   # sets the value of param specified by key
   # x[key] = value
   # meas Dict cannot be set.  It is the result of a simulation
@@ -175,13 +175,10 @@ length(x::LTspiceSimulation!) = length(x.log) + length(x.circuit)
 getcircuitpath(x::LTspiceSimulation!) = getcircuitpath(x.circuit)
 getlogpath(x::LTspiceSimulation!) = getlogpath(x.log)
 getltspiceexecutablepath(x::LTspiceSimulation!) = x.executablepath
+getparameternames(x::LTspiceSimulation!) = getparameternames(x.circuit)
 getparameters(x::LTspiceSimulation!) = getparameters(x.circuit)
-function getmeasurementnames(x::LTspiceSimulation!)
-  [lowercase(measurementname) for measurementname in getmeasurementnames(x.circuit)]
-end
-function getstepnames(x::LTspiceSimulation!)
-  [lowercase(stepname) for stepname in getstepnames(x.circuit)]
-end
+getmeasurementnames(x::LTspiceSimulation!) = getmeasurementnames(x.circuit)
+getstepnames(x::LTspiceSimulation!) = getstepnames(x.circuit)
 
 function getmeasurements(x::LTspiceSimulation!)
   run!(x)

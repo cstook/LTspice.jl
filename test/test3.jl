@@ -6,6 +6,9 @@ filename = "temp\\test3.asc"
 exc = ""  # null string will not run LTspice.exe.  Test parsing only.
 test3 = LTspiceSimulation!(filename, exc)
 
+pn = ["a","b","c","d","e","f","g","h","i","j","k","l"]
+
+
 @test_approx_eq(test3["a"],10.0)
 @test_approx_eq(test3["b"],8.0)
 @test_approx_eq(test3["c"],2.0)
@@ -23,8 +26,7 @@ test3 = LTspiceSimulation!(filename, exc)
 @test_approx_eq(test3["z"],0.019685)
 @test_approx_eq(test3["y"],0.984252)
 
-p = LTspice.getparameters(test3)
-for (key,value) in p
+for (key,value) in test3.circuit
   test3[key] = 1.0
 end
 
@@ -32,8 +34,7 @@ dummyread = test3["x"]  # will force parameters to write to file
                         # sim will not run since exc = ""
 
 test3b = LTspiceSimulation(filename, exc)
-p = LTspice.getparameters(test3b)
-for (key,value) in p
+for (key,value) in test3b.circuit
   @test_approx_eq(test3b[key],1.0)
 end
 

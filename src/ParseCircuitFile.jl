@@ -14,7 +14,9 @@ import Base: start, next, done, length, eltype
 type CircuitFile
 	circuitpath			:: ASCIIString
 	circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
-	parameters 			:: Dict{ASCIIString,Tuple{Float64,Float64,Int}} # dictionay of parameters (value, multiplier, index)
+#	parameters 			:: Dict{ASCIIString,Tuple{Float64,Float64,Int}} # dictionay of parameters (value, multiplier, index)
+  parameternames  :: Array{ASCIIString,1}
+  parameters      :: Array{Tuple{Float64,Float64,Int},1}  # array of parameters (value, multiplier, index)
   measurementnames:: Array{ASCIIString,1}              # measurment names
   stepnames			  :: Array{ASCIIString,1}  
   needsupdate			:: Bool # true if any parameter has been changed
@@ -29,7 +31,7 @@ function show(io::IO, x::CircuitFile)
   if length(x.parameters)>0
   	println(io,"")
   	println(io,"Parameters")
-  	for (key,(value,m,i)) in x.parameters
+  	for (key,(value,m,i)) in zip(x.parameternames,x.parameters)
     	println(io,"  $(rpad(key,25,' ')) = $value")
   	end
   end
@@ -50,9 +52,12 @@ function show(io::IO, x::CircuitFile)
 end
 
 # CircuitFile is a Dict of its parameters
-haskey(x::CircuitFile,key::ASCIIString) = haskey(x.parameters,key::ASCIIString)
-keys(x::CircuitFile) = keys(x.parameters)
+#haskey(x::CircuitFile,key::ASCIIString) = haskey(x.parameters,key::ASCIIString)
+haskey(x::CircuitFile,key::ASCIIString) = findfirst(x.parameternames, key) != 0
+#keys(x::CircuitFile) = keys(x.parameters)
+keys(x::CircuitFile) = [key for key in x.parameternames]
 
+#=
 function values(x::CircuitFile)
   result = Array(Float64,0)
   for (key,(value,m,i)) in x.parameters
@@ -60,29 +65,65 @@ function values(x::CircuitFile)
   end
   return result
 end
+=#
 
+values(x::CircuitFile) = [parameter[1] for parameter in x.parameters]
+
+#=
 function getindex(x::CircuitFile, key::ASCIIString)
   (v,m,i) =  x.parameters[key]  # just want the value.  Hide internal stuff
   return v
 end
+=#
 
+function getindex(x::CircuitFile, key::ASCIIString)
+  k = findfirst(x.parameternames, key)
+  if k == 0 
+    throw(KeyError(key))
+  else
+    return x.parameters[k][1]
+  end
+end
+
+#=
 function setindex!(x::CircuitFile, value:: Float64, key:: ASCIIString)
   (v,m,i) = x.parameters[key]
   x.parameters[key] = (value,m,i)
   x.circuitfilearray[i] = "$(value/m)"
   x.needsupdate = true
 end
+=#
+
+function setindex!(x::CircuitFile, value:: Float64, key:: ASCIIString)
+  k = findfirst(x.parameternames, key)
+  if k == 0 
+    throw(KeyError(key))
+  else
+    (v,m,i) = x.parameters[k]
+    x.parameters[k] = (value,m,i)
+    x.circuitfilearray[i] = "$(value/m)"
+    x.needsupdate = true
+  end
+end
 
 length(x::CircuitFile) = length(x.parameters)
 eltype(::CircuitFile) = Float64
 
 # CircuitFile iterates over its parameters
+#=
 start(x::CircuitFile) = start(x.parameters)
 function next(x::CircuitFile, state)
   ((key,(value,m,i)),state) = next(x.parameters, state)
   return ((key=>value),state)
 end
 done(x::CircuitFile, state) = done(x.parameters, state)
+=#
+start(x::CircuitFile) = 0
+function next(x::CircuitFile, state)
+  state +=1
+  return ((x.parameternames[state]=>x.parameters[state][1]),state)
+end
+done(x::CircuitFile, state) = ~(state < length(x.parameters))
 
 function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   #= reads circuit file and returns a tuple of
@@ -97,7 +138,9 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   ltspicefile = readall(circuitpath)            # read the circuit file
   # create empty dictionarys to be filled as file is parsed
   #key = parameter, value = (parameter value, multiplier, circuit file array index)
-  parameters = Dict{ASCIIString,Tuple{Float64,Float64,Int}}() 
+#  parameters = Dict{ASCIIString,Tuple{Float64,Float64,Int}}() 
+  parameternames = Array(ASCIIString,0)
+  parameters = Array(Tuple{Float64,Float64,Int},0)
   measurementnames = Array(ASCIIString,0)
   stepnames	= Array(ASCIIString,0)
   circuitfilearray = Array(ASCIIString,1)
@@ -157,21 +200,22 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
         i += 1
         circuitfilearray = vcat(circuitfilearray,ltspicefile[position:position+length(parametervalue)-1])  # text of the value
         i += 1
-        parameters[parametername] = (valuenounit * multiplier, multiplier, i)
+        # parameters[parametername] = (valuenounit * multiplier, multiplier, i)
+        push!(parameternames, parametername)
+        push!(parameters, (valuenounit * multiplier, multiplier, i))
         position = position+length(parametervalue)
       elseif ismeasure  # this is a measurement card
-        key = lowercase(measurementname)  # measurements are all lower case in log file
-        push!(measurementnames,key)
+        push!(measurementnames,lowercase(measurementname)) # measurements are all lower case in log file
       elseif isstep # this is a step card
-        push!(stepnames,steppedname)
+        push!(stepnames,lowercase(steppedname)) # measurements are all lower case in log file
       elseif issteppedmodel
-        push!(stepnames,modelname)
+        push!(stepnames,lowercase(modelname)) # measurements are all lower case in log file
       end
     end
     m = match(match_tags,ltspicefile,m.offset+length(m.match))   # find next match
   end
   circuitfilearray = vcat(circuitfilearray,ltspicefile[position:end])  # the rest of the circuit
-  return CircuitFile(circuitpath, circuitfilearray, parameters,
+  return CircuitFile(circuitpath, circuitfilearray, parameternames, parameters,
                      measurementnames, stepnames, false)
 end
 
@@ -193,13 +237,15 @@ function update!(x::CircuitFile)
 end
 
 getcircuitpath(x::CircuitFile) = x.circuitpath
-
+#=
 function getparameters(x::CircuitFile)
   result = Dict{ASCIIString,Float64}()
   [result[y] = x.parameters[y][1] for y in keys(x.parameters)]
   return result
 end
-
+=#
+getparameternames(x::CircuitFile) = x.parameternames
+getparameters(x::CircuitFile) = [parameter[1] for parameter in x.parameters]
 getmeasurementnames(x::CircuitFile) = x.measurementnames
 getstepnames(x::CircuitFile) = x.stepnames
 isstep(x::CircuitFile) = length(x.stepnames) != 0

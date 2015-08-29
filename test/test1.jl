@@ -13,7 +13,7 @@ show(test1.log)
 @test getmeasurementnames(test1) == ["current"]
 @test getlogpath(test1) != ""
 @test getcircuitpath(test1) != ""
-@test typeof(getparameters(test1)) == Dict{ASCIIString,Float64}
+@test typeof(getparameters(test1)) == Array{Float64,1}
 @test getmeasurements(test1)[1,1,1,1] == 2.5
 @test getltspiceexecutablepath(test1) == ""
 @test eltype(test1.circuit) == Type(Float64)

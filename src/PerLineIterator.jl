@@ -2,34 +2,50 @@
 #
 # used to pass to writedlm to create a delimited file
 
+export getheader
+
 immutable PerLineIterator
-  simulation :: LTspiceSimulation!
-  order      :: Array{ASCIIString,1}
-  header     :: Array{ASCIIString,1}
-  stepindexes:: Array{Int,1}
-  mli        :: MultiLevelIterator
+  simulation        :: LTspiceSimulation!
+  header            :: Array{ASCIIString,1}
+  stepindexes       :: Array{Int,1}
+  resultindexes     :: Array{Tuple{Bool,Int},1} # is parameter and index into array
+  mli               :: MultiLevelIterator
 
   function PerLineIterator(simulation :: LTspiceSimulation!;
-                           order = getstepnames(simulation),
-                           header = keys(simulation))
-    for step in order
+                           steporder = getstepnames(simulation),
+                           resultnames = vcat(getparameternames(simulation),
+                                              getmeasurementnames(simulation)))
+    for step in steporder
       if findfirst(getstepnames(simulation),step) == 0 
         error("$step step not found")
       end
     end
-    for item in header
-      if ~haskey(simulation,item) | findfirst(getmeasurementnames(simulation),item) == 0
-        error("$item not found in parameters or measurements")
-      end
+    if length(steporder) != length(getstepnames(simulation))
+      error("length(steporder) must equal number of steped items in simulation")
     end
     args = Array(Int,0)
     stepindexes = Array(Int,0)
-    for step in order
+    for step in steporder
       index = findfirst(getstepnames(simulation),step)
       push!(args,length(getsteps(simulation)[index]))
       push!(stepindexes,index)
     end
-    new(simulation, order, header,stepindexes,MultiLevelIterator(args))
+    resultindexes = Array(Tuple{Bool,Int},0) 
+    for resultname in resultnames
+      i = findfirst(getparameternames(simulation),resultname)
+      if i > 0
+        push!(resultindexes,(true,i))
+      else
+        i = findfirst(getmeasurementnames(simulation),resultname)
+        if i > 0
+          push!(resultindexes,(false,i))
+        else 
+          error("$resultname not found in parameters or measurements")
+        end 
+      end
+    end
+    header = vcat(steporder,resultnames)
+    new(simulation, header, stepindexes, resultindexes, MultiLevelIterator(args))
   end
 end
 
@@ -40,19 +56,27 @@ function next(x :: PerLineIterator, state :: Array{Int,1})
   (q,nextstate) = next(x.mli,state)
   k = [1,1,1]
   for (i,si) in enumerate(x.stepindexes)
-    k[i] = q[si] 
+    k[si] = q[i] 
   end
 
   # gather the data into a line of output
-  line = Array(Float64, length(x.header))
-  for (i,item) in enumerate(x.header)
-    if haskey(x.simulation,item)
-      line[i] = x.simulation[item]
+  line = Array(Float64, length(x.stepindexes)+length(x.resultindexes))
+  i = 1
+  for si in x.stepindexes
+    line[i] = getsteps(x.simulation)[si][k[si]]
+    i +=1
+  end
+  for (isparameter,j) in x.resultindexes
+    if isparameter
+      line[i] = getparameters(x.simulation)[j]
     else 
-      line[i] = getmeasurements(x.simulation)[findfirst(getmeasurementnames(x.simulation),item),k...]
+      line[i] = getmeasurements(x.simulation)[j,k...]
     end
+    i +=1
   end
   return (line,nextstate)
 end
 
 done(x :: PerLineIterator, state) = done(x.mli, state)
+
+getheader(x :: PerLineIterator) = x.header

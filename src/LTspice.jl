@@ -63,7 +63,8 @@ include("PerLineIterator.jl")  # for delimited output
 ### BEGIN Overloading Base ###
 
 function show(io::IO, x::LTspiceSimulation!)
-  println(io,getcircuitpath(x.circuit))
+  println(io,"LTspiceSimulation!:")
+  println(io,"circuit path = $(getcircuitpath(x.circuit))")
   println(io,"")
   println(io,"Parameters")
   for (key,value) in x.circuit

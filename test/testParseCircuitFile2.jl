@@ -19,3 +19,9 @@ stepnames = ["v1","b","c"]
 @test getstepnames(PCF_test2) == stepnames
 @test getstepnames(PCF_test2.log) == stepnames
 @test getmeasurements(PCF_test2) == Array(Float64,0,0,0,0)
+
+pli = PerLineIterator(PCF_test2)
+show(pli)
+@test length(collect(pli)) == length(v1list)*length(blist)*length(clist)
+h = getheader(pli)
+@test h == ["v1","b","c","a"]

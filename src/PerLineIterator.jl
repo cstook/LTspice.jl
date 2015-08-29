@@ -49,6 +49,11 @@ immutable PerLineIterator
   end
 end
 
+function show(io ::IO, x :: PerLineIterator)
+  numberoflines = length(x.mli)
+  println(io,"$(numberoflines)-line PerLineIterator")
+end
+
 start(x :: PerLineIterator) = start(x.mli)
 
 function next(x :: PerLineIterator, state :: Array{Int,1})

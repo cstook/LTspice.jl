@@ -40,6 +40,7 @@ for (i,a) in enumerate(alist)
 end
 
 pli = PerLineIterator(PCF_test1)
+show(pli)
 for line in pli
     @test (line[1]+line[2]+line[3] == line[4])
     @test (line[4] + 1000 == line[5])

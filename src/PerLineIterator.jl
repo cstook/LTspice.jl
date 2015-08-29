@@ -9,7 +9,7 @@ immutable PerLineIterator
   stepindexes:: Array{Int,1}
   mli        :: MultiLevelIterator
 
-  function PerLineIterator(simulation :: LTspiceSimualtion!;
+  function PerLineIterator(simulation :: LTspiceSimulation!;
                            order = getstepnames(simulation),
                            header = keys(simulation))
     for step in order
@@ -18,15 +18,15 @@ immutable PerLineIterator
       end
     end
     for item in header
-      if ~haskey(simulation,item) & findfirst(getmeasurementnames(simulation),item) == 0
+      if ~haskey(simulation,item) | findfirst(getmeasurementnames(simulation),item) == 0
         error("$item not found in parameters or measurements")
       end
     end
     args = Array(Int,0)
-    stepindexs = Array(Int,0)
-    for step in x.order
-      index = findfirst(getstepnames(x.simulation),step)
-      push!(args,length(getsteps(x.simulation)[index]))
+    stepindexes = Array(Int,0)
+    for step in order
+      index = findfirst(getstepnames(simulation),step)
+      push!(args,length(getsteps(simulation)[index]))
       push!(stepindexes,index)
     end
     new(simulation, order, header,stepindexes,MultiLevelIterator(args))
@@ -37,22 +37,22 @@ start(x :: PerLineIterator) = start(x.mli)
 
 function next(x :: PerLineIterator, state :: Array{Int,1})
   # flip MultiLevelIterator indexes around to be order requires by the measurements array
-  nextstate = next(x.mli,state)
+  (q,nextstate) = next(x.mli,state)
   k = [1,1,1]
   for (i,si) in enumerate(x.stepindexes)
-    k[i] = si 
+    k[i] = q[si] 
   end
 
   # gather the data into a line of output
-  line = Array(ASCIIString, length(x.header))
-  for (i,item) in enumerate(header)
+  line = Array(Float64, length(x.header))
+  for (i,item) in enumerate(x.header)
     if haskey(x.simulation,item)
       line[i] = x.simulation[item]
     else 
-      line[i] = getmeasurments(x.simulation)[findfirst(getmeasurmentnames,item),k...]
+      line[i] = getmeasurements(x.simulation)[findfirst(getmeasurementnames(x.simulation),item),k...]
     end
   end
   return (line,nextstate)
 end
 
-done(x :: PerLineIterator) = done(x.mli)
+done(x :: PerLineIterator, state) = done(x.mli, state)

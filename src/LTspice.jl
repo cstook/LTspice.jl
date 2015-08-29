@@ -11,9 +11,11 @@ import Base: start, next, done, length, eltype
 export LTspiceSimulation!, LTspiceSimulation, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
 export getlogpath, getmeasurementnames, getstepnames, getsteps
+export PerLineIterator
 
 include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
+
 
 ### BEGIN Type LTspiceSimulation and constructors ###
 
@@ -55,6 +57,8 @@ function LTspiceSimulation!(circuitpath::ASCIIString)
 end
 
 ### END Type LTspice and constructors ###
+
+include("PerLineIterator.jl")  # for delimited output
 
 ### BEGIN Overloading Base ###
 
@@ -101,7 +105,7 @@ haskey(x::LTspiceSimulation!, key::ASCIIString) = haskey(x.circuit,key) | haskey
 
 function keys(x::LTspiceSimulation!)
   # returns an array all keys (param and meas)
-  vcat(collect(keys(x.circuit)),getmeasurementnames(x))
+  vcat(collect(keys(x.circuit)),getmeasurementnames(x))  # might not want to include measurement names for stepped
 end
 
   # returns an array of all values (param and meas)

@@ -52,13 +52,13 @@ end
 start(x :: PerLineIterator) = start(x.mli)
 
 function next(x :: PerLineIterator, state :: Array{Int,1})
-  # flip MultiLevelIterator indexes around to be order requires by the measurements array
+  # flip MultiLevelIterator indexes around to be order required 
+  # by the measurements array
   (q,nextstate) = next(x.mli,state)
   k = [1,1,1]
   for (i,si) in enumerate(x.stepindexes)
     k[si] = q[i] 
   end
-
   # gather the data into a line of output
   line = Array(Float64, length(x.stepindexes)+length(x.resultindexes))
   i = 1

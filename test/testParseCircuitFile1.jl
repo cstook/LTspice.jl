@@ -38,6 +38,19 @@ for (i,a) in enumerate(alist)
         end
     end
 end
+
+pli = PerLineIterator(PCF_test1)
+for line in pli
+    @test (line[1]+line[2]+line[3] == line[4])
+    @test (line[4] + 1000 == line[5])
+end
+
+pli = PerLineIterator(PCF_test1,resultnames=["sum"],steporder=["b","a","c"])
+for line in pli
+    @test (line[1]+line[2]+line[3] == line[4])
+end
+
+
 @test getmeasurements(PCF_test1) == verify
 show(PCF_test1)
 show(PCF_test1.circuit)

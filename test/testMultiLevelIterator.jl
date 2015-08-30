@@ -16,3 +16,8 @@ for i in 1:4
   @test eltype(mli) == Type(Int)
 end
 
+mli = LTspice.MultiLevelIterator([])
+@test length(mli) == 0
+for i in mli
+  @test false
+end

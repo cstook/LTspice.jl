@@ -115,30 +115,30 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
     if ismatch(r"^TEXT .*?!"i,line) # found a directive
       while regexposition < endof(line)
         m = match(r"""[.](parameter|param)[ ]+|
-                        [.](measure|meas)[ ]+
+                        [.](measure|meas)[ ]+|
                         [.](step)[ ]+"""ix,line,regexposition)
         if m == nothing
           regexposition = endof(line)
         else
-          regexposition += length(m.match)
           if m.captures[1] != nothing  # a parameter card
+            regexposition = m.offsets[1]+length(m.captures[1])+1
             parametermatch = match(r"""([a-z0-9]+)[= ]+
                                        ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)
                                        (k|meg|g|t|m|u|n|p|f){0,1}
-                                       [ ]*(?:\\n|$)*"""ix,
+                                       [ ]*"""ix,
                                    line,regexposition)
-            regexposition += length(parametermatch.match)
-            parametername = parametermatch.captrures[1]
-            parametervalue = parametermatch.captrures[2]
-            valueoffset = parametermatch.offsets[2]+position # offset in line
+            regexposition += length(parametermatch.match)-1
+            parametername = parametermatch.captures[1]
+            parametervalue = parametermatch.captures[2]
+            valueoffset = parametermatch.offsets[2]  # offset in line
             valuelength = length(parametervalue)
             valueend = valuelength + valueoffset # pos of end of value in line
             parameterunit = parametermatch.captures[3]
             push!(circuitfilearray,line[cfaposition:valueoffset-1]) #before the value
             cfaposition = valueoffset
             i+=1
-            push!(circuitfilearray,line[cfaposition:valueend]) # the value
-            cfaposition = valueend+1
+            push!(circuitfilearray,line[cfaposition:valueend-1]) # the value
+            cfaposition = valueend
             i+=1
             if haskey(units,parameterunit)
               multiplier = units[parameterunit]
@@ -149,27 +149,35 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
             push!(parameternames, lowercase(parametername))
             push!(parameters, (valuenounit * multiplier, multiplier, i))
           elseif m.captures[2] != nothing # a measure card
-            measurematch = match(r"""(?:ac|dc|op|tran|tf|noise)[ ]+(\w+)[ ]+"""i,
+            regexposition = m.offsets[2]+length(m.captures[2])+1
+            measurematch = match(r"(?:ac|dc|op|tran|tf|noise)[ ]+(\w+)[ ]+"i,
                                 line,regexposition)
-            regexposition +=length(measurematch.match)
+            regexposition +=length(measurematch.match)-1
             measurename = measurematch.captures[1]
             push!(measurementnames,lowercase(measurename))
-            regexposition += length(measurematch.match)
+            regexposition += length(measurematch.match)-1
           elseif m.captures[3] != nothing # a step card
-            step1match = match(r"""+(?:oct |param ){0,1}
+            regexposition = m.offsets[3]+length(m.captures[3])+1
+            step1match = match(r"""(?:oct |param ){0,1}
                                 [ ]*(\w+)[ ]+(?:list ){0,1}
                                 [ ]*[0-9.e+-]+[a-z]*[ ]+"""ix,
                                 line, regexposition)
             if step1match != nothing # one type of step card
-              regexposition += length(step1match.match)
+              println("Type 1 Step")
+              println(line)
+              regexposition += length(step1match.match)-1
               stepname = step1match.captures[1]
+              println(stepname)
               push!(stepnames, lowercase(stepname))
             else
-              step2match = match(r"""(\w+)[ ]+(\w+[(]\w+[)])[ ]+"""i,
+              step2match = match(r"(\w+)[ ]+(\w+[(]\w+[)])[ ]+"i,
                                 line,regexposition)
               if step2match != nothing # the other type of step card
-                regexposition += length(step2match.match)
+                println("Type 2 Step")
+                println(line)
+                regexposition += length(step2match.match)-1
                 stepname = step2match.captures[2]
+                println(stepname)
                 push!(stepnames, lowercase(stepname))
               end
             end
@@ -178,6 +186,8 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
       end
       if cfaposition<endof(line)
         push!(circuitfilearray,line[cfaposition:endof(line)])
+        i+=1
+      end
     else
       push!(circuitfilearray,line)
       i+=1

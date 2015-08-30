@@ -7,7 +7,9 @@ end
 
 function start(x::MultiLevelIterator)
     s = ones(x.max)
-    s[1] = 0
+    if x.max != []
+        s[1] = 0
+    end
     return s
 end
 
@@ -39,9 +41,13 @@ end
 eltype(::MultiLevelIterator) = Int
 
 function length(x::MultiLevelIterator)
-    l = 1
-    for m in x.max
-        l *= m
+    if x.max == []
+        l = 0
+    else
+        l = 1
+        for m in x.max
+            l *= m
+        end
     end
     return l
 end

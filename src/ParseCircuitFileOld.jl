@@ -91,98 +91,101 @@ end
 done(x::CircuitFile, state) = ~(state < length(x.parameters))
 
 function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
-  #= 
+  #= reads circuit file and returns a tuple of
+  Dict of parameters
+  Dict of measurements, values N/A
   circuit file array
     The circuit file array is an array of strings which when concatenated
     produce the circuit file.  The elements of the array split the file 
     around parameter values to avoid parsing the file every time a parameter
     is modified
   =#
-  IOcircuit  = open(circuitpath,true,false,false,false,false)
-  lines = eachline(IOcircuit)
+  ltspicefile = readall(circuitpath)            # read the circuit file
+  # create empty dictionarys to be filled as file is parsed
+  #key = parameter, value = (parameter value, multiplier, circuit file array index)
+#  parameters = Dict{ASCIIString,Tuple{Float64,Float64,Int}}() 
   parameternames = Array(ASCIIString,0)
   parameters = Array(Tuple{Float64,Float64,Int},0)
   measurementnames = Array(ASCIIString,0)
   stepnames	= Array(ASCIIString,0)
-  circuitfilearray = Array(ASCIIString,0)
+  circuitfilearray = Array(ASCIIString,1)
+  circuitfilearray[1] = ""
+  validparameter = true
+  # regex used to parse file.  I know this is a bad comment.
+  match_tags = r"""(
+                ^TEXT .*?(!|;)|
+                [.](param)[ ]+([A-Za-z0-9]+)[= ]+([0-9.eE+-]+)([a-z]*)[ ]*|
+                [.](measure|meas)[ ]+(?:ac|dc|op|tran|tf|noise)[ ]+(\w+)[ ]+|
+                [.](step)[ ]+(oct |param ){0,1}[ ]*
+                (\w+)[ ]+(?:list ){0,1}[ ]*[0-9.e+-]+[a-z]*[ ]+|
+                [.](step)[ ]+(\w+)[ ]+(\w+[(]\w+[)])[ ]+
+                )"""imx
+
   # parse the file
-  regexposition = 1
-  cfaposition = 1
-  i = 0
-  for line in lines
-    regexposition = 1
-    cfaposition = 1  # has been put in cfa up to (not including) this position
-    if ismatch(r"^TEXT .*?!"i,line) # found a directive
-      while regexposition < endof(line)
-        m = match(r"""[.](parameter|param)[ ]+|
-                        [.](measure|meas)[ ]+
-                        [.](step)[ ]+"""ix,line,regexposition)
-        if m == nothing
-          regexposition = endof(line)
-        else
-          regexposition += length(m.match)
-          if m.captures[1] != nothing  # a parameter card
-            parametermatch = match(r"""([a-z0-9]+)[= ]+
-                                       ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)
-                                       (k|meg|g|t|m|u|n|p|f){0,1}
-                                       [ ]*(?:\\n|$)*"""ix,
-                                   line,regexposition)
-            regexposition += length(parametermatch.match)
-            parametername = parametermatch.captrures[1]
-            parametervalue = parametermatch.captrures[2]
-            valueoffset = parametermatch.offsets[2]+position # offset in line
-            valuelength = length(parametervalue)
-            valueend = valuelength + valueoffset # pos of end of value in line
-            parameterunit = parametermatch.captures[3]
-            push!(circuitfilearray,line[cfaposition:valueoffset-1]) #before the value
-            cfaposition = valueoffset
-            i+=1
-            push!(circuitfilearray,line[cfaposition:valueend]) # the value
-            cfaposition = valueend+1
-            i+=1
-            if haskey(units,parameterunit)
-              multiplier = units[parameterunit]
-            else
-              multiplier = 1.0
-            end
-            valuenounit = parse(Float64,parametervalue)
-            push!(parameternames, lowercase(parametername))
-            push!(parameters, (valuenounit * multiplier, multiplier, i))
-          elseif m.captures[2] != nothing # a measure card
-            measurematch = match(r"""(?:ac|dc|op|tran|tf|noise)[ ]+(\w+)[ ]+"""i,
-                                line,regexposition)
-            regexposition +=length(measurematch.match)
-            measurename = measurematch.captures[1]
-            push!(measurementnames,lowercase(measurename))
-            regexposition += length(measurematch.match)
-          elseif m.captures[3] != nothing # a step card
-            step1match = match(r"""+(?:oct |param ){0,1}
-                                [ ]*(\w+)[ ]+(?:list ){0,1}
-                                [ ]*[0-9.e+-]+[a-z]*[ ]+"""ix,
-                                line, regexposition)
-            if step1match != nothing # one type of step card
-              regexposition += length(step1match.match)
-              stepname = step1match.captures[1]
-              push!(stepnames, lowercase(stepname))
-            else
-              step2match = match(r"""(\w+)[ ]+(\w+[(]\w+[)])[ ]+"""i,
-                                line,regexposition)
-              if step2match != nothing # the other type of step card
-                regexposition += length(step2match.match)
-                stepname = step2match.captures[2]
-                push!(stepnames, lowercase(stepname))
-              end
-            end
-          end
-        end
-      end
-      if cfaposition<endof(line)
-        push!(circuitfilearray,line[cfaposition:endof(line)])
-    else
-      push!(circuitfilearray,line)
-      i+=1
+  directive = false   # true for directives, false for comments
+  m = match(match_tags,ltspicefile)
+  i = 1  # index for circuit file array
+  position = 1   # pointer into ltspicefile
+  old_position = 1
+  while m!=nothing
+    commentordirective = m.captures[2] # ";" starts a comment, "!" starts a directive
+    isparamater = m.captures[3]!=nothing  # true for parameter card
+    parametername = m.captures[4]
+    parametervalue = m.captures[5]
+    parameterunit = m.captures[6]
+    ismeasure = m.captures[7]!=nothing   # true for measurement card
+    measurementname = m.captures[8] # name in .log
+    isstep = m.captures[9]!=nothing
+    oct_or_param_or_nothing = m.captures[10]
+    steppedname = m.captures[11] # name in .log
+    issteppedmodel = m.captures[12]!=nothing
+    modeltype = m.captures[13] # for example NPN
+    modelname = m.captures[14] # name in .log
+
+    # determine if we are processign a comment or directive
+    if commentordirective == "!"
+      directive = true
+    elseif commentordirective == ";"
+      directive = false
     end
+    if directive
+      if isparamater  # this is a paramater card
+        validparameter = true
+        if haskey(units,parameterunit) # if their is an SI unit
+          multiplier = units[parameterunit] # find the multiplier
+        elseif parameterunit == ""
+          multiplier = 1.0 # if no unit, multiplier is 1.0
+        else 
+          validparameter = false
+        end
+        valuenounit = try  # try to convert the value.
+          parse(Float64,parametervalue)
+        catch
+          validparameter = false
+          convert(Float64,NaN)
+        end
+        if validparameter
+          old_position = position
+          position = m.offsets[5]   # offset of the begining if the value in the circuit file
+          circuitfilearray = vcat(circuitfilearray,ltspicefile[old_position:position-1])  # text before the value
+          i += 1
+          circuitfilearray = vcat(circuitfilearray,ltspicefile[position:position+length(parametervalue)-1])  # text of the value
+          i += 1
+          push!(parameternames, lowercase(parametername))
+          push!(parameters, (valuenounit * multiplier, multiplier, i))
+          position = position+length(parametervalue)
+        end
+      elseif ismeasure  # this is a measurement card
+        push!(measurementnames,lowercase(measurementname)) # measurements are all lower case in log file
+      elseif isstep # this is a step card
+        push!(stepnames,lowercase(steppedname)) # measurements are all lower case in log file
+      elseif issteppedmodel
+        push!(stepnames,lowercase(modelname)) # measurements are all lower case in log file
+      end
+    end
+    m = match(match_tags,ltspicefile,m.offset+length(m.match))   # find next match
   end
+  circuitfilearray = vcat(circuitfilearray,ltspicefile[position:end])  # the rest of the circuit
   return CircuitFile(circuitpath, circuitfilearray, parameternames, parameters,
                      measurementnames, stepnames, false)
 end
@@ -238,7 +241,3 @@ units["F"] = 1.0e-15
 units["f"] = 1.0e-15
 
 ### END other ###
-
-
-
-      

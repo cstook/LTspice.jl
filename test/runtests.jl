@@ -8,5 +8,7 @@ include("testParseCircuitFile1.jl")
 include("testParseCircuitFile2.jl")
 include("testParseCircuitFile3.jl")
 include("testMultiLevelIterator.jl")
+include("test4.jl")
+include("test5.jl")
 
 @test 1 == 1

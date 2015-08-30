@@ -85,3 +85,4 @@ end
 done(x :: PerLineIterator, state) = done(x.mli, state)
 
 getheader(x :: PerLineIterator) = x.header
+length(x :: PerLineIterator) = length(x.mli)

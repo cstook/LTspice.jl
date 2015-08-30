@@ -219,7 +219,7 @@ function run!(x::LTspiceSimulation!)
   # runs simulation and updates measurement values
   if x.logneedsupdate
     update!(x.circuit)
-    if (x.executablepath != "") & hasmeasurements(x.circuit)  # so travis dosen't need to load LTspice
+    if (x.executablepath != "")  # so travis dosen't need to load LTspice
       run(`$(getltspiceexecutablepath(x)) -b -Run $(getcircuitpath(x))`)
     end
     x.log = parse(x.log)

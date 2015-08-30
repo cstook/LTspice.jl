@@ -185,13 +185,14 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
     4 - outer sweep.  steps[3] is header. stepname[3] is name.
   =#
   # restart at beginning of file
+  zeroisone(x) = x==0?1:x
   l1 = length(measurementnames)
   if l1 > 0 
     IOlog = open(logpath,true,false,false,false,false) # open log file read only
     if isstep
-      l2 = length(steps[1])
-      l3 = length(steps[2])
-      l4 = length(steps[3])
+      l2 = zeroisone(length(steps[1]))
+      l3 = zeroisone(length(steps[2]))
+      l4 = zeroisone(length(steps[3]))
       measurementsiterator = MultiLevelIterator([l2,l3,l4,l1])
       measurements = Array(Float64,l1,l2,l3,l4)
       ismeasurementblock = false
@@ -265,6 +266,10 @@ getmeasurements(x::SteppedLogFile) = getmeasurements(x.nonsteppedlogfile)
 getstepnames(x::SteppedLogFile) = x.stepnames
 getsteps(x::SteppedLogFile) = x.steps
 
-
-
 ### END LogFile specific methods ###
+
+### BEGIN other ###
+
+
+
+### END other

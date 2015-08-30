@@ -110,10 +110,11 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
   stepnames	= Array(ASCIIString,0)
   circuitfilearray = Array(ASCIIString,1)
   circuitfilearray[1] = ""
+  validparameter = true
   # regex used to parse file.  I know this is a bad comment.
   match_tags = r"""(
                 ^TEXT .*?(!|;)|
-                [.](param)[ ]+([A-Za-z0-9]*)[= ]*([0-9.eE+-]*)([a-z]*)|
+                [.](param)[ ]+([A-Za-z0-9]+)[= ]+([0-9.eE+-]+)([a-z]*)[ ]*|
                 [.](measure|meas)[ ]+(?:ac|dc|op|tran|tf|noise)[ ]+(\w+)[ ]+|
                 [.](step)[ ]+(oct |param ){0,1}[ ]*
                 (\w+)[ ]+(?:list ){0,1}[ ]*[0-9.e+-]+[a-z]*[ ]+|
@@ -149,25 +150,31 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
     end
     if directive
       if isparamater  # this is a paramater card
+        validparameter = true
         if haskey(units,parameterunit) # if their is an SI unit
           multiplier = units[parameterunit] # find the multiplier
-        else
+        elseif parameterunit == ""
           multiplier = 1.0 # if no unit, multiplier is 1.0
+        else 
+          validparameter = false
         end
-        valuenounit = try  # try to convert the value.  might just want to let the exception happen...
+        valuenounit = try  # try to convert the value.
           parse(Float64,parametervalue)
         catch
+          validparameter = false
           convert(Float64,NaN)
         end
-        old_position = position
-        position = m.offsets[5]   # offset of the begining if the value in the circuit file
-        circuitfilearray = vcat(circuitfilearray,ltspicefile[old_position:position-1])  # text before the value
-        i += 1
-        circuitfilearray = vcat(circuitfilearray,ltspicefile[position:position+length(parametervalue)-1])  # text of the value
-        i += 1
-        push!(parameternames, parametername)
-        push!(parameters, (valuenounit * multiplier, multiplier, i))
-        position = position+length(parametervalue)
+        if validparameter
+          old_position = position
+          position = m.offsets[5]   # offset of the begining if the value in the circuit file
+          circuitfilearray = vcat(circuitfilearray,ltspicefile[old_position:position-1])  # text before the value
+          i += 1
+          circuitfilearray = vcat(circuitfilearray,ltspicefile[position:position+length(parametervalue)-1])  # text of the value
+          i += 1
+          push!(parameternames, lowercase(parametername))
+          push!(parameters, (valuenounit * multiplier, multiplier, i))
+          position = position+length(parametervalue)
+        end
       elseif ismeasure  # this is a measurement card
         push!(measurementnames,lowercase(measurementname)) # measurements are all lower case in log file
       elseif isstep # this is a step card

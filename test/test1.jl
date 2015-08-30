@@ -5,7 +5,7 @@ show(test1)
 show(test1.circuit)
 show(test1.log)
 loadlog!(test1)
-@test test1["Vin"] == 5
+@test test1["vin"] == 5
 @test test1["load"] == 2
 @test test1["current"] == 2.5
 show(test1)
@@ -40,7 +40,7 @@ catch
 end
 #@test t == 1    # uncomment for travis
 
-keyss = ["Vin","load","current","bad key"]
+keyss = ["vin","load","current","bad key"]
 valuess = [5.0,2.0,2.5,1.0]
 for (key,value) in zip(keyss,valuess) 
   @test get(test1,key,1.0) == value 

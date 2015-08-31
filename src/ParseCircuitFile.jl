@@ -219,8 +219,9 @@ getparameternames(x::CircuitFile) = x.parameternames
 getparameters(x::CircuitFile) = [parameter[1] for parameter in x.parameters]
 getmeasurementnames(x::CircuitFile) = x.measurementnames
 getstepnames(x::CircuitFile) = x.stepnames
-isstep(x::CircuitFile) = length(x.stepnames) != 0
+hassteps(x::CircuitFile) = length(x.stepnames) != 0
 hasmeasurements(x::CircuitFile) = length(x.measurementnames) != 0
+hasparameters(x::CircuitFile) = length(x.parameters) != 0
 
 ### END CircuitFile specific methods ###
 

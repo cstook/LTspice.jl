@@ -63,26 +63,30 @@ include("PerLineIterator.jl")  # for delimited output
 function show(io::IO, x::LTspiceSimulation!)
   println(io,"LTspiceSimulation!:")
   println(io,"circuit path = $(getcircuitpath(x.circuit))")
-  println(io,"")
-  println(io,"Parameters")
-  for (key,value) in x.circuit
-    println(io,"$(rpad(key,25,' ')) = $value")
-  end
-  println(io,"")
-  println(io,"Measurements")
-  for (i,key) in enumerate(getmeasurementnames(x.circuit))
-    if getstepnames(x.circuit) == []
-      if x.logneedsupdate
-        value = convert(Float64,NaN)
-      else
-        value = getmeasurements(x.log)[i,1,1,1]
-      end
+  if hasparameters(x.circuit)
+    println(io,"")
+    println(io,"Parameters")
+    for (key,value) in x.circuit
       println(io,"$(rpad(key,25,' ')) = $value")
-    else 
-      println(io,"$(rpad(key,25,' ')) stepped simulation")
     end
   end
-  if isstep(x.circuit)
+  if hasmeasurements(x.circuit)
+    println(io,"")
+    println(io,"Measurements")
+    for (i,key) in enumerate(getmeasurementnames(x.circuit))
+      if getstepnames(x.circuit) == []
+        if x.logneedsupdate
+          value = convert(Float64,NaN)
+        else
+          value = getmeasurements(x.log)[i,1,1,1]
+        end
+        println(io,"$(rpad(key,25,' ')) = $value")
+      else 
+        println(io,"$(rpad(key,25,' ')) stepped simulation")
+      end
+    end
+  end
+  if hassteps(x.circuit)
     println(io,"")
     println(io,"Sweeps")
     if x.logneedsupdate
@@ -234,7 +238,7 @@ end
 
 function blanklog(circuit::CircuitFile, logpath::ASCIIString)
 # creates a blank log object of appropiate type for circuitfile
-  if isstep(circuit)
+  if hassteps(circuit)
     log = SteppedLogFile(logpath)  # a blank stepped log object
   else 
     log = NonSteppedLogFile(logpath) # a blank non stepped log object

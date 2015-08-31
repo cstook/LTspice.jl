@@ -2,7 +2,7 @@
 #
 # used to pass to writedlm to create a delimited file
 
-export getheader
+export getheaders, header
 
 immutable PerLineIterator
   simulation        :: LTspiceSimulation!
@@ -84,5 +84,6 @@ end
 
 done(x :: PerLineIterator, state) = done(x.mli, state)
 
-getheader(x :: PerLineIterator) = x.header
+getheaders(x :: PerLineIterator) = x.header
+header(x::PerLineIterator) = transpose(x.header) 
 length(x :: PerLineIterator) = length(x.mli)

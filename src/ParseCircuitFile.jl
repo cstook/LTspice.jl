@@ -205,6 +205,7 @@ function update!(x::CircuitFile)
 	if x.needsupdate
 		io = open(x.circuitpath,false,true,false,false,false)  # open circuit file to be overwritten
 		for text in x.circuitfilearray
+      print(io,text)
 		end
 		close(io)
   	x.needsupdate = false

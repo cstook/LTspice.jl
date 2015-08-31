@@ -24,7 +24,7 @@ show(test6.log)
 pli = PerLineIterator(test6)
 show(pli)
 @test length(pli) == 0
-@test getheader(pli) == []
+@test getheaders(pli) == []
 
 
 show(test6)

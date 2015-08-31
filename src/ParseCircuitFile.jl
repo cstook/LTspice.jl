@@ -127,27 +127,29 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
                                        (k|meg|g|t|m|u|n|p|f){0,1}
                                        [ ]*(?:\\n|\r|$)"""ix,
                                    line,regexposition)
-            regexposition += length(parametermatch.match)-1
-            parametername = parametermatch.captures[1]
-            parametervalue = parametermatch.captures[2]
-            valueoffset = parametermatch.offsets[2]  # offset in line
-            valuelength = length(parametervalue)
-            valueend = valuelength + valueoffset # pos of end of value in line
-            parameterunit = parametermatch.captures[3]
-            push!(circuitfilearray,line[cfaposition:valueoffset-1]) #before the value
-            cfaposition = valueoffset
-            i+=1
-            push!(circuitfilearray,line[cfaposition:valueend-1]) # the value
-            cfaposition = valueend
-            i+=1
-            if haskey(units,parameterunit)
-              multiplier = units[parameterunit]
-            else
-              multiplier = 1.0
+            if parametermatch != nothing
+              regexposition += length(parametermatch.match)-1
+              parametername = parametermatch.captures[1]
+              parametervalue = parametermatch.captures[2]
+              valueoffset = parametermatch.offsets[2]  # offset in line
+              valuelength = length(parametervalue)
+              valueend = valuelength + valueoffset # pos of end of value in line
+              parameterunit = parametermatch.captures[3]
+              push!(circuitfilearray,line[cfaposition:valueoffset-1]) #before the value
+              cfaposition = valueoffset
+              i+=1
+              push!(circuitfilearray,line[cfaposition:valueend-1]) # the value
+              cfaposition = valueend
+              i+=1
+              if haskey(units,parameterunit)
+                multiplier = units[parameterunit]
+              else
+                multiplier = 1.0
+              end
+              valuenounit = parse(Float64,parametervalue)
+              push!(parameternames, lowercase(parametername))
+              push!(parameters, (valuenounit * multiplier, multiplier, i))
             end
-            valuenounit = parse(Float64,parametervalue)
-            push!(parameternames, lowercase(parametername))
-            push!(parameters, (valuenounit * multiplier, multiplier, i))
           elseif m.captures[2] != nothing # a measure card
             regexposition = m.offsets[2]+length(m.captures[2])+1
             measurematch = match(r"(?:ac|dc|op|tran|tf|noise)[ ]+(\w+)[ ]+"i,

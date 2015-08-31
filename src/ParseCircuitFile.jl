@@ -122,7 +122,7 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
         else
           if m.captures[1] != nothing  # a parameter card
             regexposition = m.offsets[1]+length(m.captures[1])+1
-            parametermatch = match(r"""([a-z0-9]+)[= ]+
+            parametermatch = match(r"""([a-z0-9_]+)[= ]+
                                        ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)
                                        (k|meg|g|t|m|u|n|p|f){0,1}
                                        [ ]*(?:\\n|\r|$)"""ix,
@@ -135,7 +135,7 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
               valuelength = length(parametervalue)
               valueend = valuelength + valueoffset # pos of end of value in line
               parameterunit = parametermatch.captures[3]
-              push!(circuitfilearray,line[cfaposition:valueoffset-1]) #before the value
+              push!(circuitfilearray,line[cfaposition:valueoffset-1]) # before the value
               cfaposition = valueoffset
               i+=1
               push!(circuitfilearray,line[cfaposition:valueend-1]) # the value
@@ -152,7 +152,8 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
             end
           elseif m.captures[2] != nothing # a measure card
             regexposition = m.offsets[2]+length(m.captures[2])+1
-            measurematch = match(r"(?:ac|dc|op|tran|tf|noise)[ ]+(\w+)[ ]+"i,
+            measurematch = match(r"""(?:ac |dc |op |tran |tf |noise ){0,1}
+                                  [ ]*(\w+)[ ]+"""ix,
                                 line,regexposition)
             regexposition +=length(measurematch.match)-1
             measurename = measurematch.captures[1]
@@ -180,8 +181,9 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
           end
         end
       end
-      if cfaposition<endof(line)
+      if cfaposition<=endof(line)
         push!(circuitfilearray,line[cfaposition:endof(line)])
+        cfaposition = endof(line)+1
         i+=1
       end
     else
@@ -189,6 +191,7 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
       i+=1
     end
   end
+  close(IOcircuit)
   return CircuitFile(circuitpath, circuitfilearray, parameternames, parameters,
                      measurementnames, stepnames, false)
 end
@@ -201,13 +204,14 @@ end
 function update!(x::CircuitFile)
 	if x.needsupdate
 		io = open(x.circuitpath,false,true,false,false,false)  # open circuit file to be overwritten
-  		for text in x.circuitfilearray
-    		print(io,text)
-  		end
-  		close(io)
-  		x.needsupdate = false
-  	end
-  	return nothing
+		for text in x.circuitfilearray
+  		print(io,text)
+      println(text)
+		end
+		close(io)
+  	x.needsupdate = false
+  end
+  return nothing
 end
 
 getcircuitpath(x::CircuitFile) = x.circuitpath
@@ -244,7 +248,3 @@ units["F"] = 1.0e-15
 units["f"] = 1.0e-15
 
 ### END other ###
-
-
-
-      

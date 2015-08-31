@@ -125,7 +125,7 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
             parametermatch = match(r"""([a-z0-9]+)[= ]+
                                        ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)
                                        (k|meg|g|t|m|u|n|p|f){0,1}
-                                       [ ]*"""ix,
+                                       [ ]*(?:\\n|\r|$)"""ix,
                                    line,regexposition)
             regexposition += length(parametermatch.match)-1
             parametername = parametermatch.captures[1]
@@ -159,25 +159,19 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
           elseif m.captures[3] != nothing # a step card
             regexposition = m.offsets[3]+length(m.captures[3])+1
             step1match = match(r"""(?:oct |param ){0,1}
-                                [ ]*(\w+)[ ]+(?:list ){0,1}
+                                [ ]*([a-z]+\w*)[ ]+(?:list ){0,1}
                                 [ ]*[0-9.e+-]+[a-z]*[ ]+"""ix,
                                 line, regexposition)
             if step1match != nothing # one type of step card
-              println("Type 1 Step")
-              println(line)
               regexposition += length(step1match.match)-1
               stepname = step1match.captures[1]
-              println(stepname)
               push!(stepnames, lowercase(stepname))
             else
               step2match = match(r"(\w+)[ ]+(\w+[(]\w+[)])[ ]+"i,
                                 line,regexposition)
               if step2match != nothing # the other type of step card
-                println("Type 2 Step")
-                println(line)
                 regexposition += length(step2match.match)-1
                 stepname = step2match.captures[2]
-                println(stepname)
                 push!(stepnames, lowercase(stepname))
               end
             end

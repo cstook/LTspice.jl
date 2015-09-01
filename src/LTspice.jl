@@ -25,14 +25,17 @@ type LTspiceSimulation!
   circuit         :: CircuitFile
   log             :: LogFile
   executablepath  :: ASCIIString
+  workingdir      :: ASCIIString
   logneedsupdate  :: Bool
 
-  function LTspiceSimulation!(circuitpath::ASCIIString, executablepath::ASCIIString)
+  function LTspiceSimulation!(circuitpath::ASCIIString,
+                              executablepath::ASCIIString,
+                              workingdir = dirname(circuitpath))
     (everythingbeforedot,e) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
     circuit = parse(CircuitFile,circuitpath)
     log = blanklog(circuit,logpath) # creates a blank log object
-    new(circuit,log,executablepath,true)
+    new(circuit,log,executablepath,workingdir,true)
   end
 end
 
@@ -41,7 +44,9 @@ function LTspiceSimulation(circuitpath::ASCIIString, executablepath::ASCIIString
   (d,f) = splitdir(circuitpath)
   workingcircuitpath = convert(ASCIIString, joinpath(td,f))
   cp(circuitpath,workingcircuitpath)
-  LTspiceSimulation!(workingcircuitpath, executablepath)
+  LTspiceSimulation!(workingcircuitpath,
+                     executablepath,
+                     dirname(abspath(circuitpath)))
 end
 
 function LTspiceSimulation(circuitpath::ASCIIString)

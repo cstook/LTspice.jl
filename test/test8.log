@@ -10,7 +10,7 @@ j\m: j\=10
 voltage: v(n001)=-4 at 0.5
 
 
-Date: Tue Sep 01 09:32:23 2015
+Date: Tue Sep 01 10:06:24 2015
 Total elapsed time: 0.016 seconds.
 
 tnom = 27
@@ -24,7 +24,7 @@ rejected = 0
 matrix size = 1
 fillins = 0
 solver = Normal
-Matrix Compiler1: off  0.1/0.0/[0.0]
-Matrix Compiler2: off  [0.0]/0.1/0.1
+Matrix Compiler1: off  0.0/0.0/[0.0]
+Matrix Compiler2: 43 bytes object code size  0.0/0.0/[0.0]
 
 

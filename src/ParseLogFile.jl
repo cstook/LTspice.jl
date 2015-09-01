@@ -122,16 +122,17 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
   foundmeasurement = false
   for line in lines
     if state == 0  # looking for "Circuit:"
-      m = match(r"^Circuit: \*\s*([\w\:\\/. ]+)",line)
+      m = match(r"^Circuit: \*\s*([\w\:\\/. ~]+)",line)
       if m!=nothing
         circuitpath = m.captures[1]
         state = 1
       end
     elseif state == 1 # look for either ".step" or measurement
-      regex = r"^(?:(\w+):|(\.step)
+      regex = r"^(?:([a-z][a-z0-9_@#$.:\\]*):|
+        (\.step)
         (?:\s+(.*?)=(.*?))
         (?:\s+(.*?)=(.*?)){0,1}
-        (?:\s+(.*?)=(.*?)){0,1}\s*$)"x
+        (?:\s+(.*?)=(.*?)){0,1}\s*$)"ix
       m = match(regex,line)
       if m!=nothing  
         if m.captures[1]!=nothing # we have a measurement
@@ -159,9 +160,9 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
         state = 2 # start looking for stepped measurements
       end
     elseif state ==  2 # look for stepped measurements or date or time
-      regex = r"^(?:Measurement:\s*(\w+)\s*$|
+      regex = r"^(?:Measurement:\s*([a-z][a-z0-9_@#$.:\\]*)\s*$|
         Date:\s*(.*?)\s*$|
-        Total[ ]elapsed[ ]time:\s*([\w.]+)\s+seconds.\s*$)"x
+        Total[ ]elapsed[ ]time:\s*([\w.]+)\s+seconds.\s*$)"ix
       m = match(regex,line)
       if m!= nothing
         if m.captures[1]!=nothing # found a measurement
@@ -200,7 +201,7 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
       while ~done(measurementsiterator,state) & ~eof(IOlog)
         line = readline(IOlog)
         if ismeasurementblock
-          m = match(r"^\s*[0-9]+\s+([0-9.eE+-]+)",line)
+          m = match(r"^\s*[0-9]+\s+([0-9.eE+-]+)"i,line)
           if m != nothing
             value = parse(Float64,m.captures[1])
             (i,state) = next(measurementsiterator,state)
@@ -220,11 +221,11 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
       measurementsrange = 1:l1  
       line = readline(IOlog)
       line = readline(IOlog)
-      while ~ismatch(r"^\w+:",line)
+      while ~ismatch(r"^[a-z][a-z0-9_@#$.:\\]*:"i,line)
         line = readline(IOlog)
       end
       for i in measurementsrange
-        m = match(r"^\w+:.*?=([0-9.eE+-]+)",line)
+        m = match(r"^[a-z][a-z0-9_@#$.:\\]*:.*?=([0-9.eE+-]+)"i,line)
         measurements[i,1,1,1] = parse(Float64,m.captures[1])
         line = readline(IOlog)
       end

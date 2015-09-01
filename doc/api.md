@@ -119,6 +119,32 @@ step dimensions is 1.
 
 Returns a three element Tuple of arrays of step names.
 
-##PerLineIterator(*LTspiceSimulation!*[,steporder=*steporder*][,
-					resultnames=*resultnames*])
+##PerLineIterator(*LTspiceSimulation!*[,steporder=*steporder*][,resultnames=*resultnames*])
+
+Creates an iterator in the format required to pass to writecsv or writedlm.
+The step order defaults to the order the steps appear in the circuit file.  It
+can be overwritten by passing an array of step names.  By default there is one
+column for each measurement and parameter.  The desired measurement and
+parameters can be set by passing an array of names to resultnames.
+
+```julia
+# write CSV with headers
+io = open("test.csv",false,true,true,false,false)
+pli = PerLineIterator(simulation)
+writecsv(io,header(pli))
+writecsv(io,pli)
+close(io)
+```
+##header(*PerLineIterator*)
+
+Returns the header for PerLineIterator in the format needed for writecsv or 
+writedlm.  this is equivalent to ```transpose(getheaders(*PerLineIterator*)).
+
+##getheaders(*PerLineIterator*)
+
+Returns an array of strings of parameter and measurement names.
+
+
+
+
 

@@ -203,7 +203,7 @@ end
 "writes circuit file back to disk if any parameters have changed"
 function update!(x::CircuitFile)
 	if x.needsupdate
-		io = open(x.circuitpath,false,true,false,false,false)  # open circuit file to be overwritten
+		io = open(x.circuitpath,false,true,false,true,false)  # open circuit file to be overwritten
 		for text in x.circuitfilearray
       print(io,text)
 		end

@@ -6,7 +6,7 @@ Constructor for LTspiceSimulation! object.  Circuitpath and execuatblepath
 are the path to the circuit file (.asc) and the LTspice executable 
 (C:/Program Files (x86)/LTC/LTspiceIV/scad3.exe).  If executable path is
 omitted, an attempt will be made to find it in the default location.
-Operations on LTspiceSimulation will modify the circuit file.
+Operations on LTspiceSimulation! will modify the circuit file.
 
 ##LTspiceSimulation(*circuitpath* [,*executablepath*])
 
@@ -61,15 +61,15 @@ Same as getindex, but with default value if index is not found
 Sets the value of a parameter.  Parameter can be specified by name
 or position.
 
-##eltype(*LTspiceSimulation*)
+##eltype(*LTspiceSimulation!*)
 
 Returns Float64.
 
-##length(*LTspiceSimulation*)
+##length(*LTspiceSimulation!*)
 
 Returns length of the dictionary like interface.  The number of parameters and measurements for non-stepped simulations.  The number of parameters for stepped simulations.
 
-##call(*LTsimulation!*, *args...*)
+##call(*LTspiceSimulation!*, *args...*)
 
 Allows non-stepped simulations to have a function call syntax.  Parameters
 are passed in the order they appear in the circuit file.  An array of
@@ -122,10 +122,10 @@ Returns a three element Tuple of arrays of step names.
 ##PerLineIterator(*LTspiceSimulation!*[,steporder=*steporder*][,resultnames=*resultnames*])
 
 Creates an iterator in the format required to pass to writecsv or writedlm.
-The step order defaults to the order the steps appear in the circuit file.  It
-can be overwritten by passing an array of step names.  By default there is one
-column for each measurement and parameter.  The desired measurement and
-parameters can be set by passing an array of names to resultnames.
+The step order defaults to the order the steps appear in the circuit file.
+Step order can be specified by passing an array of step names.  By default 
+there is one column for each measurement or parameter.  The desired measurement
+and parameters can be set by passing an array of names to resultnames.
 
 ```julia
 # write CSV with headers

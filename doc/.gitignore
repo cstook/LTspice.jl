@@ -1,0 +1,8 @@
+*.net
+*.op
+*.raw
+*.lnk
+*.log
+*.ipynd_checkpoints
+*checkpoint.ipynb
+

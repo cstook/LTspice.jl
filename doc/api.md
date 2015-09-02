@@ -138,7 +138,10 @@ close(io)
 ##header(*PerLineIterator*)
 
 Returns the header for PerLineIterator in the format needed for writecsv or 
-writedlm.  this is equivalent to ```transpose(getheaders(*PerLineIterator*))```.
+writedlm.  this is equivalent to 
+```julia
+transpose(getheaders(*PerLineIterator*))
+```.
 
 ##getheaders(*PerLineIterator*)
 

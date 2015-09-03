@@ -39,9 +39,7 @@ loadpower = example1["pload"] # run simulation, return Pload
 
 Circuit can be called like a function
 ```julia
-using Optim
-result = optimize(rload -> -example1(rload)[1],10.0,100.0)
-example1["rload"]
+loadpower = example1(100.0)  # pass Rload, return Pload
 ```
 
 Use [Optim.jl](https://github.com/JuliaOpt/Optim.jl) to perform an optimization on a LTspice simulation

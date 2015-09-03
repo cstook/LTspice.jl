@@ -3,7 +3,11 @@
 [![Build Status](https://travis-ci.org/cstook/LTspice.jl.svg?branch=master)](https://travis-ci.org/cstook/LTspice.jl)
 [![Coverage Status](https://coveralls.io/repos/cstook/LTspice.jl/badge.svg?branch=v0r4_working&service=github)](https://coveralls.io/github/cstook/LTspice.jl?branch=v0r4_working)
 
-LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice) simulation parameters and measurements.  Parameters and measurements are accessed as a dictionary like type.
+LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice).  Several interfaces are provided.
+
+1. A dictionary like interface to access parameters and measurements by name.
+2. An array interface, which is primarily for measurements of stepped simulations.
+3. Simulations can be called like functions.
 
 ## Example 1
 
@@ -12,20 +16,20 @@ LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linea
 In this example parameter x is the voltage across a 5 Ohm resistor and measurement y is the current through the resistor.
 
 Import the module.
-```
+```julia
 using LTspice
 ```
 
 Create an instance of LTspiceSimulation!.
-```
+```julia
 circuitpath = "example1.asc"
 example1 = LTspiceSimulation(circuitpath)
 ```
 
 If the LTspice executable cannot be found, it's location can be specified.
-```
+```julia
 circuitpath = "example1.asc"
-executablepath = "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe"
+executablepath = "C:/Program Files (x86)/LTC/LTspiceIV/scad3.exe"
 example1 = LTspiceSimulation(circuitpath, executablepath)
 ```
 

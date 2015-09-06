@@ -17,7 +17,7 @@ export loadlog!
 
 include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
-
+include("removetempdirectories.jl")
 
 ### BEGIN Type LTspiceSimulation and constructors ###
 
@@ -41,6 +41,7 @@ end
 
 function LTspiceSimulation(circuitpath::ASCIIString, executablepath::ASCIIString)
   td = mktempdir()
+  push!(dirlist,td) # add temp directory to list to be removed on exit
   (d,f) = splitdir(circuitpath)
   workingcircuitpath = convert(ASCIIString, joinpath(td,f))
   cp(circuitpath,workingcircuitpath)
@@ -260,8 +261,9 @@ function defaultltspiceexecutable()
       return canidatepath
     end
   end
-  error("Could not find scad.exe")
+  error("Could not find scad3.exe")
 end
+
 
 ### END other ###
 

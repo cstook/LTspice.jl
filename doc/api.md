@@ -119,6 +119,10 @@ step dimensions is 1.
 
 Returns a three element Tuple of arrays of step names.
 
+##loadlog!(*LTspiceSimulation*)
+
+Loads log file without running simulation.
+
 ##PerLineIterator(*LTspiceSimulation!*[,steporder=*steporder*][,resultnames=*resultnames*])
 
 Creates an iterator in the format required to pass to writecsv or writedlm.

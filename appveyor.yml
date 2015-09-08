@@ -9,7 +9,6 @@ branches:
   only:
     - master
     - /release-.*/
-    - try_appveyor
 
 notifications:
   - provider: Email

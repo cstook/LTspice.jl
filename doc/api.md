@@ -109,7 +109,7 @@ Returns the measurement array.  The measurement array is a 4-d array of Float64
 values.  
  
 ```julia
-value = getmeasurements(simulation, name, inner_step, middle_step, outer_step)
+value = getmeasurements(simulation, measurement_name, inner_step, middle_step, outer_step)
 ```
 
 For non-stepped simulations a 4-d array is returned where the length of all the 
@@ -117,7 +117,12 @@ step dimensions is 1.
 
 ##getstepnames(*LTspiceSimulation!*)
 
-Returns a three element Tuple of arrays of step names.
+Returns an array of step names.
+
+##getsteps(*LTspiceSimulation!*)
+
+Returns a tuple of three arrays of the step values.  Always will return three
+arrays.
 
 ##loadlog!(*LTspiceSimulation*)
 

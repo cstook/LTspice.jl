@@ -253,9 +253,17 @@ function blanklog(circuit::CircuitFile, logpath::ASCIIString)
 end
 
 function defaultltspiceexecutable()
-  possibleltspiceexecutablelocations = [
-  "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe"
-  ]
+  os = @windows? 1 : (@osx? 2 : 3)
+  if os == 1 # windows
+    possibleltspiceexecutablelocations = [
+    "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe",
+    "C:\\Program Files\\LTC\\LTspiceIV\\scad3.exe"
+    ]
+  elseif os == 2 # osx
+    possibleltspiceexecutablelocations = []
+  else # linux
+    possibleltspiceexecutablelocations = []
+  end
   for canidatepath in possibleltspiceexecutablelocations
     if ispath(canidatepath)
       return canidatepath

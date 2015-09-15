@@ -34,7 +34,7 @@ type LTspiceSimulation!
       (d,f) = splitdir(abspath(circuitpath))
       linkdir = "/home/$(ENV["USER"])/.wine/drive_c/Program Files (x86)/LTC/LTspice.jl_links"
       if ~isdir(linkdir)
-        mkdir(linkdir)
+        mkpath(linkdir)
       end
       push!(dirlist,linkdir)  # delete this on exit
       templinkdir = mktempdir(linkdir)

@@ -17,7 +17,12 @@ blist = [10.0,15.0,20.0,25.0]
 @test getstepnames(test4) == ["a","b"]
 @test getstepnames(test4.log) == getstepnames(test4)
 @test getlogpath(test4) != ""
-@test getcircuitpath(test4) == test4file
+
+islinux = @linux? true:false
+if ~islinux
+    @test getcircuitpath(test4) == test4file
+end
+
 @test typeof(getcircuitpath(test4.log)) == Type(ASCIIString)
 @test typeof(getparameters(test4)) == Array{Float64,1}
 @test getmeasurements(test4)[1,1,1,1] == 11.0

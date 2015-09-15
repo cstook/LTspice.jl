@@ -25,17 +25,29 @@ type LTspiceSimulation!
   circuit         :: CircuitFile
   log             :: LogFile
   executablepath  :: ASCIIString
-  workingdir      :: ASCIIString
   logneedsupdate  :: Bool
 
   function LTspiceSimulation!(circuitpath::ASCIIString,
-                              executablepath::ASCIIString,
-                              workingdir = dirname(circuitpath))
+                              executablepath::ASCIIString)
+    islinux = @linux? true:false
+    if islinux
+      (d,f) = splitdir(abspath(circuitpath))
+      linkdir = "/home/$(ENV["USER"])/.wine/drive_c/Program Files (x86)/LTC/LTspice.jl_links"
+      if ~isdir(linkdir)
+        mkdir(linkdir)
+      end
+      push!(dirlist,linkdir)  # delete this on exit
+      templinkdir = abspath(mktempdir(linkdir))
+      cd(templinkdir) do
+        symlink(d,"linktocircuit")
+      end
+      circuitpath = convert(ASCIIString,joinpath(templinkdir,"linktocircuit",f))
+    end
+    circuit = parse(CircuitFile,circuitpath)
     (everythingbeforedot,e) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
-    circuit = parse(CircuitFile,circuitpath)
     log = blanklog(circuit,logpath) # creates a blank log object
-    new(circuit,log,executablepath,workingdir,true)
+    new(circuit,log,executablepath,true)
   end
 end
 
@@ -46,8 +58,7 @@ function LTspiceSimulation(circuitpath::ASCIIString, executablepath::ASCIIString
   workingcircuitpath = convert(ASCIIString, joinpath(td,f))
   cp(circuitpath,workingcircuitpath)
   LTspiceSimulation!(workingcircuitpath,
-                     executablepath,
-                     dirname(abspath(circuitpath)))
+                     executablepath)
 end
 
 function LTspiceSimulation(circuitpath::ASCIIString)
@@ -260,18 +271,19 @@ function defaultltspiceexecutable()
     "C:\\Program Files\\LTC\\LTspiceIV\\scad3.exe"
     ]
   elseif os == 2 # osx
-    possibleltspiceexecutablelocations = []
+    possibleltspiceexecutablelocations = [
+    "/Applications/LTspice.app/Contents/MacOS/LTspice"]
   else # linux
-    possibleltspiceexecutablelocations = []
+    possibleltspiceexecutablelocations = [
+    "/home/$(ENV["USER"])/.wine/drive_c/Program Files (x86)/LTC/LTspiceIV/scad3.exe"]
   end
   for canidatepath in possibleltspiceexecutablelocations
     if ispath(canidatepath)
       return canidatepath
     end
   end
-  error("Could not find scad3.exe")
+  error("Could not find LTspice executable")
 end
-
 
 ### END other ###
 

@@ -12,7 +12,12 @@ show(test6.log)
 @test getmeasurementnames(test6.log) == getmeasurementnames(test6)
 @test getstepnames(test6) == []
 @test getlogpath(test6) != ""
-@test getcircuitpath(test6) == test6file
+
+islinux = @linux? true:false
+if ~islinux
+    @test getcircuitpath(test6) == test6file
+end
+
 @test typeof(getcircuitpath(test6.log)) == Type(ASCIIString)
 @test typeof(getparameters(test6)) == Array{Float64,1}
 #@test getmeasurements(test6)[1,1,1,1] == 1.0

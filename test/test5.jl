@@ -16,7 +16,12 @@ alist = [1.0,2.0]
 @test getstepnames(test5) == ["a"]
 @test getstepnames(test5.log) == getstepnames(test5)
 @test getlogpath(test5) != ""
-@test getcircuitpath(test5) == test5file
+
+islinux = @linux? true:false
+if ~islinux
+    @test getcircuitpath(test5) == test5file
+end
+
 @test typeof(getcircuitpath(test5.log)) == Type(ASCIIString)
 @test typeof(getparameters(test5)) == Array{Float64,1}
 @test getmeasurements(test5)[1,1,1,1] == 1.0

@@ -37,7 +37,7 @@ type LTspiceSimulation!
         mkdir(linkdir)
       end
       push!(dirlist,linkdir)  # delete this on exit
-      templinkdir = abspath(mktempdir(linkdir))
+      templinkdir = mktempdir(linkdir)
       cd(templinkdir) do
         symlink(d,"linktocircuit")
       end
@@ -241,7 +241,16 @@ function run!(x::LTspiceSimulation!)
   if x.logneedsupdate
     update!(x.circuit)
     if (x.executablepath != "")  # so travis dosen't need to load LTspice
-      run(`$(getltspiceexecutablepath(x)) -b -Run $(getcircuitpath(x))`)
+      println("exec path = $(getltspiceexecutablepath(x))")
+      islinux = @linux? true:false
+      if islinux
+        drive_c = "/home/$(ENV["USER"])/.wine/drive_c"
+        winecircuitpath = joinpath("C:",relpath(getcircuitpath(x),drive_c))
+        println("circuit path = $winecircuitpath")
+        run(`$(getltspiceexecutablepath(x)) -b -Run $winecircuitpath`)
+      else
+        run(`$(getltspiceexecutablepath(x)) -b -Run $(getcircuitpath(x))`)
+      end
     end
     x.log = parse(x.log)
     x.logneedsupdate = false

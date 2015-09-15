@@ -241,12 +241,10 @@ function run!(x::LTspiceSimulation!)
   if x.logneedsupdate
     update!(x.circuit)
     if (x.executablepath != "")  # so travis dosen't need to load LTspice
-      println("exec path = $(getltspiceexecutablepath(x))")
       islinux = @linux? true:false
       if islinux
         drive_c = "/home/$(ENV["USER"])/.wine/drive_c"
         winecircuitpath = joinpath("C:",relpath(getcircuitpath(x),drive_c))
-        println("circuit path = $winecircuitpath")
         run(`$(getltspiceexecutablepath(x)) -b -Run $winecircuitpath`)
       else
         run(`$(getltspiceexecutablepath(x)) -b -Run $(getcircuitpath(x))`)

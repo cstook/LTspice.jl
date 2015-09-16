@@ -63,9 +63,9 @@ rload_for_maximum_power = example1["rload"]
 
 For additional information
 
-[LTspice.jl API](LTspice.jl/doc/api.md)
+[LTspice.jl API](https://github.com/cstook/LTspice.jl/blob/master/doc/api.md)
 
-[Introduction to LTspice.jl](LTspice.jl/doc/introduction.ipynb)
+[Introduction to LTspice.jl](https://github.com/cstook/LTspice.jl/blob/master/doc/introduction.ipynb)
 
 
 

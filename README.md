@@ -39,7 +39,7 @@ Access parameters and measurements using their name as the key.
 
 Set a parameter to a new value.
 ```julia
-example1["rload"] = 20.0  # set parameter Rload to 25.0
+example1["rload"] = 20.0  # set parameter Rload to 20.0
 ```
 
 Read the resulting measurement.

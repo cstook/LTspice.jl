@@ -156,7 +156,7 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
           end
           isstep = true
         end
-      elseif isstep | foundmeasurement # if we are seeing .step's measurements and then see a blank line
+      elseif isstep || foundmeasurement # if we are seeing .step's measurements and then see a blank line
         state = 2 # start looking for stepped measurements
       end
     elseif state ==  2 # look for stepped measurements or date or time
@@ -198,7 +198,7 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
       measurements = Array(Float64,l1,l2,l3,l4)
       ismeasurementblock = false
       state = start(measurementsiterator)
-      while ~done(measurementsiterator,state) & ~eof(IOlog)
+      while ~done(measurementsiterator,state) && ~eof(IOlog)
         line = readline(IOlog)
         if ismeasurementblock
           m = match(r"^\s*[0-9]+\s+([0-9.eE+-]+)"i,line)
@@ -236,8 +236,8 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
   else 
     measurements = Array(Float64,0,0,0,0)
   end
-  cp = convert(ASCIIString,copy(circuitpath))
-  nslf = NonSteppedLogFile(logpath, cp, timestamp, duration, measurementnames, measurements)
+  cpascii = convert(ASCIIString,copy(circuitpath))
+  nslf = NonSteppedLogFile(logpath, cpascii, timestamp, duration, measurementnames, measurements)
   if isstep
     return SteppedLogFile(nslf, stepnames, steps)
   else 

@@ -16,7 +16,7 @@ end
 function next(x :: MultiLevelIterator, state :: Array{Int,1})
     i = 1
     d = false
-    while (i<=length(x.max)) & ~d
+    while (i<=length(x.max)) && ~d
         if state[i] < x.max[i]
             state[i] += 1
             d = true

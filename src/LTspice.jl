@@ -12,7 +12,7 @@ import Base: call
 export LTspiceSimulation!, LTspiceSimulation, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
 export getlogpath, getmeasurementnames, getstepnames, getsteps
-export PerLineIterator, getparameternames, getparameters
+export PerLineIterator, getparameternames
 export loadlog!
 
 include("ParseCircuitFile.jl")
@@ -44,7 +44,7 @@ type LTspiceSimulation!
       circuitpath = convert(ASCIIString,joinpath(templinkdir,"linktocircuit",f))
     end
     circuit = parse(CircuitFile,circuitpath)
-    (everythingbeforedot,e) = splitext(circuitpath)
+    (everythingbeforedot,dontcare) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
     log = blanklog(circuit,logpath) # creates a blank log object
     new(circuit,log,executablepath,true)

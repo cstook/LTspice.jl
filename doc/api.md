@@ -3,10 +3,9 @@
 ##LTspiceSimulation!(*circuitpath* [,*executablepath*])
 
 Constructor for LTspiceSimulation! object.  Circuitpath and execuatblepath 
-are the path to the circuit file (.asc) and the LTspice executable 
-(C:/Program Files (x86)/LTC/LTspiceIV/scad3.exe).  If executable path is
-omitted, an attempt will be made to find it in the default location.
-Operations on LTspiceSimulation! will modify the circuit file.
+are the path to the circuit file (.asc) and the LTspice executable.  If
+executable path is omitted, an attempt will be made to find it in the default
+location.  Operations on LTspiceSimulation! will modify the circuit file.
 
 ##LTspiceSimulation(*circuitpath* [,*executablepath*])
 
@@ -91,7 +90,7 @@ Returns the path to the LTspice executable.
 ##getparameternames(*LTspiceSimulation!*)
 
 Returns an array of the parameters names in the order they appear in the
-circuit file
+circuit file.
 
 ##getparameters(*LTspiceSimulation!*)
 
@@ -133,8 +132,9 @@ Loads log file without running simulation.
 Creates an iterator in the format required to pass to writecsv or writedlm.
 The step order defaults to the order the steps appear in the circuit file.
 Step order can be specified by passing an array of step names.  By default 
-there is one column for each measurement or parameter.  The desired measurement
-and parameters can be set by passing an array of names to resultnames.
+there is one column for each step, measurement, and parameter.  The desired
+measurements and parameters can be set by passing an array of names to
+resultnames.
 
 ```julia
 # write CSV with headers

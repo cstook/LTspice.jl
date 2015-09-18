@@ -70,7 +70,22 @@ function LTspiceSimulation!(circuitpath::ASCIIString)
   # look up default executable if not specified
   LTspiceSimulation!(circuitpath, defaultltspiceexecutable())
 end
+"""
+LTspiceSimulation!(*circuitpath* [,*executablepath*])
+LTspiceSimulation(*circuitpath* [,*executablepath*])
 
+Constructor for LTspiceSimulation! object.  Circuitpath and execuatblepath 
+are the path to the circuit file (.asc) and the LTspice executable.  If 
+executable path is omitted, an attempt will be made to find it in the default
+location for your operating system.
+
+Operations on LTspiceSimulation! will modify the circuit file.
+
+LTspiceSimulation creates an object which works on a copy of the circuit in a
+temporary directory. LTspice will need to be able to find all sub-circuits and
+libraries from the temporary directory or the simulation will not run.
+"""
+LTspiceSimulation, LTspiceSimulation!
 ### END Type LTspice and constructors ###
 
 include("PerLineIterator.jl")  # for delimited output
@@ -209,15 +224,59 @@ end
 ### END overloading Base ###
 
 ### BEGIN LTspiceSimulation! specific methods ###
- 
-getcircuitpath(x::LTspiceSimulation!) = getcircuitpath(x.circuit)
-getlogpath(x::LTspiceSimulation!) = getlogpath(x.log)
-getltspiceexecutablepath(x::LTspiceSimulation!) = x.executablepath
-getparameternames(x::LTspiceSimulation!) = getparameternames(x.circuit)
-getparameters(x::LTspiceSimulation!) = getparameters(x.circuit)
-getmeasurementnames(x::LTspiceSimulation!) = getmeasurementnames(x.circuit)
-getstepnames(x::LTspiceSimulation!) = getstepnames(x.circuit)
+"""
+getcircuitpath(*LTspiceSimulation!*)
 
+Returns path to the circuit file.
+
+This is the path to the working circuit file.  If LTspiceSimulation was used 
+or if running under wine, this will not be the path given to the constructor.
+""" 
+getcircuitpath(x::LTspiceSimulation!) = getcircuitpath(x.circuit)
+"""
+getlogpath(*LTspiceSimulation!*)
+
+Returns path to the log file.
+"""
+getlogpath(x::LTspiceSimulation!) = getlogpath(x.log)
+"""
+getltspiceexecutablepath(*LTspiceSimulation!*)
+
+Returns path to the LTspice executable
+"""
+getltspiceexecutablepath(x::LTspiceSimulation!) = x.executablepath
+"""
+getparameternames(*LTspiceSimulation!*)
+
+Returns an array of the parameters names in the order they appear in the
+circuit file.
+"""
+getparameternames(x::LTspiceSimulation!) = getparameternames(x.circuit)
+"""
+getparameters(*LTspiceSimulation!*)
+
+Returns an array of the parameters names in the order they appear in the
+circuit file
+"""
+getparameters(x::LTspiceSimulation!) = getparameters(x.circuit)
+"""
+getmeasurementnames(*LTspiceSimulation!*)
+
+Returns an array of the measurement names in the order they appear in the
+circuit file.
+"""
+getmeasurementnames(x::LTspiceSimulation!) = getmeasurementnames(x.circuit)
+"""
+getstepnames(*LTspiceSimulation!*)
+
+Returns an array of step names.
+"""
+getstepnames(x::LTspiceSimulation!) = getstepnames(x.circuit)
+"""
+loadlog!(*LTspiceSimulation*)
+
+Loads log file without running simulation.
+"""
 function loadlog!(x::LTspiceSimulation!)
 # loads log file without running simulation
 # sets logneedsupdate to false
@@ -225,12 +284,27 @@ function loadlog!(x::LTspiceSimulation!)
   x.logneedsupdate = false
   return nothing
 end
+"""
+getmeasurements(*LTspiceSimulation!*)
 
+Returns the measurement array.  The measurement array is a 4-d array of Float64
+values.
+
+```julia
+value = getmeasurements(simulation, measurement_name, inner_step, middle_step,
+                        outer_step)
+``` 
+"""
 function getmeasurements(x::LTspiceSimulation!)
   run!(x)
   getmeasurements(x.log)
 end
+"""
+getsteps(*LTspiceSimulation!*)
 
+Returns a tuple of three arrays of the step values.  Always will return three
+arrays.
+"""
 function getsteps(x::LTspiceSimulation!)
   run!(x)
   getsteps(x.log)

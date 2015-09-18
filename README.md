@@ -32,8 +32,7 @@ using LTspice
 Create an instance of LTspiceSimulation!.
 ```julia
 circuitpath = "example1.asc"
-executablepath = "C:/Program Files (x86)/LTC/LTspiceIV/scad3.exe"
-example1 = LTspiceSimulation(circuitpath,executablepath)
+example1 = LTspiceSimulation(circuitpath)
 ```
 
 Access parameters and measurements using their name as the key.
@@ -60,8 +59,11 @@ using Optim
 result = optimize(rload -> -example1(rload)[1],10.0,100.0)
 rload_for_maximum_power = example1["rload"]
 ```
+## Supported Platforms
 
-For additional information
+LTspice.jl works on windows and linux with LTspice under wine.  Osx is not supported.
+
+## Additional Information
 
 [LTspice.jl API](https://github.com/cstook/LTspice.jl/blob/master/doc/api.md)
 

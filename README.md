@@ -20,7 +20,7 @@ The [julia documentation](http://docs.julialang.org) section on installing unreg
 
 LTspice.jl is only compatible with julia v0.4.
 
-## [Example 1](https://github.com/cstook/LTspice.jl/blob/v0r4_working/examples/example%201/example1.ipynb)
+## [Example 1](https://github.com/cstook/LTspice.jl/blob/master/examples/example%201/example1.jpg)
 
 <img src="https://github.com/cstook/LTspice.jl/blob/v0r4_working/examples/example%201/example1.jpg">
 

@@ -1,17 +1,17 @@
-# PerLineIterator(LTspiceSimulation!) --> iterable collection of 1d arrays
+# PerLineIterator(LTspiceSimulation) --> iterable collection of 1d arrays
 #
 # used to pass to writedlm to create a delimited file
 
 export getheaders, header
 
 immutable PerLineIterator
-  simulation        :: LTspiceSimulation!
+  simulation        :: LTspiceSimulation
   header            :: Array{ASCIIString,1}
   stepindexes       :: Array{Int,1}
   resultindexes     :: Array{Tuple{Bool,Int},1} # is parameter and index into array
   mli               :: MultiLevelIterator
 
-  function PerLineIterator(simulation :: LTspiceSimulation!;
+  function PerLineIterator(simulation :: LTspiceSimulation;
                            steporder = getstepnames(simulation),
                            resultnames = vcat(getparameternames(simulation),
                                               getmeasurementnames(simulation)))
@@ -50,7 +50,7 @@ immutable PerLineIterator
 end
 
 """
-PerLineIterator(*LTspiceSimulation!*[,steporder=*steporder*]
+PerLineIterator(*LTspiceSimulation*[,steporder=*steporder*]
                 [,resultnames=*resultnames*])
 
 Creates an iterator in the format required to pass to writecsv or writedlm.

@@ -9,7 +9,7 @@ import Base: getindex, setindex!, get, endof
 import Base: start, next, done, length, eltype
 import Base: call
 
-export LTspiceSimulation!, LTspiceSimulation, getmeasurements
+export LTspiceSimulation, LTspiceSimulationTempDir, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
 export getlogpath, getmeasurementnames, getstepnames, getsteps
 export PerLineIterator, getparameternames
@@ -19,15 +19,15 @@ include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
 include("removetempdirectories.jl")
 
-### BEGIN Type LTspiceSimulation and constructors ###
+### BEGIN Type LTspiceSimulationTempDir and constructors ###
 
-type LTspiceSimulation!
+type LTspiceSimulation
   circuit         :: CircuitFile
   log             :: LogFile
   executablepath  :: ASCIIString
   logneedsupdate  :: Bool
 
-  function LTspiceSimulation!(circuitpath::ASCIIString,
+  function LTspiceSimulation(circuitpath::ASCIIString,
                               executablepath::ASCIIString)
     islinux = @linux? true:false
     if islinux
@@ -51,49 +51,49 @@ type LTspiceSimulation!
   end
 end
 
-function LTspiceSimulation(circuitpath::ASCIIString, executablepath::ASCIIString)
+function LTspiceSimulationTempDir(circuitpath::ASCIIString, executablepath::ASCIIString)
   td = mktempdir()
   push!(dirlist,td) # add temp directory to list to be removed on exit
   (d,f) = splitdir(circuitpath)
   workingcircuitpath = convert(ASCIIString, joinpath(td,f))
   cp(circuitpath,workingcircuitpath)
-  LTspiceSimulation!(workingcircuitpath,
+  LTspiceSimulation(workingcircuitpath,
                      executablepath)
+end
+
+function LTspiceSimulationTempDir(circuitpath::ASCIIString)
+  # look up default executable if not specified
+  LTspiceSimulationTempDir(circuitpath, defaultltspiceexecutable())
 end
 
 function LTspiceSimulation(circuitpath::ASCIIString)
   # look up default executable if not specified
   LTspiceSimulation(circuitpath, defaultltspiceexecutable())
 end
-
-function LTspiceSimulation!(circuitpath::ASCIIString)
-  # look up default executable if not specified
-  LTspiceSimulation!(circuitpath, defaultltspiceexecutable())
-end
 """
-LTspiceSimulation!(*circuitpath* [,*executablepath*])
 LTspiceSimulation(*circuitpath* [,*executablepath*])
+LTspiceSimulationTempDir(*circuitpath* [,*executablepath*])
 
-Constructor for LTspiceSimulation! object.  Circuitpath and execuatblepath 
+Constructor for LTspiceSimulation object.  Circuitpath and execuatblepath 
 are the path to the circuit file (.asc) and the LTspice executable.  If 
 executable path is omitted, an attempt will be made to find it in the default
 location for your operating system.
 
-Operations on LTspiceSimulation! will modify the circuit file.
+Operations on LTspiceSimulation will modify the circuit file.
 
-LTspiceSimulation creates an object which works on a copy of the circuit in a
+LTspiceSimulationTempDir creates an object which works on a copy of the circuit in a
 temporary directory. LTspice will need to be able to find all sub-circuits and
 libraries from the temporary directory or the simulation will not run.
 """
-LTspiceSimulation, LTspiceSimulation!
+LTspiceSimulationTempDir, LTspiceSimulation
 ### END Type LTspice and constructors ###
 
 include("PerLineIterator.jl")  # for delimited output
 
 ### BEGIN Overloading Base ###
 
-function show(io::IO, x::LTspiceSimulation!)
-  println(io,"LTspiceSimulation!:")
+function show(io::IO, x::LTspiceSimulation)
+  println(io,"LTspiceSimulation:")
   println(io,"circuit path = $(getcircuitpath(x.circuit))")
   if hasparameters(x.circuit)
     println(io,"")
@@ -133,23 +133,23 @@ function show(io::IO, x::LTspiceSimulation!)
   end
 end
 
-# LTspiceSimulation! is a Dict 
+# LTspiceSimulation is a Dict 
 #   of its parameters and measurements for non stepped simulations (measurements read only)
 #   of its parameters for stepped simulations
-haskey(x::LTspiceSimulation!, key::ASCIIString) = haskey(x.circuit,key) | haskey(x.log,key)
+haskey(x::LTspiceSimulation, key::ASCIIString) = haskey(x.circuit,key) | haskey(x.log,key)
 
-function keys(x::LTspiceSimulation!)
+function keys(x::LTspiceSimulation)
   # returns an array all keys (param and meas)
   vcat(collect(keys(x.circuit)),collect(keys(x.log)))
 end
 
   # returns an array of all values (param and meas)
-function values(x::LTspiceSimulation!)
+function values(x::LTspiceSimulation)
   run!(x)
   vcat(collect(values(x.circuit)),collect(values(x.log)))
 end
 
-function getindex(x::LTspiceSimulation!, key::ASCIIString)
+function getindex(x::LTspiceSimulation, key::ASCIIString)
   # returns value for key in either param or meas
   # value = x[key]
   # dosen't handle multiple keys, but neither does standard julia library for Dict
@@ -164,7 +164,7 @@ function getindex(x::LTspiceSimulation!, key::ASCIIString)
   return(v)
 end
 
-function get(x::LTspiceSimulation!, key::ASCIIString, default:: Float64)
+function get(x::LTspiceSimulation, key::ASCIIString, default:: Float64)
   # returns value for key in either param or meas
   # returns default if key not found
   if haskey(x,key)
@@ -174,7 +174,7 @@ function get(x::LTspiceSimulation!, key::ASCIIString, default:: Float64)
   end
 end
 
-function setindex!(x::LTspiceSimulation!, value:: Float64, key::ASCIIString)
+function setindex!(x::LTspiceSimulation, value:: Float64, key::ASCIIString)
   # sets the value of param specified by key
   # x[key] = value
   # meas Dict cannot be set.  It is the result of a simulation
@@ -188,27 +188,27 @@ function setindex!(x::LTspiceSimulation!, value:: Float64, key::ASCIIString)
   end
 end
 
-function setindex!(x::LTspiceSimulation!, value:: Float64, index:: Int)
+function setindex!(x::LTspiceSimulation, value:: Float64, index:: Int)
   x.logneedsupdate = true 
   x.circuit[index] = value 
 end
 
-# LTspiceSimulation is an read only array of its measurements
+# LTspiceSimulationTempDir is an read only array of its measurements
 # Intended for use in interactive sessions only.
 # For type stablity use getmeasurements()
-function getindex(x::LTspiceSimulation!,index::Int)
+function getindex(x::LTspiceSimulation,index::Int)
   run!(x)
   x.log[index]
 end
-function getindex(x::LTspiceSimulation!, i1::Int, i2::Int, i3::Int, i4::Int)
+function getindex(x::LTspiceSimulation, i1::Int, i2::Int, i3::Int, i4::Int)
   run!(x)
   x.log[i1,i2,i3,i4] 
 end
 
-eltype(x::LTspiceSimulation!) = Float64 
-length(x::LTspiceSimulation!) = length(x.log) + length(x.circuit)
+eltype(x::LTspiceSimulation) = Float64 
+length(x::LTspiceSimulation) = length(x.log) + length(x.circuit)
 
-function call(x::LTspiceSimulation!, args...)
+function call(x::LTspiceSimulation, args...)
   if length(args) != length(x.circuit)
     throw(ArgumentError("number of arguments must match number of parameters"))
   end
@@ -223,61 +223,61 @@ end
 
 ### END overloading Base ###
 
-### BEGIN LTspiceSimulation! specific methods ###
+### BEGIN LTspiceSimulation specific methods ###
 """
-getcircuitpath(*LTspiceSimulation!*)
+getcircuitpath(*LTspiceSimulation*)
 
 Returns path to the circuit file.
 
-This is the path to the working circuit file.  If LTspiceSimulation was used 
+This is the path to the working circuit file.  If LTspiceSimulationTempDir was used 
 or if running under wine, this will not be the path given to the constructor.
 """ 
-getcircuitpath(x::LTspiceSimulation!) = getcircuitpath(x.circuit)
+getcircuitpath(x::LTspiceSimulation) = getcircuitpath(x.circuit)
 """
-getlogpath(*LTspiceSimulation!*)
+getlogpath(*LTspiceSimulation*)
 
 Returns path to the log file.
 """
-getlogpath(x::LTspiceSimulation!) = getlogpath(x.log)
+getlogpath(x::LTspiceSimulation) = getlogpath(x.log)
 """
-getltspiceexecutablepath(*LTspiceSimulation!*)
+getltspiceexecutablepath(*LTspiceSimulation*)
 
 Returns path to the LTspice executable
 """
-getltspiceexecutablepath(x::LTspiceSimulation!) = x.executablepath
+getltspiceexecutablepath(x::LTspiceSimulation) = x.executablepath
 """
-getparameternames(*LTspiceSimulation!*)
+getparameternames(*LTspiceSimulation*)
 
 Returns an array of the parameters names in the order they appear in the
 circuit file.
 """
-getparameternames(x::LTspiceSimulation!) = getparameternames(x.circuit)
+getparameternames(x::LTspiceSimulation) = getparameternames(x.circuit)
 """
-getparameters(*LTspiceSimulation!*)
+getparameters(*LTspiceSimulation*)
 
 Returns an array of the parameters names in the order they appear in the
 circuit file
 """
-getparameters(x::LTspiceSimulation!) = getparameters(x.circuit)
+getparameters(x::LTspiceSimulation) = getparameters(x.circuit)
 """
-getmeasurementnames(*LTspiceSimulation!*)
+getmeasurementnames(*LTspiceSimulation*)
 
 Returns an array of the measurement names in the order they appear in the
 circuit file.
 """
-getmeasurementnames(x::LTspiceSimulation!) = getmeasurementnames(x.circuit)
+getmeasurementnames(x::LTspiceSimulation) = getmeasurementnames(x.circuit)
 """
-getstepnames(*LTspiceSimulation!*)
+getstepnames(*LTspiceSimulation*)
 
 Returns an array of step names.
 """
-getstepnames(x::LTspiceSimulation!) = getstepnames(x.circuit)
+getstepnames(x::LTspiceSimulation) = getstepnames(x.circuit)
 """
-loadlog!(*LTspiceSimulation*)
+loadlog!(*LTspiceSimulationTempDir*)
 
 Loads log file without running simulation.
 """
-function loadlog!(x::LTspiceSimulation!)
+function loadlog!(x::LTspiceSimulation)
 # loads log file without running simulation
 # sets logneedsupdate to false
   x.log = parse(x.log)
@@ -285,7 +285,7 @@ function loadlog!(x::LTspiceSimulation!)
   return nothing
 end
 """
-getmeasurements(*LTspiceSimulation!*)
+getmeasurements(*LTspiceSimulation*)
 
 Returns the measurement array.  The measurement array is a 4-d array of Float64
 values.
@@ -295,22 +295,22 @@ value = getmeasurements(simulation, measurement_name, inner_step, middle_step,
                         outer_step)
 ``` 
 """
-function getmeasurements(x::LTspiceSimulation!)
+function getmeasurements(x::LTspiceSimulation)
   run!(x)
   getmeasurements(x.log)
 end
 """
-getsteps(*LTspiceSimulation!*)
+getsteps(*LTspiceSimulation*)
 
 Returns a tuple of three arrays of the step values.  Always will return three
 arrays.
 """
-function getsteps(x::LTspiceSimulation!)
+function getsteps(x::LTspiceSimulation)
   run!(x)
   getsteps(x.log)
 end
 
-function run!(x::LTspiceSimulation!)
+function run!(x::LTspiceSimulation)
   # runs simulation and updates measurement values
   if x.logneedsupdate
     update!(x.circuit)

@@ -3,7 +3,7 @@ using Base.Test
 
 test7file = "test7.asc"
 exc = ""
-test7 = LTspiceSimulation!(test7file,exc)
+test7 = LTspiceSimulation(test7file,exc)
 show(test7)
 show(test7.circuit)
 show(test7.log)

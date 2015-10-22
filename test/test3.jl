@@ -4,7 +4,7 @@ cp("test3.log","temp\\test3.log",remove_destination = true)
 
 filename = "temp\\test3.asc"
 exc = ""  # null string will not run LTspice.exe.  Test parsing only.
-test3 = LTspiceSimulation!(filename, exc)
+test3 = LTspiceSimulation(filename, exc)
 
 parameternamesverify = ["a","b","c","d","e","f","g","h","i","j","k","l"]
 for (verify,parameter,value) in zip(parameternamesverify,getparameternames(test3),getparameters(test3))
@@ -36,7 +36,7 @@ end
 dummyread = test3["x"]  # will force parameters to write to file
                         # sim will not run since exc = ""
 
-test3b = LTspiceSimulation(filename, exc)
+test3b = LTspiceSimulationTempDir(filename, exc)
 for (key,value) in test3b.circuit
   @test_approx_eq(test3b[key],1.0)
 end

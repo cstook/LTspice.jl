@@ -3,7 +3,7 @@ using LTspice
 using Base.Test
 
 filename = "test1.asc"
-test1 = LTspiceSimulation(filename)
+test1 = LTspiceSimulationTempDir(filename)
 println(getltspiceexecutablepath(test1))
 println(getcircuitpath(test1))
 v = 20.0

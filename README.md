@@ -29,10 +29,10 @@ Import the module.
 using LTspice
 ```
 
-Create an instance of LTspiceSimulation!.
+Create an instance of LTspiceSimulation.
 ```julia
 circuitpath = "example1.asc"
-example1 = LTspiceSimulation(circuitpath)
+example1 = LTspiceSimulationTempDir(circuitpath)
 ```
 
 Access parameters and measurements using their name as the key.

@@ -3,7 +3,7 @@ using Base.Test
 
 PCF_test2file = "PCF_test2.asc"
 exc = ""
-PCF_test2 = LTspiceSimulation!(PCF_test2file,exc)
+PCF_test2 = LTspiceSimulation(PCF_test2file,exc)
 
 v1list = [1.0, 1.1487, 1.31951, 1.51572, 1.7411, 
           2.0, 2.2974, 2.63902, 3.03143, 3.4822,

@@ -3,7 +3,7 @@ using Base.Test
 
 PCF_test1file = "PCF_test1.asc"
 exc = ""
-PCF_test1 = LTspiceSimulation!(PCF_test1file,exc)
+PCF_test1 = LTspiceSimulation(PCF_test1file,exc)
 show(PCF_test1)
 show(PCF_test1.circuit)
 show(PCF_test1.log)

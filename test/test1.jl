@@ -1,6 +1,6 @@
 filename = "test1.asc"
 exc = ""  # null string will not run LTspice.exe.  Test parsing only.
-test1 = LTspiceSimulation!(filename,exc)
+test1 = LTspiceSimulation(filename,exc)
 show(test1)
 show(test1.circuit)
 show(test1.log)
@@ -20,14 +20,14 @@ show(test1.log)
 @test eltype(test1.circuit) == Type(Float64)
 
 t = try
-  LTspiceSimulation(filename)
+  LTspiceSimulationTempDir(filename)
 catch
   1  # LTspice is not inatalled on travis
 end
 #@test t == 1   # uncomment for travis
 
 t = try
-  LTspiceSimulation!(filename)
+  LTspiceSimulation(filename)
 catch
   1  # LTspice is not inatalled on travis
 end

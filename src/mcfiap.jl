@@ -7,54 +7,54 @@ function makecircuitfileincludeabsolutepath(originalcircuitpath::ASCIIString,
                                      executablepath::ASCIIString)
   executabledir = abspath(dirname(executablepath))
   originalcircuitdir = abspath(dirname(originalcircuitpath))
-  println(originalcircuitdir)
   ltspiceincludesearchpath = [joinpath(executabledir,"\\lib\\sub"),
                               originalcircuitdir]
   ltspicelibsearchpath = [joinpath(executabledir,"\\lib\\cmp"),
                           joinpath(executabledir,"\\lib\\sub"),
                           originalcircuitdir]
   workingdirectory = pwd()
-  println("cd(originalcircuitdir)")
   cd(originalcircuitdir)
   iocircuitread  = open(workingcircuitpath,true,false,false,false,false)
   lines = readlines(iocircuitread)
   close(iocircuitread)
   iocircuitwrite  = open(workingcircuitpath,false,true,false,true,false)
+  regexposition = 1
   for line in lines
     regexposition = 1
     if ismatch(r"^TEXT .*?!"i,line) # found a directive
       while regexposition < endof(line)
-        includematch = match(r"(?:.include|inc)[ ]+(.*)(?:\\n|\r|$)"ix,
-                        line,regexposition)
-        if includematch != nothing
-          regexposition += includematch.offset+length(includematch.match)-1
-          includefile = includematch.captures[1]
-          if ~islinux
-            if ~isabspath(includefile) |
-               ~isfile(joinpath(ltspiceincludesearchpath[1],includefile))
-              absolutefilepathfile = abspath(includefile)
-              line = replace(line,includefile,absolutefilepathfile)
-              regexposition += length(absolutefilepathfile)-length(includefile)
+        m = match(r"(.include|.inc|.lib)[ ]+(.*?)(?:\\n|\r|$)"i,
+                  line,regexposition)
+        if m == nothing 
+          regexposition = endof(line)
+        else
+          regexposition = m.offset+length(m.match)
+          if (m.captures[1] == ".include") | (m.captures[1] == ".inc")
+            includefile = m.captures[2]
+            if ~islinux
+              if ~isabspath(includefile) |
+                 ~isfile(joinpath(ltspiceincludesearchpath[1],includefile))
+                absolutefilepathfile = abspath(includefile)
+                line = replace(line,includefile,absolutefilepathfile)
+                regexposition += length(absolutefilepathfile)-length(includefile)
+              end
+            else
+              # put linux code here
             end
-          else
-            # put linux code here
           end
-        end
-        libmatch = match(r"(?:.lib)[ ]+(.*)(?:\\n|\r|$)"ix,
-                        line,regexposition)
-        if libmatch != nothing
-          regexposition += libmatch.offset+length(libmatch.match)-1
-          libfile = libmatch.captures[1]
-          if ~islinux
-            if ~isabspath(libfile) |
-               ~isfile(joinpath(ltspiceincludesearchpath[1],libfile)) |
-               ~isfile(joinpath(ltspiceincludesearchpath[2],libfile))
-              absolutefilepathfile = abspath(libfile) 
-              line = replace(line,libfile,absolutefilepathfile)
-              regexposition += length(absolutefilepathfile)-length(libfile)
+          if m.captures[1] == ".lib"
+            libfile = m.captures[2]
+            if ~islinux
+              if ~isabspath(libfile) |
+                 ~isfile(joinpath(ltspiceincludesearchpath[1],libfile)) |
+                 ~isfile(joinpath(ltspiceincludesearchpath[2],libfile))
+                absolutefilepathfile = abspath(libfile) 
+                line = replace(line,libfile,absolutefilepathfile)
+                regexposition += length(absolutefilepathfile)-length(libfile)
+              end
+            else
+              # put linux code here
             end
-          else
-            # put linux code here
           end
         end
       end

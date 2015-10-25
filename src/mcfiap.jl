@@ -7,11 +7,11 @@ function makecircuitfileincludeabsolutepath(originalcircuitpath::ASCIIString,
                                      executablepath::ASCIIString)
   executabledir = abspath(dirname(executablepath))
   originalcircuitdir = abspath(dirname(originalcircuitpath))
-  ltspiceincludesearchpath = [joinpath(executabledir,"\\lib\\sub"),
+  ltspiceincludesearchpath = [joinpath(executabledir,"lib\\sub"),
                               originalcircuitdir]
-  ltspicelibsearchpath = [joinpath(executabledir,"\\lib\\cmp"),
-                          joinpath(executabledir,"\\lib\\sub"),
-                          originalcircuitdir]
+  ltspicelibsearchpath = [joinpath(executabledir,"lib\\cmp"),
+                          joinpath(executabledir,"lib\\sub"),
+                          originalcircuitdir]                       
   workingdirectory = pwd()
   cd(originalcircuitdir)
   iocircuitread  = open(workingcircuitpath,true,false,false,false,false)
@@ -33,8 +33,7 @@ function makecircuitfileincludeabsolutepath(originalcircuitpath::ASCIIString,
           if (m.captures[1] == ".include") | (m.captures[1] == ".inc")
             includefile = m.captures[2]
             if ~islinux
-              if ~isabspath(includefile) |
-                 ~isfile(joinpath(ltspiceincludesearchpath[1],includefile))
+              if ~isfile(joinpath(ltspiceincludesearchpath[1],includefile))
                 absolutefilepathfile = abspath(includefile)
                 line = replace(line,includefile,absolutefilepathfile)
                 regexposition += length(absolutefilepathfile)-length(includefile)
@@ -46,9 +45,9 @@ function makecircuitfileincludeabsolutepath(originalcircuitpath::ASCIIString,
           if m.captures[1] == ".lib"
             libfile = m.captures[2]
             if ~islinux
-              if ~isabspath(libfile) |
-                 ~isfile(joinpath(ltspiceincludesearchpath[1],libfile)) |
-                 ~isfile(joinpath(ltspiceincludesearchpath[2],libfile))
+              inpath1 = isfile(joinpath(ltspicelibsearchpath[1],libfile))
+              inpath2 = isfile(joinpath(ltspicelibsearchpath[2],libfile))
+              if ~ (inpath1 | inpath2)
                 absolutefilepathfile = abspath(libfile) 
                 line = replace(line,libfile,absolutefilepathfile)
                 regexposition += length(absolutefilepathfile)-length(libfile)

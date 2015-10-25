@@ -32,7 +32,7 @@ function makecircuitfileincludeabsolutepath(originalcircuitpath::ASCIIString,
           regexposition = m.offset+length(m.match)
           if (m.captures[1] == ".include") | (m.captures[1] == ".inc")
             includefile = m.captures[2]
-            if ~islinux
+            if true #~islinux
               if ~isfile(joinpath(ltspiceincludesearchpath[1],includefile))
                 absolutefilepathfile = abspath(includefile)
                 line = replace(line,includefile,absolutefilepathfile)
@@ -44,7 +44,7 @@ function makecircuitfileincludeabsolutepath(originalcircuitpath::ASCIIString,
           end
           if m.captures[1] == ".lib"
             libfile = m.captures[2]
-            if ~islinux
+            if true # ~islinux
               inpath1 = isfile(joinpath(ltspicelibsearchpath[1],libfile))
               inpath2 = isfile(joinpath(ltspicelibsearchpath[2],libfile))
               if ~ (inpath1 | inpath2)

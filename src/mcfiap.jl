@@ -23,7 +23,8 @@ function makecircuitfileincludeabsolutepath(originalcircuitpath::ASCIIString,
     regexposition = 1
     if ismatch(r"^TEXT .*?!"i,line) # found a directive
       while regexposition < endof(line)
-        m = match(r"(.include|.inc|.lib)[ ]+(.*?)(?:\\n|\r|$)"i,
+        m = match(r"""(.include|.inc|.lib)[ ]+
+                  [\"]{0,1}(.*?)[\"]{0,1}(?:\\n|\r|$)"""ix,
                   line,regexposition)
         if m == nothing 
           regexposition = endof(line)

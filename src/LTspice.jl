@@ -19,7 +19,7 @@ const islinux = @linux? true:false
 const iswindows = @windows? true:false
 const isosx = @osx? true:false
 
-# include("MakeCircuitFileIncludeAbsolutePath.jl")
+include("mcfiap.jl")
 include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
 include("removetempdirectories.jl")
@@ -62,7 +62,7 @@ function LTspiceSimulationTempDir(circuitpath::ASCIIString, executablepath::ASCI
   (d,f) = splitdir(circuitpath)
   workingcircuitpath = convert(ASCIIString, joinpath(td,f))
   cp(circuitpath,workingcircuitpath)
-  # MakeCircuitFileIncludeAbsolutePath(circuitpath,workingcircuitpath,exectublepath)
+  makecircuitfileincludeabsolutepath(circuitpath,workingcircuitpath,executablepath)
   LTspiceSimulation(workingcircuitpath,
                      executablepath)
 end

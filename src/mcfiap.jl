@@ -2,20 +2,22 @@
 # in .inc, .include, and .lib directives to 
 # absolute paths
 
-function MakeCircuitFileIncludeAbsolutePath(originalcircuitpath::ASCIIString,
+function makecircuitfileincludeabsolutepath(originalcircuitpath::ASCIIString,
                                      workingcircuitpath::ASCIIString,
                                      executablepath::ASCIIString)
-  executabledir = dirname(executablepath)
-  originalcircuitdir = dirname(originalcircuitpath)
+  executabledir = abspath(dirname(executablepath))
+  originalcircuitdir = abspath(dirname(originalcircuitpath))
+  println(originalcircuitdir)
   ltspiceincludesearchpath = [joinpath(executabledir,"\\lib\\sub"),
                               originalcircuitdir]
   ltspicelibsearchpath = [joinpath(executabledir,"\\lib\\cmp"),
                           joinpath(executabledir,"\\lib\\sub"),
                           originalcircuitdir]
   workingdirectory = pwd()
+  println("cd(originalcircuitdir)")
   cd(originalcircuitdir)
   iocircuitread  = open(workingcircuitpath,true,false,false,false,false)
-  lines = readall(iocircuitread)
+  lines = readlines(iocircuitread)
   close(iocircuitread)
   iocircuitwrite  = open(workingcircuitpath,false,true,false,true,false)
   for line in lines
@@ -60,5 +62,6 @@ function MakeCircuitFileIncludeAbsolutePath(originalcircuitpath::ASCIIString,
     write(iocircuitwrite,line)
   end
   close(iocircuitwrite)
+  cd(workingdirectory)
   return nothing
 end

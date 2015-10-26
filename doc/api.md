@@ -127,7 +127,7 @@ Returns an array of strings of parameter and measurement names.
 
 See [Introduction to LTspice.jl](https://github.com/cstook/LTspice.jl/blob/v0r4_working/doc/introduction.ipynb) for more information.
 
-**flush(*LTspiceSimulation*)
+##flush(*LTspiceSimulation*)
 
 Writes changes to circuit file back to disk.
 

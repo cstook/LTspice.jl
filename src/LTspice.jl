@@ -7,7 +7,7 @@ import Base: parse, show
 import Base: haskey, keys, values
 import Base: getindex, setindex!, get, endof
 import Base: start, next, done, length, eltype
-import Base: call
+import Base: call, flush
 
 export LTspiceSimulation, LTspiceSimulationTempDir, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath
@@ -151,7 +151,7 @@ end
 
   # returns an array of all values (param and meas)
 function values(x::LTspiceSimulation)
-  run!(x)
+  run(x)
   vcat(collect(values(x.circuit)),collect(values(x.log)))
 end
 
@@ -160,7 +160,7 @@ function getindex(x::LTspiceSimulation, key::ASCIIString)
   # value = x[key]
   # dosen't handle multiple keys, but neither does standard julia library for Dict
   if findfirst(getmeasurementnames(x),key) > 0
-    run!(x)
+    run(x)
     v = x.log[key]
   elseif haskey(x.circuit,key)
     v = x.circuit[key]
@@ -203,11 +203,11 @@ end
 # Intended for use in interactive sessions only.
 # For type stablity use getmeasurements()
 function getindex(x::LTspiceSimulation,index::Int)
-  run!(x)
+  run(x)
   x.log[index]
 end
 function getindex(x::LTspiceSimulation, i1::Int, i2::Int, i3::Int, i4::Int)
-  run!(x)
+  run(x)
   x.log[i1,i2,i3,i4] 
 end
 
@@ -302,7 +302,7 @@ value = getmeasurements(simulation, measurement_name, inner_step, middle_step,
 ``` 
 """
 function getmeasurements(x::LTspiceSimulation)
-  run!(x)
+  run(x)
   getmeasurements(x.log)
 end
 """
@@ -312,14 +312,14 @@ Returns a tuple of three arrays of the step values.  Always will return three
 arrays.
 """
 function getsteps(x::LTspiceSimulation)
-  run!(x)
+  run(x)
   getsteps(x.log)
 end
 
-function run!(x::LTspiceSimulation)
+function run(x::LTspiceSimulation)
   # runs simulation and updates measurement values
   if x.logneedsupdate
-    update!(x.circuit)
+    flush(x.circuit)
     if (x.executablepath != "")  # so travis dosen't need to load LTspice
       islinux = @linux? true:false
       if islinux
@@ -335,6 +335,9 @@ function run!(x::LTspiceSimulation)
     return(nothing)
   end
 end
+
+"writes circuit file back to disk if any parameters have changed"
+flush(x::LTspiceSimulation) = flush(x.circuit)
 
 ### END LTspicesSimulation! specific methods
 

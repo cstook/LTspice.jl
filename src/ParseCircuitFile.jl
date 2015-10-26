@@ -201,7 +201,7 @@ end
 ### BEGIN CircuitFile specific methods ###
 
 "writes circuit file back to disk if any parameters have changed"
-function update!(x::CircuitFile)
+function flush(x::CircuitFile)
 	if x.needsupdate
 		io = open(x.circuitpath,false,true,false,true,false)  # open circuit file to be overwritten
 		for text in x.circuitfilearray

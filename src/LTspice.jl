@@ -7,7 +7,7 @@ import Base: parse, show
 import Base: haskey, keys, values
 import Base: getindex, setindex!, get, endof
 import Base: start, next, done, length, eltype
-import Base: call, flush
+import Base: call, flush, run
 
 export LTspiceSimulation, LTspiceSimulationTempDir, getmeasurements
 export getparameters, getcircuitpath, getltspiceexecutablepath

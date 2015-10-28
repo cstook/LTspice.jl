@@ -262,6 +262,7 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
   end
   cpascii = convert(ASCIIString,copy(circuitpath))
   nslf = NonSteppedLogFile(logpath, cpascii, timestamp, duration, measurementnames, measurements)
+  close(IOlog)
   if isstep
     return SteppedLogFile(nslf, stepnames, steps)
   else 

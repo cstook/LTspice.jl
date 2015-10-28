@@ -157,7 +157,7 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
           isstep = true
         end
       elseif isstep || foundmeasurement # if we are seeing .step's measurements and then see a blank line
-        state = 2 # start looking for stepped measurements
+        state = 3 # check to see if a measurment failed
       end
     elseif state ==  2 # look for stepped measurements or date or time
       regex = r"^(?:Measurement:\s*([a-z][a-z0-9_@#$.:\\]*)\s*$|
@@ -172,6 +172,12 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
         else # found duration
           duration = parse(Float64,m.captures[3])
         end
+      end
+    elseif state == 3 # test for failed measurement, and ignore that it failed
+      if ismatch(r"^Measurement.*FAIL'ed",line)
+        state = 1
+      else
+        state = 2
       end
     end
   end
@@ -226,7 +232,9 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
       end
       for i in measurementsrange
         m = match(r"^[a-z][a-z0-9_@#$.:\\]*:.*?=([0-9.eE+-]+)"i,line)
-        measurements[i,1,1,1] = parse(Float64,m.captures[1])
+        if m != nothing
+          measurements[i,1,1,1] = parse(Float64,m.captures[1])
+        end
         line = readline(IOlog)
       end
       if eof(IOlog) 

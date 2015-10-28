@@ -115,8 +115,10 @@ function show(io::IO, x::LTspiceSimulation)
       if getstepnames(x.circuit) == []
         if x.logneedsupdate
           value = convert(Float64,NaN)
+        elseif haskey(x.log,key)
+          value = x.log[key] #getmeasurements(x.log)[i,1,1,1]
         else
-          value = getmeasurements(x.log)[i,1,1,1]
+          value = "measurement failed"
         end
         println(io,"$(rpad(key,25,' ')) = $value")
       else 

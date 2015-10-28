@@ -224,6 +224,23 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
       end
     else
       measurements = Array(Float64,l1,1,1,1)
+      line = ""; lom = 0; shortline = true; foundmatch = false
+      for (i,measurement) in enumerate(measurementnames)
+        lom = length(measurement)+1
+        foundmatch = false
+        while ~foundmatch && ~eof(IOlog)
+          shortline = true
+          while shortline && ~eof(IOlog)
+            line = readline(IOlog)
+            shortline = length(line)<lom
+          end
+          foundmatch = line[1:lom] == measurement*":"
+        end
+        m = match(r"^[a-z][a-z0-9_@#$.:\\]*:.*?=([0-9.eE+-]+)"i,line)
+        measurements[i,1,1,1] = parse(Float64,m.captures[1])
+      end
+
+#=
       measurementsrange = 1:l1  
       line = readline(IOlog)
       line = readline(IOlog)
@@ -232,11 +249,10 @@ function parse(::Type{LogFile}, logpath::ASCIIString)
       end
       for i in measurementsrange
         m = match(r"^[a-z][a-z0-9_@#$.:\\]*:.*?=([0-9.eE+-]+)"i,line)
-        if m != nothing
-          measurements[i,1,1,1] = parse(Float64,m.captures[1])
-        end
+        measurements[i,1,1,1] = parse(Float64,m.captures[1])
         line = readline(IOlog)
       end
+=#
       if eof(IOlog) 
         throw(ParseError("log file EOF before all measurements found."))
       end

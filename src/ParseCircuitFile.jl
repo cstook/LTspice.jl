@@ -120,8 +120,8 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
         if m == nothing
           regexposition = endof(line)
         else
+          regexposition = m.offset + length(m.match)
           if m.captures[1] != nothing  # a parameter card
-            regexposition = m.offsets[1]+length(m.captures[1])+1
             parametermatch = match(r"""([a-z][a-z0-9_@#$.:\\]*)[= ]+
                                        ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)
                                        (k|meg|g|t|m|u|n|p|f){0,1}
@@ -151,16 +151,13 @@ function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
               push!(parameters, (valuenounit * multiplier, multiplier, i))
             end
           elseif m.captures[2] != nothing # a measure card
-            regexposition = m.offsets[2]+length(m.captures[2])+1
             measurematch = match(r"""(?:ac |dc |op |tran |tf |noise ){0,1}
                                   [ ]*([a-z][a-z0-9_@#$.:\\]*)[ ]+"""ix,
                                 line,regexposition)
             regexposition +=length(measurematch.match)-1
             measurename = measurematch.captures[1]
             push!(measurementnames,lowercase(measurename))
-            regexposition += length(measurematch.match)-1
           elseif m.captures[3] != nothing # a step card
-            regexposition = m.offsets[3]+length(m.captures[3])+1
             step1match = match(r"""(?:oct |param ){0,1}
                                 [ ]*([a-z][a-z0-9_@#$.:\\]*)[ ]+(?:list ){0,1}
                                 [ ]*[0-9.e+-]+[a-z]*[ ]+"""ix,

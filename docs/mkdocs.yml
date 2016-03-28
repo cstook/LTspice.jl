@@ -1,14 +1,9 @@
-site_name:        Documenter.jl
-repo_url:         https://github.com/MichaelHatherly/Documenter.jl
-site_description: Julia package documentation generator.
-site_author:      Michael Hatherly
+site_name:        LTspice.jl
+repo_url:         https://github.com/cstook/LTspice.jl
+site_description: Julia interface to LTspice.
+site_author:      Chris Stook
 
-theme: material
-
-extra:
-  palette:
-    primary: 'indigo'
-    accent:  'blue'
+theme: readthedocs
 
 extra_css:
   - assets/Documenter.css
@@ -27,12 +22,6 @@ docs_dir: 'build'
 
 pages:
 - Home: index.md
-- Manual:
-  - Guide: man/guide.md
-  - Syntax: man/syntax.md
-  - Doctests: man/doctests.md
-  - Hosting Documentation: man/hosting.md
-  - Internals: man/internals.md
-- Library:
-  - Public: lib/public.md
-  - Internals: lib/internals.md
+- Installation: install.md
+- Quickstart: quickstart.md
+- API: api.md

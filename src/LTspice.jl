@@ -25,13 +25,17 @@ include("ParseLogFile.jl")
 include("removetempdirectories.jl")
 
 ### BEGIN Type LTspiceSimulationTempDir and constructors ###
-
 type LTspiceSimulation
   circuit         :: CircuitFile
   log             :: LogFile
   executablepath  :: ASCIIString
   logneedsupdate  :: Bool
 
+  """
+  Creates an LTspiceSimulation object.    `Circuitpath` and `execuatblepath` 
+  are the path to the circuit file (.asc) and the LTspice executable.  Operations 
+  on LTspiceSimulation will modify the circuit file.
+  """
   function LTspiceSimulation(circuitpath::ASCIIString,
                               executablepath::ASCIIString)
     islinux = @linux? true:false
@@ -56,6 +60,11 @@ type LTspiceSimulation
   end
 end
 
+"""
+Same as `LTspiceSimulation` except creates an object which works on a copy of 
+the circuit in a temporary directory. LTspice will need to be able to find all
+ sub-circuits and libraries from the temporary directory or the simulation will not run.
+"""
 function LTspiceSimulationTempDir(circuitpath::ASCIIString, executablepath::ASCIIString)
   td = mktempdir()
   push!(dirlist,td) # add temp directory to list to be removed on exit
@@ -67,31 +76,24 @@ function LTspiceSimulationTempDir(circuitpath::ASCIIString, executablepath::ASCI
                      executablepath)
 end
 
+"""
+If `executablepath` is not specified, an attempt will be made to find it in the default
+location for your operating system.
+"""
 function LTspiceSimulationTempDir(circuitpath::ASCIIString)
   # look up default executable if not specified
   LTspiceSimulationTempDir(circuitpath, defaultltspiceexecutable())
 end
 
+"""
+If `executablepath` is not specified, an attempt will be made to find it in the default
+location for your operating system.
+"""
 function LTspiceSimulation(circuitpath::ASCIIString)
   # look up default executable if not specified
   LTspiceSimulation(circuitpath, defaultltspiceexecutable())
 end
-"""
-LTspiceSimulation(*circuitpath* [,*executablepath*])
-LTspiceSimulationTempDir(*circuitpath* [,*executablepath*])
 
-Constructor for LTspiceSimulation object.  Circuitpath and execuatblepath 
-are the path to the circuit file (.asc) and the LTspice executable.  If 
-executable path is omitted, an attempt will be made to find it in the default
-location for your operating system.
-
-Operations on LTspiceSimulation will modify the circuit file.
-
-LTspiceSimulationTempDir creates an object which works on a copy of the circuit in a
-temporary directory. LTspice will need to be able to find all sub-circuits and
-libraries from the temporary directory or the simulation will not run.
-"""
-LTspiceSimulationTempDir, LTspiceSimulation
 ### END Type LTspice and constructors ###
 
 include("PerLineIterator.jl")  # for delimited output
@@ -233,56 +235,47 @@ end
 
 ### BEGIN LTspiceSimulation specific methods ###
 """
-getcircuitpath(*LTspiceSimulation*)
-
 Returns path to the circuit file.
 
 This is the path to the working circuit file.  If LTspiceSimulationTempDir was used 
 or if running under wine, this will not be the path given to the constructor.
 """ 
 getcircuitpath(x::LTspiceSimulation) = getcircuitpath(x.circuit)
-"""
-getlogpath(*LTspiceSimulation*)
 
+"""
 Returns path to the log file.
 """
 getlogpath(x::LTspiceSimulation) = getlogpath(x.log)
-"""
-getltspiceexecutablepath(*LTspiceSimulation*)
 
+"""
 Returns path to the LTspice executable
 """
 getltspiceexecutablepath(x::LTspiceSimulation) = x.executablepath
-"""
-getparameternames(*LTspiceSimulation*)
 
+"""
 Returns an array of the parameters names in the order they appear in the
 circuit file.
 """
 getparameternames(x::LTspiceSimulation) = getparameternames(x.circuit)
-"""
-getparameters(*LTspiceSimulation*)
 
+"""
 Returns an array of the parameters names in the order they appear in the
 circuit file
 """
 getparameters(x::LTspiceSimulation) = getparameters(x.circuit)
-"""
-getmeasurementnames(*LTspiceSimulation*)
 
+"""
 Returns an array of the measurement names in the order they appear in the
 circuit file.
 """
 getmeasurementnames(x::LTspiceSimulation) = getmeasurementnames(x.circuit)
-"""
-getstepnames(*LTspiceSimulation*)
 
+"""
 Returns an array of step names.
 """
 getstepnames(x::LTspiceSimulation) = getstepnames(x.circuit)
-"""
-loadlog!(*LTspiceSimulationTempDir*)
 
+"""
 Loads log file without running simulation.
 """
 function loadlog!(x::LTspiceSimulation)
@@ -293,8 +286,6 @@ function loadlog!(x::LTspiceSimulation)
   return nothing
 end
 """
-getmeasurements(*LTspiceSimulation*)
-
 Returns the measurement array.  The measurement array is a 4-d array of Float64
 values.
 
@@ -308,8 +299,6 @@ function getmeasurements(x::LTspiceSimulation)
   getmeasurements(x.log)
 end
 """
-getsteps(*LTspiceSimulation*)
-
 Returns a tuple of three arrays of the step values.  Always will return three
 arrays.
 """

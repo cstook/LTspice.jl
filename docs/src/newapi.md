@@ -8,7 +8,11 @@
 
 	{index}
 
+
 ## LTspice
 
 	{docs}
- 	getcircuitpath
+	LTspiceSimulation(x)
+	LTspiceSimulationTempDir
+	getcircuitpath
+	getlogpath

@@ -1,6 +1,6 @@
 # [Example 1](https://github.com/cstook/LTspice.jl/blob/master/examples/example%201/example1.ipynb)
 
-<img src="https://github.com/cstook/LTspice.jl/blob/master/examples/example%201/example1.jpg">
+![example 1](img/example1.jpg)
 
 Import the module.
 ```julia

@@ -9,7 +9,6 @@ extra_css:
   - assets/Documenter.css
 
 markdown_extensions:
-  - codehilite
   - extra
   - tables
   - fenced_code
@@ -26,3 +25,4 @@ pages:
 - Quickstart: quickstart.md
 - API: api.md
 - New API: newapi.md
+- Example Test: test.md

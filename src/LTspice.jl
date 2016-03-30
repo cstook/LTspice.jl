@@ -1,6 +1,7 @@
 # this module provided an interface to treat the parameters and measurements
 # of an LTspice simulation as a dictionary like type
 
+"Main module for `LTspice.jl` - a Julia interface to LTspice"
 module LTspice
 
 import Base: parse, show
@@ -31,11 +32,6 @@ type LTspiceSimulation
   executablepath  :: ASCIIString
   logneedsupdate  :: Bool
 
-  """
-  Creates an LTspiceSimulation object.    `Circuitpath` and `execuatblepath` 
-  are the path to the circuit file (.asc) and the LTspice executable.  Operations 
-  on LTspiceSimulation will modify the circuit file.
-  """
   function LTspiceSimulation(circuitpath::ASCIIString,
                               executablepath::ASCIIString)
     islinux = @linux? true:false
@@ -60,11 +56,6 @@ type LTspiceSimulation
   end
 end
 
-"""
-Same as `LTspiceSimulation` except creates an object which works on a copy of 
-the circuit in a temporary directory. LTspice will need to be able to find all
- sub-circuits and libraries from the temporary directory or the simulation will not run.
-"""
 function LTspiceSimulationTempDir(circuitpath::ASCIIString, executablepath::ASCIIString)
   td = mktempdir()
   push!(dirlist,td) # add temp directory to list to be removed on exit
@@ -76,23 +67,46 @@ function LTspiceSimulationTempDir(circuitpath::ASCIIString, executablepath::ASCI
                      executablepath)
 end
 
-"""
-If `executablepath` is not specified, an attempt will be made to find it in the default
-location for your operating system.
-"""
 function LTspiceSimulationTempDir(circuitpath::ASCIIString)
   # look up default executable if not specified
   LTspiceSimulationTempDir(circuitpath, defaultltspiceexecutable())
 end
 
-"""
-If `executablepath` is not specified, an attempt will be made to find it in the default
-location for your operating system.
-"""
 function LTspiceSimulation(circuitpath::ASCIIString)
   # look up default executable if not specified
   LTspiceSimulation(circuitpath, defaultltspiceexecutable())
 end
+
+"""
+
+```julia
+LTspiceSimulation(circuitpath)
+LTspiceSimulation(circuitpath, executablepath)
+```
+
+Creates an `LTspiceSimulation` object.    `circuitpath` and `execuatblepath` 
+are the path to the circuit file (.asc) and the LTspice executable.  Operations 
+on `LTspiceSimulation` will modify the circuit file.
+
+If `executablepath` is not specified, an attempt will be made to find it in the default
+location for your operating system.
+"""
+LTspiceSimulation
+
+"""
+
+```julia
+LTspiceSimulationTempDir(circuitpath)
+LTspiceSimulationTempDir(circuitpath, executablepath)
+```
+
+Same as `LTspiceSimulation` except creates an object which works on a copy of 
+the circuit in a temporary directory. LTspice will need to be able to find all
+ sub-circuits and libraries from the temporary directory or the simulation will not run.  
+   Anything included with .include or .lib directives will be changed to work 
+ correctly in temp directory.
+"""
+LTspiceSimulationTempDir
 
 ### END Type LTspice and constructors ###
 

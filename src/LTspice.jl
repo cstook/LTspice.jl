@@ -381,7 +381,10 @@ end
 ```julia
 flush(sim)
 ```
-writes circuit file back to disk if any parameters have changed
+Writes `sim`'s circuit file back to disk if any parameters have changed.  The 
+user does not usualy need to call this.  It will be called automatically
+ when a measurment is requested and the log file needs to be updated.  It can be used
+ to update a circuit file using julia for simulation with the LTspice GUI.  
 """
 flush(x::LTspiceSimulation) = flush(x.circuit)
 

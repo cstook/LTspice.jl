@@ -249,6 +249,9 @@ end
 
 ### BEGIN LTspiceSimulation specific methods ###
 """
+```julia
+getcircuitpath(sim)
+```
 Returns path to the circuit file.
 
 This is the path to the working circuit file.  If LTspiceSimulationTempDir was used 
@@ -257,40 +260,61 @@ or if running under wine, this will not be the path given to the constructor.
 getcircuitpath(x::LTspiceSimulation) = getcircuitpath(x.circuit)
 
 """
+```julia
+getlogpath(sim)
+```
 Returns path to the log file.
 """
 getlogpath(x::LTspiceSimulation) = getlogpath(x.log)
 
 """
+```julia
+getltspiceexecutablepath(sim)
+```
 Returns path to the LTspice executable
 """
 getltspiceexecutablepath(x::LTspiceSimulation) = x.executablepath
 
 """
-Returns an array of the parameters names in the order they appear in the
+```julia
+getparameternames(sim)
+```
+Returns an array of the parameters names of `sim` in the order they appear in the
 circuit file.
 """
 getparameternames(x::LTspiceSimulation) = getparameternames(x.circuit)
 
 """
-Returns an array of the parameters names in the order they appear in the
+```julia
+getparameters(sim)
+```
+Returns an array of the parameters of `sim` in the order they appear in the
 circuit file
 """
 getparameters(x::LTspiceSimulation) = getparameters(x.circuit)
 
 """
-Returns an array of the measurement names in the order they appear in the
+```julia
+getmeasurmentnames(sim)
+```
+Returns an array of the measurement names of `sim` in the order they appear in the
 circuit file.
 """
 getmeasurementnames(x::LTspiceSimulation) = getmeasurementnames(x.circuit)
 
 """
-Returns an array of step names.
+```julia
+getstepnames(sim)
+```
+Returns an array of step names of `sim`.
 """
 getstepnames(x::LTspiceSimulation) = getstepnames(x.circuit)
 
 """
-Loads log file without running simulation.
+```julia
+loadlog!(sim)
+```
+Loads log file of `sim` without running simulation.
 """
 function loadlog!(x::LTspiceSimulation)
 # loads log file without running simulation
@@ -300,12 +324,15 @@ function loadlog!(x::LTspiceSimulation)
   return nothing
 end
 """
-Returns the measurement array.  The measurement array is a 4-d array of Float64
+```julia
+getmeasurments(sim)
+```
+Retruns measurments of `sim` as an a 4-d array of Float64
 values.
 
 ```julia
-value = getmeasurements(simulation, measurement_name, inner_step, middle_step,
-                        outer_step)
+value = getmeasurements(sim)[measurement_name, inner_step, middle_step,
+                        outer_step]
 ``` 
 """
 function getmeasurements(x::LTspiceSimulation)
@@ -313,14 +340,23 @@ function getmeasurements(x::LTspiceSimulation)
   getmeasurements(x.log)
 end
 """
-Returns a tuple of three arrays of the step values.  Always will return three
-arrays.
+```julia
+getsteps(sim)
+```
+Returns the steps of `sim` as a tuple of three arrays of 
+the step values.
 """
 function getsteps(x::LTspiceSimulation)
   run(x)
   getsteps(x.log)
 end
 
+"""
+```julia
+rum(sim)
+```
+Checks if log file is up to date, if not runs `sim`.
+"""
 function run(x::LTspiceSimulation)
   # runs simulation and updates measurement values
   if x.logneedsupdate
@@ -341,15 +377,20 @@ function run(x::LTspiceSimulation)
   end
 end
 
-"writes circuit file back to disk if any parameters have changed"
+"""
+```julia
+flush(sim)
+```
+writes circuit file back to disk if any parameters have changed
+"""
 flush(x::LTspiceSimulation) = flush(x.circuit)
 
 ### END LTspicesSimulation! specific methods
 
 ### BEGIN other
 
+"creates a blank log object of appropiate type for circuitfile"
 function blanklog(circuit::CircuitFile, logpath::ASCIIString)
-# creates a blank log object of appropiate type for circuitfile
   if hassteps(circuit)
     log = SteppedLogFile(logpath)  # a blank stepped log object
   else 
@@ -358,6 +399,12 @@ function blanklog(circuit::CircuitFile, logpath::ASCIIString)
   return log
 end
 
+"""
+```julia
+defaultltspiceexecutable()
+```
+returns the default LTspice executable path for the operating system
+"""
 function defaultltspiceexecutable()
   os = @windows? 1 : (@osx? 2 : 3)
   if os == 1 # windows

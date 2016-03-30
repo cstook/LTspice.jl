@@ -1,7 +1,8 @@
-# parses the circuit file changing all paths
-# in .inc, .include, and .lib directives to 
-# absolute paths
-
+"""
+parses the circuit file changing all paths
+in .inc, .include, and .lib directives to 
+absolute paths
+"""
 function makecircuitfileincludeabsolutepath(originalcircuitpath::ASCIIString,
                                      workingcircuitpath::ASCIIString,
                                      executablepath::ASCIIString)

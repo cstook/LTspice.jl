@@ -1,4 +1,5 @@
-# [Example 1](https://github.com/cstook/LTspice.jl/blob/master/examples/example%201/example1.ipynb)
+# Example 1 
+[jupyter version](https://github.com/cstook/LTspice.jl/blob/master/examples/example%201/example1.ipynb)
 
 ![example 1](img/example1.jpg)
 
@@ -47,6 +48,4 @@ rload_for_maximum_power = example1["rload"]
 
 # Additional Information
 
-[LTspice.jl API](https://github.com/cstook/LTspice.jl/blob/master/docs/src/api.md)
-
-[Introduction to LTspice.jl](https://github.com/cstook/LTspice.jl/blob/master/docs/src/introduction.ipynb)
+[Introduction to LTspice.jl](https://github.com/cstook/LTspice.jl/blob/master/docs/src/introduction.ipynb) - a jupyter notebook with more examples.

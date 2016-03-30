@@ -23,6 +23,5 @@ pages:
 - Home: index.md
 - Installation: install.md
 - Quickstart: quickstart.md
-- API: api.md
-- New API: newapi.md
-- Example Test: test.md
+- API: newapi.md
+- Contents: contents.md

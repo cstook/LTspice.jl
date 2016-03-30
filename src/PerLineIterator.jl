@@ -4,6 +4,7 @@
 
 export getheaders, header
 
+"Iterator used to dump result of simulations to csv"
 immutable PerLineIterator
   simulation        :: LTspiceSimulation
   header            :: Array{ASCIIString,1}
@@ -50,8 +51,11 @@ immutable PerLineIterator
 end
 
 """
-PerLineIterator(*LTspiceSimulation*[,steporder=*steporder*]
-                [,resultnames=*resultnames*])
+```julia
+PerLineIterator(sim :: LTspiceSimulation;
+                steporder = getstepnames(sim),
+                resultnames = vcat(getparameternames(sim), getmeasurementnames(sim)))
+```
 
 Creates an iterator in the format required to pass to writecsv or writedlm.
 The step order defaults to the order the steps appear in the circuit file.
@@ -69,7 +73,7 @@ writecsv(io,pli)
 close(io)
 ```
 """
-PerLineIterator
+PerLineIterator(x)
 
 function show(io ::IO, x :: PerLineIterator)
   numberoflines = length(x.mli)
@@ -108,18 +112,20 @@ done(x :: PerLineIterator, state) = done(x.mli, state)
 length(x :: PerLineIterator) = length(x.mli)
 
 """
-getheaders(*PerLineIterator*)
-
-Returns an array of strings of parameter and measurement names.
+```julia
+getheaders(perlineiterator)
+```
+Returns an array of strings of parameter and measurement names of `perlineiterator`.
 """
 getheaders(x :: PerLineIterator) = x.header
 """
-header(*PerLineIterator*)
-
-Returns the header for PerLineIterator in the format needed for writecsv or 
+```julia
+header(Perlineiterator)
+```
+Returns the header for `perlineterator` in the format needed for writecsv or 
 writedlm.  this is equivalent to 
 ```julia
-transpose(getheaders(PerLineIterator))
+transpose(getheaders(perlineiterator))
 ```
 """
 header(x::PerLineIterator) = transpose(x.header) 

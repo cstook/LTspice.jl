@@ -1,15 +1,9 @@
-# New API
-
-## Contents
-
-	{contents}
-
-## Index
+# Index
 
 	{index}
 
 
-## Public API
+# Public API
 
 	{docs}
 	LTspice
@@ -25,6 +19,7 @@
 	getsteps
 	getstepnames
 	PerLineIterator
+	PerLineIterator(x)
 	getheaders
 	header
 	loadlog!

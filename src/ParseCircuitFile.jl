@@ -222,6 +222,7 @@ function Base.parse(::Type{CircuitFile}, circuitpath::ASCIIString)
             end
         end
     end
+    close(io)
     return cf
 end
 

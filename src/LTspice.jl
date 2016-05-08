@@ -353,7 +353,7 @@ end
 
 """
 ```julia
-rum(sim)
+run(sim)
 ```
 Checks if log file is up to date, if not runs `sim`.
 """

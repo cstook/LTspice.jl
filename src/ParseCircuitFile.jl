@@ -12,20 +12,23 @@ import Base: start, next, done, length, eltype
 ### BEGIN Type CircuitFile and constructors ###
 
 type CircuitFile
-	circuitpath			:: ASCIIString
-	circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
+  circuitpath     :: ASCIIString
+  circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
   parameternames  :: Array{ASCIIString,1}
   parameters      :: Array{Tuple{Float64,Float64,Int},1}  # array of parameters (value, multiplier, index)
   measurementnames:: Array{ASCIIString,1}              # measurment names
-  stepnames			  :: Array{ASCIIString,1}  
-  needsupdate			:: Bool # true if any parameter has been changed
+  stepnames       :: Array{ASCIIString,1}  
+  needsupdate     :: Bool # true if any parameter has been changed
+  parsed          :: Bool # true if last parsecard! call was a match
+  CircuitFile() = new("",[],[],[],[],[],false,false) # empty CircuitFile
 end
+
 
 ### END Type CircuitFile and constructors ###
 
 ### BEGIN overloading Base ###
 
-function show(io::IO, x::CircuitFile)
+function Base.show(io::IO, x::CircuitFile)
 	println(io,x.circuitpath)
   if length(x.parameters)>0
   	println(io,"")
@@ -51,10 +54,10 @@ function show(io::IO, x::CircuitFile)
 end
 
 # CircuitFile is a Dict of its parameters
-haskey(x::CircuitFile,key::ASCIIString) = findfirst(x.parameternames, key) != 0
-keys(x::CircuitFile) = [key for key in x.parameternames]
-values(x::CircuitFile) = [parameter[1] for parameter in x.parameters]
-function getindex(x::CircuitFile, key::ASCIIString)
+Base.haskey(x::CircuitFile,key::ASCIIString) = findfirst(x.parameternames, key) != 0
+Base.keys(x::CircuitFile) = [key for key in x.parameternames]
+Base.values(x::CircuitFile) = [parameter[1] for parameter in x.parameters]
+function Base.getindex(x::CircuitFile, key::ASCIIString)
   k = findfirst(x.parameternames, key)
   if k == 0 
     throw(KeyError(key))
@@ -63,7 +66,7 @@ function getindex(x::CircuitFile, key::ASCIIString)
   end
 end
 
-function setindex!(x::CircuitFile, value:: Float64, key:: ASCIIString)
+function Base.setindex!(x::CircuitFile, value:: Float64, key::ASCIIString)
   k = findfirst(x.parameternames, key)
   if k == 0 
     throw(KeyError(key))
@@ -72,125 +75,154 @@ function setindex!(x::CircuitFile, value:: Float64, key:: ASCIIString)
   end
 end
 
-function setindex!(x::CircuitFile, value:: Float64, index:: Int)
+function Base.setindex!(x::CircuitFile, value:: Float64, index:: Int)
   (v,m,i) = x.parameters[index]
   x.parameters[index] = (value,m,i)
   x.circuitfilearray[i] = "$(value/m)"
   x.needsupdate = true
 end
 
-length(x::CircuitFile) = length(x.parameters)
-eltype(::CircuitFile) = Float64
+Base.length(x::CircuitFile) = length(x.parameters)
+Base.eltype(::CircuitFile) = Float64
 
 # CircuitFile iterates over its Dict
-start(x::CircuitFile) = 0
-function next(x::CircuitFile, state)
+Base.start(x::CircuitFile) = 0
+function Base.next(x::CircuitFile, state)
   state +=1
   return ((x.parameternames[state]=>x.parameters[state][1]),state)
 end
-done(x::CircuitFile, state) = ~(state < length(x.parameters))
+Base.done(x::CircuitFile, state) = ~(state < length(x.parameters))
 
-function parse(::Type{CircuitFile}, circuitpath::ASCIIString)
-  #= 
-  circuit file array
-    The circuit file array is an array of strings which when concatenated
-    produce the circuit file.  The elements of the array split the file 
-    around parameter values to avoid parsing the file every time a parameter
-    is modified
-  =#
-  IOcircuit  = open(circuitpath,true,false,false,false,false)
-  lines = eachline(IOcircuit)
-  parameternames = Array(ASCIIString,0)
-  parameters = Array(Tuple{Float64,Float64,Int},0)
-  measurementnames = Array(ASCIIString,0)
-  stepnames	= Array(ASCIIString,0)
-  circuitfilearray = Array(ASCIIString,0)
-  # parse the file
-  regexposition = 1
-  cfaposition = 1
-  i = 0
-  for line in lines
-    regexposition = 1
-    cfaposition = 1  # has been put in cfa up to (not including) this position
-    if ismatch(r"^TEXT .*?!"i,line) # found a directive
-      while regexposition < endof(line)
-        m = match(r"""[.](parameter|param)[ ]+|
-                        [.](measure|meas)[ ]+|
-                        [.](step)[ ]+"""ix,line,regexposition)
-        if m == nothing
-          regexposition = endof(line)
-        else
-          regexposition = m.offset + length(m.match)
-          if m.captures[1] != nothing  # a parameter card
-            parametermatch = match(r"""([a-z][a-z0-9_@#$.:\\]*)[= ]+
-                                       ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)
-                                       (k|meg|g|t|m|u|n|p|f){0,1}
-                                       [ ]*(?:\\n|\r|$)"""ix,
-                                   line,regexposition)
-            if parametermatch != nothing
-              regexposition += length(parametermatch.match)-1
-              parametername = parametermatch.captures[1]
-              parametervalue = parametermatch.captures[2]
-              valueoffset = parametermatch.offsets[2]  # offset in line
-              valuelength = length(parametervalue)
-              valueend = valuelength + valueoffset # pos of end of value in line
-              parameterunit = parametermatch.captures[3]
-              push!(circuitfilearray,line[cfaposition:valueoffset-1]) # before the value
-              cfaposition = valueoffset
-              i+=1
-              push!(circuitfilearray,line[cfaposition:valueend-1]) # the value
-              cfaposition = valueend
-              i+=1
-              if haskey(units,parameterunit)
-                multiplier = units[parameterunit]
-              else
-                multiplier = 1.0
-              end
-              valuenounit = parse(Float64,parametervalue)
-              push!(parameternames, lowercase(parametername))
-              push!(parameters, (valuenounit * multiplier, multiplier, i))
-            end
-          elseif m.captures[2] != nothing # a measure card
-            measurematch = match(r"""(?:ac |dc |op |tran |tf |noise ){0,1}
-                                  [ ]*([a-z][a-z0-9_@#$.:\\]*)[ ]+"""ix,
-                                line,regexposition)
-            regexposition +=length(measurematch.match)-1
-            measurename = measurematch.captures[1]
-            push!(measurementnames,lowercase(measurename))
-          elseif m.captures[3] != nothing # a step card
-            step1match = match(r"""(?:oct |param ){0,1}
-                                [ ]*([a-z][a-z0-9_@#$.:\\]*)[ ]+(?:list ){0,1}
-                                [ ]*[0-9.e+-]+[a-z]*[ ]+"""ix,
-                                line, regexposition)
-            if step1match != nothing # one type of step card
-              regexposition += length(step1match.match)-1
-              stepname = step1match.captures[1]
-              push!(stepnames, lowercase(stepname))
-            else
-              step2match = match(r"(\w+)[ ]+(\w+[(]\w+[)])[ ]+"i,
-                                line,regexposition)
-              if step2match != nothing # the other type of step card
-                regexposition += length(step2match.match)-1
-                stepname = step2match.captures[2]
-                push!(stepnames, lowercase(stepname))
-              end
-            end
-          end
-        end
-      end
-      if cfaposition<=endof(line)
-        push!(circuitfilearray,line[cfaposition:endof(line)])
-        cfaposition = endof(line)+1
-        i+=1
-      end
+# LTspice allows multiple directives (cards) in a single block
+# in the GUI, ctrl-M is used to create a new line.
+# this puts a backslash n in the file, NOT a newline character.
+#
+# eachcard is an iterator that seperates the lines around the backslash n
+immutable eachcard 
+    line :: ASCIIString
+end
+Base.start(::eachcard) = 1
+function Base.next(ec::eachcard, state)
+    p = searchindex(ec.line,"\\n",state)
+    if p!=0
+        card = ec.line[state:p+1]
+        state = p+2
     else
-      push!(circuitfilearray,line)
-      i+=1
+        card = ec.line[state:end]
+        state = length(ec.line)
     end
-  end
-  close(IOcircuit)
-  return CircuitFile(circuitpath, circuitfilearray, parameternames, parameters,
-                     measurementnames, stepnames, false)
+    return (card, state)
+end
+Base.done(ec::eachcard, state) = state>=length(ec.line)
+
+abstract Card
+type ResetParsedFlag end
+type Parameter<:Card end
+type Measure<:Card end
+type Step<:Card end
+type Other<:Card end
+const cardlist = [ResetParsedFlag(), Parameter(), Measure(), Step(), Other()]
+
+function parsecard!(cf::CircuitFile, ::ResetParsedFlag, card)
+    cf.parsed = false  # card has not been processed if false
+end
+
+const parameterregex = r"[.](?:parameter|param)[ ]+([a-z][a-z0-9_@#$.:\\]*)[= ]+([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)(k|meg|g|t|m|u|n|p|f){0,1}[ ]*(?:\\n|\r|$)"ix
+function parsecard!(cf::CircuitFile, ::Parameter, card::ASCIIString)
+    if cf.parsed == true # exit if card has already been processed
+        return
+    end
+    m = match(parameterregex, card)
+    if m == nothing # exit if not a parameter card
+        return 
+    end
+    name = m.captures[1]
+    value = m.captures[2]
+    valueoffset = m.offsets[2] # pos of start of value in card
+    valuelength = length(value)
+    valueend = valuelength + valueoffset-1 # pos of end of value in card
+    unit = m.captures[3]
+    push!(cf.circuitfilearray,card[1:valueoffset-1]) # before the value
+    push!(cf.circuitfilearray,card[valueoffset:valueend]) # the value
+    if haskey(units,unit)
+        multiplier = units[unit]
+    else
+        multiplier = 1.0
+    end
+    valuenounit = parse(Float64,value)
+    push!(cf.parameternames, lowercase(name))
+    push!(cf.parameters, (valuenounit * multiplier, multiplier, length(cf.circuitfilearray)))
+    push!(cf.circuitfilearray,card[valueend+1:end]) # after the value
+    cf.parsed = true
+    return
+end
+
+const measureregex = r"[.](?:measure|meas)[ ]+(?:ac |dc |op |tran |tf |noise ){0,1}[ ]*([a-z][a-z0-9_@#$.:\\]*)[ ]+"ix
+function parsecard!(cf::CircuitFile, ::Measure, card::ASCIIString)
+    if cf.parsed == true # exit if card has already been processed
+        return
+    end
+    m = match(measureregex, card)
+    if m == nothing # exit if not a measure card
+        return 
+    end
+    name = m.captures[1]
+    push!(cf.measurementnames,lowercase(name))
+    push!(cf.circuitfilearray,card)
+    cf.parsed = true
+end
+
+const step1regex = r"[.](?:step)[ ]+(?:oct |param ){0,1}[ ]*([a-z][a-z0-9_@#$.:\\]*)[ ]+(?:list ){0,1}[ ]*[0-9.e+-]+[a-z]*[ ]+"ix
+const step2regex = r"[.](?:step)[ ]+(?:\w+)[ ]+(\w+[(]\w+[)])[ ]+"ix
+function parsecard!(cf::CircuitFile, ::Step, card::ASCIIString)
+    if cf.parsed == true # exit if card has already been processed
+        return
+    end
+    m = match(step1regex, card)
+    if m == nothing
+        m = match(step2regex, card)
+        if m == nothing
+            return # exit if not a step card
+        end
+    end
+    name = m.captures[1]
+    push!(cf.stepnames, lowercase(name))
+    push!(cf.circuitfilearray,card)
+    cf.parsed = true
+end
+
+function parsecard!(cf::CircuitFile, ::Other, card::ASCIIString)
+    if cf.parsed == true # exit if card has already been processed
+        return
+    end
+    push!(cf.circuitfilearray,card) # just push the whole card
+    cf.parsed = true
+    return
+end
+
+function parsecard!(cf::CircuitFile, card::ASCIIString)
+    for cardtype in cardlist
+        parsecard!(cf,cardtype,card)
+    end
+end
+
+"true if line is comment"
+iscomment(line::ASCIIString) = ismatch(r"^TEXT .* ;",line)
+
+function Base.parse(::Type{CircuitFile}, circuitpath::ASCIIString)
+    io = open(circuitpath,true,false,false,false,false)
+    cf = CircuitFile()
+    cf.circuitpath = circuitpath
+    for line in eachline(io)
+        if iscomment(line)
+            push!(cf.circuitfilearray, line)
+        else
+            for card in eachcard(line) # might be multi-line directive(s) created with Ctrl-M
+                parsecard!(cf, card)
+            end
+        end
+    end
+    return cf
 end
 
 ### END overloading Base ###

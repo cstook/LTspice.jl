@@ -10,8 +10,8 @@ ince: ee=5
 incf: f=6
 
 
-Date: Sun Oct 25 08:47:49 2015
-Total elapsed time: 0.063 seconds.
+Date: Sat May 07 20:55:26 2016
+Total elapsed time: 0.047 seconds.
 
 tnom = 27
 temp = 27
@@ -24,7 +24,7 @@ rejected = 0
 matrix size = 2
 fillins = 0
 solver = Normal
-Matrix Compiler1: 36 bytes object code size  0.0/0.0/[0.0]
-Matrix Compiler2: off  [0.0]/0.0/0.0
+Matrix Compiler1:       2 opcodes  0.0/[0.0]/0.0
+Matrix Compiler2: 96 bytes object code size  0.0/0.1/[0.0]
 
 

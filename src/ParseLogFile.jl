@@ -70,7 +70,7 @@ function measurementnames!(nslf::NonSteppedLogFile,measurementnames)
   nsfl.measurementnames = measurementnames
   return nothing
 end
-measurementnames(nslf::NonSteppedLogFile) = nslf.measurements
+measurementnames(nslf::NonSteppedLogFile) = nslf.measurementnames
 
 function measurements!(nslf::NonSteppedLogFile,measurements)
   nslf.measurements = measurements
@@ -87,19 +87,39 @@ end
 SteppedLogFile() = SteppedLogFile(NonSteppedLogFile())
 SteppedLogFile(logpath::ASCIIString) = SteppedLogFile(NonSteppedLogFile(logpath))
 
+function stepnames!(slf::SteppedLogFile, stepnames::Array{ASCIIString,1})
+  slf.stepnames = stepnames
+  return nothing
+end
+stepnames(slf::SteppedLogFile) = slf.stepnames
+
+steps(slf::SteppedLogFile) = slf.steps
+logpath(slf::SteppedLogFile) = logpath(slf.nonsteppedlogfile)
+logpath!(slf::SteppedLogFile,path::AbstractString) = logpath!(slf.nonsteppedlogfile,path)
+circuitpath(slf::SteppedLogFile) = circuitpath(slf.nonsteppedlogfile)
+circuitpath!(slf::SteppedLogFile,path::AbstractString) = circuitpath!(slf.nonsteppedlogfile,path)
+timestamp(slf::SteppedLogFile) = timestamp(slf.nonsteppedlogfile)
+timestamp!(slf::NonSteppedLogFile,ts::DateTime) = timestamp!(slf.nonsteppedlogfile,ts)
+duration(slf::SteppedLogFile) = duration(slf.nonsteppedlogfile)
+duration!(slf::SteppedLogFile,duration) = duration!(slf.nonsteppedlogfile,duration)
+measurementnames(slf::SteppedLogFile) = measurementnames(slf.nonsteppedlogfile)
+measurementnames!(slf::NonSteppedLogFile,measurementnames) = measurementnames!(slf.nonsteppedlogfile,measurementnames)
+measurements(slf::SteppedLogFile) = measurements(slf.nonsteppedlogfile)
+measurements!(slf::SteppedLogFile,measurements) = measurements!(slf.nansteppedlogfile,measurements)
+
 # END LogFile
 
 ### BEGIN overloading Base ###
 
 function Base.show(io::IO, x::NonSteppedLogFile)
-  println(io,x.logpath)  
-  println(io,x.circuitpath)
-  println(io,x.timestamp)
-  println(io,"$(x.duration) seconds")
-  if length(x.measurementnames)>0
+  println(io,logpath(x))  
+  println(io,circuitpath(x))
+  println(io,timestamp(x))
+  println(io,"$(duration(x)) seconds")
+  if length(measurementnames(x))>0
     println(io,"")
     println(io,"Measurements")
-    for name in x.measurementnames
+    for name in measurementnames(x)
       println(io,"  $name")
     end
   end
@@ -107,54 +127,50 @@ end
 
 function Base.show(io::IO, x::SteppedLogFile)
    show(io,x.nonsteppedlogfile) 
-   if length(x.stepnames)>0
+   if length(stepnames(x))>0
     println(io,"")
     println(io,"Step")
-    for name in x.stepnames
+    for name in stepnames(x)
       println(io,"  $name")
     end
   end
 end
 
 # NonSteppedLogFile is a read only Dict of its measurements
-Base.haskey(x::NonSteppedLogFile,key::ASCIIString) = findfirst(x.measurementnames,key) > 0
+Base.haskey(x::NonSteppedLogFile,key::ASCIIString) = findfirst(measurementnames(x),key) > 0
 Base.haskey(x::SteppedLogFile,   key::ASCIIString) = false
-Base.keys(x::NonSteppedLogFile)   = x.measurementnames
+Base.keys(x::NonSteppedLogFile)   = measurementnames(x)
 Base.keys(x::SteppedLogFile)      = []
-Base.values(x::NonSteppedLogFile) = x.measurements[:,1,1,1]
+Base.values(x::NonSteppedLogFile) = measurements(x)[:,1,1,1]
 Base.values(x::SteppedLogFile)    = []
-Base.length(x::NonSteppedLogFile) = length(getmeasurementnames(x))
+Base.length(x::NonSteppedLogFile) = length(measurementnames(x))
 Base.eltype(x::NonSteppedLogFile) = Float64
 function Base.getindex(x::NonSteppedLogFile, key::ASCIIString)
-  i = findfirst(x.measurementnames,key)
+  i = findfirst(measurementnames(x),key)
   if i == 0
     throw(KeyError(key))
   end
-  return x.measurements[i,1,1,1]
+  return measurements(x)[i,1,1,1]
 end
 
 # LogFile can access its measurments as a read only array
-Base.getindex(x::NonSteppedLogFile, index::Int) = x.measurements[index,1,1,1]
-function Base.getindex(x::NonSteppedLogFile, i1::Int, i2::Int, i3::Int, i4::Int)
-  x.measurements[i1,i2,i3,i4]
-end
-function Base.getindex(x::SteppedLogFile, i1::Int, i2::Int, i3::Int, i4::Int)
-  getmeasurements(x.nonsteppedlogfile)[i1,i2,i3,i4]
-end
+Base.getindex(x::NonSteppedLogFile, index::Integer) = measurements(x)[index,1,1,1]
+Base.getindex(x::LogFile, i1::Integer, i2::Integer, i3::Integer, i4::Integer) = 
+  measurements(x)[i1,i2,i3,i4]
 
 Base.length(x::SteppedLogFile) = length(getmeasurements(x))
 
 # NonSteppedLogFile iterates over its Dict
 Base.start(x::NonSteppedLogFile) = 1
 function Base.next(x::NonSteppedLogFile,state)
-  return (x.measurementnames[state]=>x.measurements[state,1,1,1],state+1)
+  return (measurementnames(x)[state]=>measurements(x)[state,1,1,1],state+1)
 end
-Base.done(x::NonSteppedLogFile, state) = state > length(x.measurementnames)
+Base.done(x::NonSteppedLogFile, state) = state > length(measurementnames(x))
 
 function parseline!(lf::NonSteppedLogFile, ::HeaderCircuitPath, line::ASCIIString)
   m = match(r"^Circuit: \*\s*([\w\:\\/. ~]+)"i,line)
   if m!=nothing
-    lf.circuitpath = m.captures[1]
+    circuitpath!(lf,m.captures[1])
     return true
   else
     return false

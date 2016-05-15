@@ -23,8 +23,23 @@ type CircuitFile
   CircuitFile() = new("",[],[],[],[],[],false,false) # empty CircuitFile
 end
 
-
 ### END Type CircuitFile and constructors ###
+
+getcircuitpath(x::CircuitFile) = x.circuitpath
+getparameternames(x::CircuitFile) = x.parameternames
+getparameters(x::CircuitFile) = [parameter[1] for parameter in x.parameters]
+getmeasurementnames(x::CircuitFile) = x.measurementnames
+getstepnames(x::CircuitFile) = x.stepnames
+
+circuitpath(x::CircuitFile) = x.circuitpath
+parameternames(x::CircuitFile) = x.parameternames
+parameters(x::CircuitFile) = x.parameters
+parametervalues(x::CircuitFile) = [parameter[1] for parameter in x.parameters]
+measurementnames(x::CircuitFile) = x.measurementnames
+stepnames(x::CircuitFile) = x.stepnames
+hassteps(x::CircuitFile) = length(x.stepnames) != 0
+hasmeasurements(x::CircuitFile) = length(x.measurementnames) != 0
+hasparameters(x::CircuitFile) = length(x.parameters) != 0
 
 ### BEGIN overloading Base ###
 
@@ -243,14 +258,7 @@ function flush(x::CircuitFile)
   return nothing
 end
 
-getcircuitpath(x::CircuitFile) = x.circuitpath
-getparameternames(x::CircuitFile) = x.parameternames
-getparameters(x::CircuitFile) = [parameter[1] for parameter in x.parameters]
-getmeasurementnames(x::CircuitFile) = x.measurementnames
-getstepnames(x::CircuitFile) = x.stepnames
-hassteps(x::CircuitFile) = length(x.stepnames) != 0
-hasmeasurements(x::CircuitFile) = length(x.measurementnames) != 0
-hasparameters(x::CircuitFile) = length(x.parameters) != 0
+
 
 ### END CircuitFile specific methods ###
 

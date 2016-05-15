@@ -42,41 +42,17 @@ type NonSteppedLogFile <: LogFile
   NonSteppedLogFile(logpath::ASCIIString) = new(logpath,"",DateTime(2015),0.0,[],Array(Float64,0,0,0,0))
 end
 NonSteppedLogFile() = NonSteppedLogFile("")
-
-function logpath!(nslf::NonSteppedLogFile,path::AbstractString)
-  nslf.logpath = path
-  return nothing
-end
+logpath!(nslf::NonSteppedLogFile,path::AbstractString) = nslf.logpath = path
 logpath(nslf::NonSteppedLogFile) = nslf.logpath
-
-function circuitpath!(nslf::NonSteppedLogFile,path::AbstractString)
-  nslf.circuitpath = path
-  return nothing
-end
+circuitpath!(nslf::NonSteppedLogFile,path::AbstractString) = nslf.circuitpath = path
 circuitpath(nslf::NonSteppedLogFile) = nslf.circuitpath
-
-function timestamp!(nslf::NonSteppedLogFile,ts::DateTime)
-  nslf.timestamp = ts 
-  return nothing
-end
+timestamp!(nslf::NonSteppedLogFile,ts::DateTime) = nslf.timestamp = ts 
 timestamp(nslf::NonSteppedLogFile) = nslf.timestamp
-
-function duration!(nslf::NonSteppedLogFile,duration)
-  nslf.duration = duration 
-  return nothing
-end
+duration!(nslf::NonSteppedLogFile,duration) = nslf.duration = duration 
 duration(nslf::NonSteppedLogFile) = nslf.duration
-
-function measurementnames!(nslf::NonSteppedLogFile,measurementnames)
-  nslf.measurementnames = measurementnames
-  return nothing
-end
+measurementnames!(nslf::NonSteppedLogFile,measurementnames) = nslf.measurementnames = measurementnames
 measurementnames(nslf::NonSteppedLogFile) = nslf.measurementnames
-
-function measurements!(nslf::NonSteppedLogFile,measurements)
-  nslf.measurements = measurements
-  return nothing
-end
+measurements!(nslf::NonSteppedLogFile,measurements) = nslf.measurements = measurements
 measurements(nslf::NonSteppedLogFile) = nslf.measurements
 
 type SteppedLogFile <: LogFile
@@ -87,13 +63,8 @@ type SteppedLogFile <: LogFile
 end
 SteppedLogFile() = SteppedLogFile(NonSteppedLogFile())
 SteppedLogFile(logpath::ASCIIString) = SteppedLogFile(NonSteppedLogFile(logpath))
-
-function stepnames!(slf::SteppedLogFile, stepnames::Array{ASCIIString,1})
-  slf.stepnames = stepnames
-  return nothing
-end
+stepnames!(slf::SteppedLogFile, stepnames::Array{ASCIIString,1}) = slf.stepnames = stepnames
 stepnames(slf::SteppedLogFile) = slf.stepnames
-
 steps(slf::SteppedLogFile) = slf.steps
 logpath(slf::SteppedLogFile) = logpath(slf.nonsteppedlogfile)
 logpath!(slf::SteppedLogFile,path::AbstractString) = logpath!(slf.nonsteppedlogfile,path)

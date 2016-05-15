@@ -298,6 +298,7 @@ function Base.parse(::Type{SteppedLogFile}, logpath::ASCIIString)
   io = open(logpath,true,false,false,false,false)
   exitcode = processlines!(io, slf, [header],[measurement,stepparameters])
   if exitcode == 1 # a non-steped log file
+    close(io)
     throw(ParseError(".log file is not expected type.  expexted SteppedLogFile, got NonSteppedLogFile"))
   else # a steped log file
     stepmeasurementname = StepMeasurementName()

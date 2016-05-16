@@ -106,7 +106,7 @@ LTspiceSimulationTempDir
 circuit(x::LTspiceSimulation) = x.circuit
 log(x::LTspiceSimulation) = x.log
 function measurements(x::LTspiceSimulation)
-  run(x)
+  runifneedsupdate!(x)
   measurements(log(x))
 end
 parameters(x::LTspiceSimulation) = parameters(circuit(x))
@@ -118,7 +118,7 @@ logpath(x::LTspiceSimulation) = logpath(log(x))
 measurementnames(x::LTspiceSimulation) = measurementnames(circuit(x))
 stepnames(x::LTspiceSimulation) = stepnames(log(x))
 function steps(x::LTspiceSimulation)
-  run(x)
+  runifneedsupdate!(x)
   steps(log(x))
 end
 logneedsupdate(x::LTspiceSimulation) = x.logneedsupdate
@@ -187,7 +187,7 @@ end
 
   # returns an array of all values (param and meas)
 function Base.values(x::LTspiceSimulation)
-  run(x)
+  runifneedsupdate!(x)
   vcat(collect(values(circuit(x))),collect(values(log(x))))
 end
 
@@ -196,7 +196,7 @@ function Base.getindex(x::LTspiceSimulation, key::ASCIIString)
   # value = x[key]
   # dosen't handle multiple keys, but neither does standard julia library for Dict
   if findfirst(measurementnames(x),key) > 0
-    run(x)
+    runifneedsupdate!(x)
     v = log(x)[key]
   elseif haskey(circuit(x),key)
     v = circuit(x)[key]
@@ -239,11 +239,11 @@ end
 # Intended for use in interactive sessions only.
 # For type stablity use getmeasurements()
 function Base.getindex(x::LTspiceSimulation,index::Int)
-  run(x)
+  runifneedsupdate!(x)
   log(x)[index]
 end
 function Base.getindex(x::LTspiceSimulation, i1::Int, i2::Int, i3::Int, i4::Int)
-  run(x)
+  runifneedsupdate!(x)
   log(x)[i1,i2,i3,i4] 
 end
 
@@ -384,29 +384,33 @@ user does not usualy need to call this.  It will be called automatically
 """
 Base.flush(x::LTspiceSimulation) = flush(circuit(x))
 
+function runifneedsupdate!(x::LTspiceSimulation)
+  if logneedsupdate(x)
+    run!(x)
+  end
+  return nothing
+end
+
 """
 ```julia
 run(sim)
 ```
-Checks if log file is up to date, if not runs `sim`.
+writes circuit changes and calls LTspice to run `sim`.
 """
-function Base.run(x::LTspiceSimulation)
-  # runs simulation and updates measurement values
-  if logneedsupdate(x)
-    flush(x)
-    if ltspiceexecutablepath(x) != ""  # so travis dosen't need to load LTspice
-      if islinux
-        drive_c = "/home/$(ENV["USER"])/.wine/drive_c"
-        winecircuitpath = joinpath("C:",relpath(circuitpath(x),drive_c))
-        run(`$(ltspiceexecutablepath(x)) -b -Run $winecircuitpath`)
-      else
-        run(`$(ltspiceexecutablepath(x)) -b -Run $(circuitpath(x))`)
-      end
+function run!(x::LTspiceSimulation)
+  flush(x)
+  if ltspiceexecutablepath(x) != ""  # so travis dosen't need to load LTspice
+    if islinux
+      drive_c = "/home/$(ENV["USER"])/.wine/drive_c"
+      winecircuitpath = joinpath("C:",relpath(circuitpath(x),drive_c))
+      run(`$(ltspiceexecutablepath(x)) -b -Run $winecircuitpath`)
+    else
+      run(`$(ltspiceexecutablepath(x)) -b -Run $(circuitpath(x))`)
     end
-    x.log = parse(x.log)
-    clearlogneedsupdate!(x)
-    return nothing 
   end
+  x.log = parse(x.log)
+  clearlogneedsupdate!(x)
+  return nothing 
 end
 
 ### END LTspicesSimulation! specific methods

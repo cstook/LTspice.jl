@@ -151,10 +151,16 @@ function parseline!(lf::LogFile, ::HeaderCircuitPath, line::ASCIIString)
 end
 
 function parseline!(lf::LogFile, measurement::Measurement, line::ASCIIString)
-  m = match(r"^([a-z][a-z0-9_@#$.:\\]*):.*=([0-9.eE+-]+)"i,line)
+  #m = match(r"^([a-z][a-z0-9_@#$.:\\]*):.*=([0-9.eE+-]+)"i,line)
+  m = match(r"^([a-z][a-z0-9_@#$.:\\]*):.*=([\S]+)"i,line)
+  value = Float64(NaN)
   if m!=nothing
     name = m.captures[1]
-    value = parse(Float64,m.captures[2])
+    try
+      value = parse(Float64,m.captures[2])
+    catch 
+      value = Float64(NaN)
+    end
     push!(measurement.measurementnames,name)
     push!(measurement.measurements,value)
     return true
@@ -209,9 +215,15 @@ function parseline!(slf::SteppedLogFile, smn::StepMeasurementName, line::ASCIISt
 end
 
 function parseline!(::SteppedLogFile, smv::StepMeasurementValue, line::ASCIIString)
-  m = match(r"^\s*[0-9]+\s+([0-9.eE+-]+)"i,line)
+  #m = match(r"^\s*[0-9]+\s+([0-9.eE+-]+)"i,line)
+  m = match(r"^\s*[0-9]+\s+(\S+)"i,line)
+  value = Float64(NaN)
   if m!=nothing
-    value = parse(Float64,m.captures[1])
+    try
+      value = parse(Float64,m.captures[1])
+    catch
+      value = Float64(NaN)
+    end
     push!(smv.values,value)
     return true
   else

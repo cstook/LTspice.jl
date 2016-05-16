@@ -13,31 +13,31 @@ immutable PerLineIterator
   mli               :: MultiLevelIterator
 
   function PerLineIterator(simulation :: LTspiceSimulation;
-                           steporder = getstepnames(simulation),
-                           resultnames = vcat(getparameternames(simulation),
-                                              getmeasurementnames(simulation)))
+                           steporder = stepnames(simulation),
+                           resultnames = vcat(parameternames(simulation),
+                                              measurementnames(simulation)))
     for step in steporder
-      if findfirst(getstepnames(simulation),step) == 0 
+      if findfirst(stepnames(simulation),step) == 0 
         error("$step step not found")
       end
     end
-    if length(steporder) != length(getstepnames(simulation))
+    if length(steporder) != length(stepnames(simulation))
       error("length(steporder) must equal number of steped items in simulation")
     end
     args = Array(Int,0)
     stepindexes = Array(Int,0)
     for step in steporder
-      index = findfirst(getstepnames(simulation),step)
-      push!(args,length(getsteps(simulation)[index]))
+      index = findfirst(stepnames(simulation),step)
+      push!(args,length(steps(simulation)[index]))
       push!(stepindexes,index)
     end
     resultindexes = Array(Tuple{Bool,Int},0) 
     for resultname in resultnames
-      i = findfirst(getparameternames(simulation),resultname)
+      i = findfirst(parameternames(simulation),resultname)
       if i > 0
         push!(resultindexes,(true,i))
       else
-        i = findfirst(getmeasurementnames(simulation),resultname)
+        i = findfirst(measurementnames(simulation),resultname)
         if i > 0
           push!(resultindexes,(false,i))
         else 
@@ -53,8 +53,8 @@ end
 """
 ```julia
 PerLineIterator(sim :: LTspiceSimulation;
-                steporder = getstepnames(sim),
-                resultnames = vcat(getparameternames(sim), getmeasurementnames(sim)))
+                steporder = stepnames(sim),
+                resultnames = vcat(parameternames(sim), measurementnames(sim)))
 ```
 
 Creates an iterator in the format required to pass to writecsv or writedlm.
@@ -94,14 +94,14 @@ function next(x :: PerLineIterator, state :: Array{Int,1})
   line = Array(Float64, length(x.stepindexes)+length(x.resultindexes))
   i = 1
   for si in x.stepindexes
-    line[i] = getsteps(x.simulation)[si][k[si]]
+    line[i] = steps(x.simulation)[si][k[si]]
     i +=1
   end
   for (isparameter,j) in x.resultindexes
     if isparameter
-      line[i] = getparameters(x.simulation)[j]
+      line[i] = parametervalues(x.simulation)[j]
     else 
-      line[i] = getmeasurements(x.simulation)[j,k...]
+      line[i] = measurements(x.simulation)[j,k...]
     end
     i +=1
   end

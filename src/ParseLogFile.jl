@@ -64,7 +64,7 @@ type SteppedLogFile <: LogFile
 end
 SteppedLogFile() = SteppedLogFile(NonSteppedLogFile())
 SteppedLogFile(logpath::ASCIIString) = SteppedLogFile(NonSteppedLogFile(logpath))
-stepnames!(slf::SteppedLogFile, stepnames::Array{ASCIIString,1}) = slf.stepnames = stepnames
+stepnames!(slf::SteppedLogFile, s::Array{ASCIIString,1}) = slf.stepnames = s
 stepnames(slf::SteppedLogFile) = slf.stepnames
 steps(slf::SteppedLogFile) = slf.steps
 logpath(slf::SteppedLogFile) = logpath(slf.nonsteppedlogfile)
@@ -88,12 +88,12 @@ function Base.show(io::IO, x::NonSteppedLogFile)
   println(io,logpath(x))  
   println(io,circuitpath(x))
   println(io,timestamp(x))
-  println(io,"$(duration(x)) seconds")
+  println(io,duration(x)," seconds")
   if length(measurementnames(x))>0
     println(io,"")
     println(io,"Measurements")
     for name in measurementnames(x)
-      println(io,"  $name")
+      println(io,"  ",name)
     end
   end
 end
@@ -104,7 +104,7 @@ function Base.show(io::IO, x::SteppedLogFile)
     println(io,"")
     println(io,"Step")
     for name in stepnames(x)
-      println(io,"  $name")
+      println(io,"  ",name)
     end
   end
 end

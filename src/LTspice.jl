@@ -4,12 +4,6 @@
 "Main module for `LTspice.jl` - a Julia interface to LTspice"
 module LTspice
 
-import Base: parse, show
-import Base: haskey, keys, values
-import Base: getindex, setindex!, get, endof
-import Base: start, next, done, length, eltype
-import Base: call, flush, run
-
 export LTspiceSimulation, LTspiceSimulationTempDir, measurements
 export parametervalues, circuitpath, ltspiceexecutablepath
 export logpath, measurementnames, stepnames, steps
@@ -34,7 +28,6 @@ type LTspiceSimulation
 
   function LTspiceSimulation(circuitpath::ASCIIString,
                               executablepath::ASCIIString)
-    #islinux = @linux? true:false
     if islinux
       (d,f) = splitdir(abspath(circuitpath))
       linkdir = "/home/$(ENV["USER"])/.wine/drive_c/Program Files (x86)/LTC/LTspice.jl_links"
@@ -185,20 +178,20 @@ end
 # LTspiceSimulation is a Dict 
 #   of its parameters and measurements for non stepped simulations (measurements read only)
 #   of its parameters for stepped simulations
-haskey(x::LTspiceSimulation, key::ASCIIString) = haskey(circuit(x),key) | haskey(log(x),key)
+Base.haskey(x::LTspiceSimulation, key::ASCIIString) = haskey(circuit(x),key) | haskey(log(x),key)
 
-function keys(x::LTspiceSimulation)
+function Base.keys(x::LTspiceSimulation)
   # returns an array all keys (param and meas)
   vcat(collect(keys(circuit(x))),collect(keys(log(x))))
 end
 
   # returns an array of all values (param and meas)
-function values(x::LTspiceSimulation)
+function Base.values(x::LTspiceSimulation)
   run(x)
   vcat(collect(values(circuit(x))),collect(values(log(x))))
 end
 
-function getindex(x::LTspiceSimulation, key::ASCIIString)
+function Base.getindex(x::LTspiceSimulation, key::ASCIIString)
   # returns value for key in either param or meas
   # value = x[key]
   # dosen't handle multiple keys, but neither does standard julia library for Dict
@@ -213,7 +206,7 @@ function getindex(x::LTspiceSimulation, key::ASCIIString)
   return(v)
 end
 
-function get(x::LTspiceSimulation, key::ASCIIString, default:: Float64)
+function Base.get(x::LTspiceSimulation, key::ASCIIString, default:: Float64)
   # returns value for key in either param or meas
   # returns default if key not found
   if haskey(x,key)
@@ -223,7 +216,7 @@ function get(x::LTspiceSimulation, key::ASCIIString, default:: Float64)
   end
 end
 
-function setindex!(x::LTspiceSimulation, value:: Float64, key::ASCIIString)
+function Base.setindex!(x::LTspiceSimulation, value:: Float64, key::ASCIIString)
   # sets the value of param specified by key
   # x[key] = value
   # meas Dict cannot be set.  It is the result of a simulation
@@ -237,7 +230,7 @@ function setindex!(x::LTspiceSimulation, value:: Float64, key::ASCIIString)
   end
 end
 
-function setindex!(x::LTspiceSimulation, value:: Float64, index:: Int)
+function Base.setindex!(x::LTspiceSimulation, value:: Float64, index:: Int)
   setlogneedsupdate!(x) 
   circuit(x)[index] = value 
 end
@@ -245,19 +238,19 @@ end
 # LTspiceSimulationTempDir is an read only array of its measurements
 # Intended for use in interactive sessions only.
 # For type stablity use getmeasurements()
-function getindex(x::LTspiceSimulation,index::Int)
+function Base.getindex(x::LTspiceSimulation,index::Int)
   run(x)
   log(x)[index]
 end
-function getindex(x::LTspiceSimulation, i1::Int, i2::Int, i3::Int, i4::Int)
+function Base.getindex(x::LTspiceSimulation, i1::Int, i2::Int, i3::Int, i4::Int)
   run(x)
   log(x)[i1,i2,i3,i4] 
 end
 
-eltype(x::LTspiceSimulation) = Float64 
-length(x::LTspiceSimulation) = length(log(x)) + length(circuit(x))
+Base.eltype(x::LTspiceSimulation) = Float64 
+Base.length(x::LTspiceSimulation) = length(log(x)) + length(circuit(x))
 
-function call(x::LTspiceSimulation, args...)
+function Base.call(x::LTspiceSimulation, args...)
   if length(args) != length(circuit(x))
     throw(ArgumentError("number of arguments must match number of parameters"))
   end
@@ -382,32 +375,6 @@ end
 =#
 """
 ```julia
-run(sim)
-```
-Checks if log file is up to date, if not runs `sim`.
-"""
-function run(x::LTspiceSimulation)
-  # runs simulation and updates measurement values
-  if logneedsupdate(x)
-    flush(x.circuit)
-    if (x.executablepath != "")  # so travis dosen't need to load LTspice
-      islinux = @linux? true:false
-      if islinux
-        drive_c = "/home/$(ENV["USER"])/.wine/drive_c"
-        winecircuitpath = joinpath("C:",relpath(getcircuitpath(x),drive_c))
-        run(`$(getltspiceexecutablepath(x)) -b -Run $winecircuitpath`)
-      else
-        run(`$(getltspiceexecutablepath(x)) -b -Run $(getcircuitpath(x))`)
-      end
-    end
-    x.log = parse(x.log)
-    x.logneedsupdate = false
-    return(nothing)
-  end
-end
-
-"""
-```julia
 flush(sim)
 ```
 Writes `sim`'s circuit file back to disk if any parameters have changed.  The 
@@ -415,7 +382,32 @@ user does not usualy need to call this.  It will be called automatically
  when a measurment is requested and the log file needs to be updated.  It can be used
  to update a circuit file using julia for simulation with the LTspice GUI.  
 """
-flush(x::LTspiceSimulation) = flush(circuit(x))
+Base.flush(x::LTspiceSimulation) = flush(circuit(x))
+
+"""
+```julia
+run(sim)
+```
+Checks if log file is up to date, if not runs `sim`.
+"""
+function Base.run(x::LTspiceSimulation)
+  # runs simulation and updates measurement values
+  if logneedsupdate(x)
+    flush(x)
+    if ltspiceexecutablepath(x) != ""  # so travis dosen't need to load LTspice
+      if islinux
+        drive_c = "/home/$(ENV["USER"])/.wine/drive_c"
+        winecircuitpath = joinpath("C:",relpath(circuitpath(x),drive_c))
+        run(`$(ltspiceexecutablepath(x)) -b -Run $winecircuitpath`)
+      else
+        run(`$(ltspiceexecutablepath(x)) -b -Run $(circuitpath(x))`)
+      end
+    end
+    x.log = parse(x.log)
+    clearlogneedsupdate!(x)
+    return nothing 
+  end
+end
 
 ### END LTspicesSimulation! specific methods
 
@@ -433,7 +425,7 @@ end
 
 """
 ```julia
-defaultltspiceexecutable()
+defaultltspiceexecutable()Base.
 ```
 returns the default LTspice executable path for the operating system
 """

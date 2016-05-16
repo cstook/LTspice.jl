@@ -75,14 +75,14 @@ close(io)
 """
 PerLineIterator(x)
 
-function show(io ::IO, x :: PerLineIterator)
+function Base.show(io ::IO, x :: PerLineIterator)
   numberoflines = length(x.mli)
   println(io,"$(numberoflines)-line PerLineIterator")
 end
 
-start(x :: PerLineIterator) = start(x.mli)
+Base.start(x :: PerLineIterator) = start(x.mli)
 
-function next(x :: PerLineIterator, state :: Array{Int,1})
+function Base.next(x :: PerLineIterator, state :: Array{Int,1})
   # flip MultiLevelIterator indexes around to be order required 
   # by the measurements array
   (q,nextstate) = next(x.mli,state)
@@ -108,8 +108,8 @@ function next(x :: PerLineIterator, state :: Array{Int,1})
   return (line,nextstate)
 end
 
-done(x :: PerLineIterator, state) = done(x.mli, state)
-length(x :: PerLineIterator) = length(x.mli)
+Base.done(x :: PerLineIterator, state) = done(x.mli, state)
+Base.length(x :: PerLineIterator) = length(x.mli)
 
 """
 ```julia

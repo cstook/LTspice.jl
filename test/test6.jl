@@ -8,20 +8,20 @@ show(test6)
 show(test6.circuit)
 show(test6.log)
 
-@test getmeasurementnames(test6) == []
-@test getmeasurementnames(test6.log) == getmeasurementnames(test6)
-@test getstepnames(test6) == []
-@test getlogpath(test6) != ""
+@test measurementnames(test6) == []
+@test measurementnames(test6.log) == measurementnames(test6)
+@test stepnames(test6) == []
+@test logpath(test6) != ""
 
 islinux = @linux? true:false
 if ~islinux
-    @test getcircuitpath(test6) == test6file
+    @test circuitpath(test6) == test6file
 end
 
-@test typeof(getcircuitpath(test6.log)) == Type(ASCIIString)
-@test typeof(getparameters(test6)) == Array{Float64,1}
-#@test getmeasurements(test6)[1,1,1,1] == 1.0
-@test getltspiceexecutablepath(test6) == ""
+@test typeof(circuitpath(test6.log)) == Type(ASCIIString)
+@test typeof(parametervalues(test6)) == Array{Float64,1}
+#@test measurements(test6)[1,1,1,1] == 1.0
+@test ltspiceexecutablepath(test6) == ""
 @test haskey(test6,"sum") == false  # measurments in stepped files are not a Dict
 @test length(test6.log) == 0
 

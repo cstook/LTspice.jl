@@ -11,12 +11,12 @@ loadlog!(test1)
 show(test1)
 show(test1.circuit)
 show(test1.log)
-@test getmeasurementnames(test1) == ["current"]
-@test getlogpath(test1) != ""
-@test getcircuitpath(test1) != ""
-@test typeof(getparameters(test1)) == Array{Float64,1}
-@test getmeasurements(test1)[1,1,1,1] == 2.5
-@test getltspiceexecutablepath(test1) == ""
+@test measurementnames(test1) == ["current"]
+@test logpath(test1) != ""
+@test circuitpath(test1) != ""
+@test typeof(parametervalues(test1)) == Array{Float64,1}
+@test measurements(test1)[1,1,1,1] == 2.5
+@test ltspiceexecutablepath(test1) == ""
 @test eltype(test1.circuit) == Type(Float64)
 
 t = try

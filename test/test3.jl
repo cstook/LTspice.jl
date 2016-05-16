@@ -7,7 +7,7 @@ exc = ""  # null string will not run LTspice.exe.  Test parsing only.
 test3 = LTspiceSimulation(filename, exc)
 
 parameternamesverify = ["a","b","c","d","e","f","g","h","i","j","k","l"]
-for (verify,parameter,value) in zip(parameternamesverify,getparameternames(test3),getparameters(test3))
+for (verify,parameter,value) in zip(parameternamesverify,parameternames(test3),parametervalues(test3))
   @test parameter == verify
   @test value == test3[parameter]
 end

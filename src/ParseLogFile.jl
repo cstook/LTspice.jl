@@ -54,6 +54,7 @@ measurementnames!(nslf::NonSteppedLogFile,measurementnames) = nslf.measurementna
 measurementnames(nslf::NonSteppedLogFile) = nslf.measurementnames
 measurements!(nslf::NonSteppedLogFile,measurements) = nslf.measurements = measurements
 measurements(nslf::NonSteppedLogFile) = nslf.measurements
+stepnames(nslf::NonSteppedLogFile) = []
 
 type SteppedLogFile <: LogFile
   nonsteppedlogfile :: NonSteppedLogFile

@@ -12,20 +12,20 @@ alist = [1.0,2.0]
 blist = [10.0,15.0,20.0,25.0]
 clist = [100.0,200.0,300.0]
 
-@test getsteps(PCF_test1) == (alist,blist,clist)
-@test getmeasurementnames(PCF_test1) == ["sum","sump1000"]
-@test getmeasurementnames(PCF_test1.log) == getmeasurementnames(PCF_test1)
-@test getstepnames(PCF_test1) == ["a","b","c"]
-@test getstepnames(PCF_test1.log) == getstepnames(PCF_test1)
-@test getlogpath(PCF_test1) != ""
+@test steps(PCF_test1) == (alist,blist,clist)
+@test measurementnames(PCF_test1) == ["sum","sump1000"]
+@test measurementnames(PCF_test1.log) == measurementnames(PCF_test1)
+@test stepnames(PCF_test1) == ["a","b","c"]
+@test stepnames(PCF_test1.log) == stepnames(PCF_test1)
+@test logpath(PCF_test1) != ""
 islinux = @linux? true:false
 if ~islinux
-    @test getcircuitpath(PCF_test1) == PCF_test1file
+    @test circuitpath(PCF_test1) == PCF_test1file
 end
-@test typeof(getcircuitpath(PCF_test1.log)) == Type(ASCIIString)
-@test typeof(getparameters(PCF_test1)) == Array{Float64,1}
-@test getmeasurements(PCF_test1)[1,1,1,1] == 111.0
-@test getltspiceexecutablepath(PCF_test1) == ""
+@test typeof(circuitpath(PCF_test1.log)) == Type(ASCIIString)
+@test typeof(parametervalues(PCF_test1)) == Array{Float64,1}
+@test measurements(PCF_test1)[1,1,1,1] == 111.0
+@test ltspiceexecutablepath(PCF_test1) == ""
 @test haskey(PCF_test1,"sum") == false  # measurments in stepped files are not a Dict
 @test length(PCF_test1.log) == 48
 
@@ -55,7 +55,7 @@ for line in pli
 end
 
 
-@test getmeasurements(PCF_test1) == verify
+@test measurements(PCF_test1) == verify
 show(PCF_test1)
 show(PCF_test1.circuit)
 show(PCF_test1.log)

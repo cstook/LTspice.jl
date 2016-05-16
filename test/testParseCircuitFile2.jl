@@ -14,11 +14,11 @@ blist = [1.0, 3.0, 5.0, 7.0, 9.0, 10.0]
 clist = [4.0, 5.0, 6.0]
 stepnames = ["v1","b","c"]
 
-@test getsteps(PCF_test2) == (v1list, blist, clist)
-@test getmeasurementnames(PCF_test2) == []
-@test getstepnames(PCF_test2) == stepnames
-@test getstepnames(PCF_test2.log) == stepnames
-@test getmeasurements(PCF_test2) == Array(Float64,0,0,0,0)
+@test steps(PCF_test2) == (v1list, blist, clist)
+@test measurementnames(PCF_test2) == []
+@test stepnames(PCF_test2) == stepnames
+@test stepnames(PCF_test2.log) == stepnames
+@test measurements(PCF_test2) == Array(Float64,0,0,0,0)
 
 pli = PerLineIterator(PCF_test2)
 show(pli)

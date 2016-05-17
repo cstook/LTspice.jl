@@ -2,14 +2,14 @@ filename = "test1.asc"
 exc = ""  # null string will not run LTspice.exe.  Test parsing only.
 test1 = LTspiceSimulation(filename,exc)
 show(test1)
-show(test1.circuit)
+show(test1.circuitparsed)
 show(test1.log)
 loadlog!(test1)
 @test test1["vin"] == 5
 @test test1["load"] == 2
 @test test1["current"] == 2.5
 show(test1)
-show(test1.circuit)
+show(test1.circuitparsed)
 show(test1.log)
 @test measurementnames(test1) == ["current"]
 @test logpath(test1) != ""
@@ -17,7 +17,7 @@ show(test1.log)
 @test typeof(parametervalues(test1)) == Array{Float64,1}
 @test measurementvalues(test1)[1,1,1,1] == 2.5
 @test ltspiceexecutablepath(test1) == ""
-@test eltype(test1.circuit) == Type(Float64)
+@test eltype(test1.circuitparsed) == Type(Float64)
 
 t = try
   LTspiceSimulationTempDir(filename)

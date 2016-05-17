@@ -5,7 +5,7 @@ test6file = "test6.asc"
 exc = ""
 test6 = LTspiceSimulation(test6file,exc)
 show(test6)
-show(test6.circuit)
+show(LTspice.circuitparsed(test6))
 show(test6.log)
 
 @test measurementnames(test6) == []
@@ -33,6 +33,6 @@ show(pli)
 
 
 show(test6)
-show(test6.circuit)
+show(LTspice.circuitparsed(test6))
 show(test6.log)
 

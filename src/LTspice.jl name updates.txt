@@ -4,9 +4,9 @@ measurements	-> measurementvalues
 measurements!	-> measurementvalues!
 steps			-> stepvalues
 CircuitFile		-> CircuitParsed
-LogParsed			-> LogParsed
-NonSteppedLogFile 	-> NonSteppedLog
-SteppedLogFile 	   	-> SteppedLog
+LogFile			-> LogParsed
+NonSteppedLog 	-> NonSteppedLog
+SteppedLog 	   	-> SteppedLog
 circuit 		-> circuitparsed
 log 			-> logparsed
 getheaders		-> headernames  = x.header

@@ -5,7 +5,7 @@ test8file = "test8.asc"
 exc = ""
 test8 = LTspiceSimulation(test8file,exc)
 show(test8)
-show(test8.circuit)
+show(LTspice.circuitparsed(test8))
 show(test8.log)
 
 @test test8["a@"] == 1.0

@@ -1,5 +1,5 @@
 """
-parses the circuit file changing all paths
+parses the circuitparsed file changing all paths
 in .inc, .include, and .lib directives to 
 absolute paths
 """

@@ -20,7 +20,7 @@ include("ParseLogFile.jl")
 include("removetempdirectories.jl")
 
 type LTspiceSimulation
-  circuit         :: CircuitParsed
+  circuitparsed         :: CircuitParsed
   log             :: LogParsed
   executablepath  :: ASCIIString
   logneedsupdate  :: Bool
@@ -40,11 +40,11 @@ type LTspiceSimulation
       end
       circuitpath = convert(ASCIIString,joinpath(templinkdir,"linktocircuit",f))
     end
-    circuit = parse(CircuitParsed,circuitpath)
+    circuitparsed = parse(CircuitParsed,circuitpath)
     (everythingbeforedot,dontcare) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
-    log = blanklog(circuit,logpath) # creates a blank log object
-    new(circuit,log,executablepath,true)
+    log = blanklog(circuitparsed,logpath) # creates a blank log object
+    new(circuitparsed,log,executablepath,true)
   end
 end
 
@@ -77,8 +77,8 @@ LTspiceSimulation(circuitpath, executablepath)
 ```
 
 Creates an `LTspiceSimulation` object.    `circuitpath` and `execuatblepath` 
-are the path to the circuit file (.asc) and the LTspice executable.  Operations 
-on `LTspiceSimulation` will modify the circuit file.
+are the path to the circuitparsed file (.asc) and the LTspice executable.  Operations 
+on `LTspiceSimulation` will modify the circuitparsed file.
 
 If `executablepath` is not specified, an attempt will be made to find it in the default
 location for your operating system.
@@ -93,7 +93,7 @@ LTspiceSimulationTempDir(circuitpath, executablepath)
 ```
 
 Same as `LTspiceSimulation` except creates an object which works on a copy of 
-the circuit in a temporary directory. LTspice will need to be able to find all
+the circuitparsed in a temporary directory. LTspice will need to be able to find all
  sub-circuits and libraries from the temporary directory or the simulation will not run.  
    Anything included with .include or .lib directives will be changed to work 
  correctly in temp directory.
@@ -101,19 +101,19 @@ the circuit in a temporary directory. LTspice will need to be able to find all
 LTspiceSimulationTempDir
 
 
-circuit(x::LTspiceSimulation) = x.circuit
+circuitparsed(x::LTspiceSimulation) = x.circuitparsed
 log(x::LTspiceSimulation) = x.log
 function measurementvalues(x::LTspiceSimulation)
   runifneedsupdate!(x)
   measurementvalues(log(x))
 end
-parameters(x::LTspiceSimulation) = parameters(circuit(x))
-parametervalues(x::LTspiceSimulation) = parametervalues(circuit(x))
-parameternames(x::LTspiceSimulation) = parameternames(circuit(x))
-circuitpath(x::LTspiceSimulation) = circuitpath(circuit(x))
+parameters(x::LTspiceSimulation) = parameters(circuitparsed(x))
+parametervalues(x::LTspiceSimulation) = parametervalues(circuitparsed(x))
+parameternames(x::LTspiceSimulation) = parameternames(circuitparsed(x))
+circuitpath(x::LTspiceSimulation) = circuitpath(circuitparsed(x))
 ltspiceexecutablepath(x::LTspiceSimulation) = x.executablepath
 logpath(x::LTspiceSimulation) = logpath(log(x))
-measurementnames(x::LTspiceSimulation) = measurementnames(circuit(x))
+measurementnames(x::LTspiceSimulation) = measurementnames(circuitparsed(x))
 stepnames(x::LTspiceSimulation) = stepnames(log(x))
 function stepvalues(x::LTspiceSimulation)
   runifneedsupdate!(x)
@@ -122,9 +122,9 @@ end
 logneedsupdate(x::LTspiceSimulation) = x.logneedsupdate
 setlogneedsupdate!(x::LTspiceSimulation) = x.logneedsupdate = true
 clearlogneedsupdate!(x::LTspiceSimulation) = x.logneedsupdate = false
-hasparameters(x::LTspiceSimulation) = hasparameters(circuit(x))
-hasmeasurements(x::LTspiceSimulation) = hasmeasurements(circuit(x))
-hassteps(x::LTspiceSimulation) = hassteps(circuit(x))
+hasparameters(x::LTspiceSimulation) = hasparameters(circuitparsed(x))
+hasmeasurements(x::LTspiceSimulation) = hasmeasurements(circuitparsed(x))
+hassteps(x::LTspiceSimulation) = hassteps(circuitparsed(x))
 
 """
     parameters(sim)
@@ -137,7 +137,7 @@ parameters
     parametervalues(sim)
 
 Returns an array of the parameters of `sim` in the order they appear in the
-circuit file
+circuitparsed file
 """
 parametervalues
 
@@ -145,7 +145,7 @@ parametervalues
     parameternames(sim)
 
 Returns an array of the parameters names of `sim` in the order they appear in the
-circuit file.
+circuitparsed file.
 """
 parameternames
 
@@ -153,9 +153,9 @@ parameternames
 
     circuitpath(sim)
 
-Returns path to the circuit file.
+Returns path to the circuitparsed file.
 
-This is the path to the working circuit file.  If LTspiceSimulationTempDir was used 
+This is the path to the working circuitparsed file.  If LTspiceSimulationTempDir was used 
 or if running under wine, this will not be the path given to the constructor.
 """
 circuitpath
@@ -178,7 +178,7 @@ ltspiceexecutablepath
     measurmentnames(sim)
 
 Returns an array of the measurement names of `sim` in the order they appear in the
-circuit file.
+circuitparsed file.
 """
 measurementnames
 
@@ -218,7 +218,7 @@ function Base.show(io::IO, x::LTspiceSimulation)
   if hasparameters(x)
     println(io,"")
     println(io,"Parameters")
-    for (key,value) in circuit(x)
+    for (key,value) in circuitparsed(x)
       println(io,"$(rpad(key,25,' ')) = $value")
     end
   end
@@ -258,17 +258,17 @@ end
 # LTspiceSimulation is a Dict 
 #   of its parameters and measurements for non stepped simulations (measurements read only)
 #   of its parameters for stepped simulations
-Base.haskey(x::LTspiceSimulation, key::ASCIIString) = haskey(circuit(x),key) | haskey(log(x),key)
+Base.haskey(x::LTspiceSimulation, key::ASCIIString) = haskey(circuitparsed(x),key) | haskey(log(x),key)
 
 function Base.keys(x::LTspiceSimulation)
   # returns an array all keys (param and meas)
-  vcat(collect(keys(circuit(x))),collect(keys(log(x))))
+  vcat(collect(keys(circuitparsed(x))),collect(keys(log(x))))
 end
 
   # returns an array of all values (param and meas)
 function Base.values(x::LTspiceSimulation)
   runifneedsupdate!(x)
-  vcat(collect(values(circuit(x))),collect(values(log(x))))
+  vcat(collect(values(circuitparsed(x))),collect(values(log(x))))
 end
 
 function Base.getindex(x::LTspiceSimulation, key::ASCIIString)
@@ -278,8 +278,8 @@ function Base.getindex(x::LTspiceSimulation, key::ASCIIString)
   if findfirst(measurementnames(x),key) > 0
     runifneedsupdate!(x)
     v = log(x)[key]
-  elseif haskey(circuit(x),key)
-    v = circuit(x)[key]
+  elseif haskey(circuitparsed(x),key)
+    v = circuitparsed(x)[key]
   else
     throw(KeyError(key))
   end
@@ -300,9 +300,9 @@ function Base.setindex!(x::LTspiceSimulation, value:: Float64, key::ASCIIString)
   # sets the value of param specified by key
   # x[key] = value
   # meas Dict cannot be set.  It is the result of a simulation
-  if haskey(circuit(x),key)
+  if haskey(circuitparsed(x),key)
     setlogneedsupdate!(x)
-    circuit(x)[key] = value
+    circuitparsed(x)[key] = value
   elseif haskey(log(x),key)
     error("measurements cannot be set.")
   else
@@ -312,7 +312,7 @@ end
 
 function Base.setindex!(x::LTspiceSimulation, value:: Float64, index:: Int)
   setlogneedsupdate!(x) 
-  circuit(x)[index] = value 
+  circuitparsed(x)[index] = value 
 end
 
 # LTspiceSimulationTempDir is an read only array of its measurements
@@ -328,13 +328,13 @@ function Base.getindex(x::LTspiceSimulation, i1::Int, i2::Int, i3::Int, i4::Int)
 end
 
 Base.eltype(x::LTspiceSimulation) = Float64 
-Base.length(x::LTspiceSimulation) = length(log(x)) + length(circuit(x))
+Base.length(x::LTspiceSimulation) = length(log(x)) + length(circuitparsed(x))
 
 function Base.call(x::LTspiceSimulation, args...)
-  if length(args) != length(circuit(x))
+  if length(args) != length(circuitparsed(x))
     throw(ArgumentError("number of arguments must match number of parameters"))
   end
-  if typeof(log(x)) == Type(SteppedLogFile)
+  if typeof(log(x)) == Type(SteppedLog)
     error("call only for non stepped simulations")
   end
   for (i,arg) in enumerate(args)
@@ -361,12 +361,12 @@ end
 ```julia
 flush(sim)
 ```
-Writes `sim`'s circuit file back to disk if any parameters have changed.  The 
+Writes `sim`'s circuitparsed file back to disk if any parameters have changed.  The 
 user does not usualy need to call this.  It will be called automatically
  when a measurment is requested and the log file needs to be updated.  It can be used
- to update a circuit file using julia for simulation with the LTspice GUI.  
+ to update a circuitparsed file using julia for simulation with the LTspice GUI.  
 """
-Base.flush(x::LTspiceSimulation) = flush(circuit(x))
+Base.flush(x::LTspiceSimulation) = flush(circuitparsed(x))
 
 function runifneedsupdate!(x::LTspiceSimulation)
   if logneedsupdate(x)
@@ -379,7 +379,7 @@ end
 ```julia
 run(sim)
 ```
-writes circuit changes and calls LTspice to run `sim`.
+writes circuitparsed changes and calls LTspice to run `sim`.
 """
 function run!(x::LTspiceSimulation)
   flush(x)
@@ -400,9 +400,9 @@ end
 "creates a blank log object of appropiate type for circuitfile"
 function blanklog(circuit::CircuitParsed, logpath::ASCIIString)
   if hassteps(circuit)
-    log = SteppedLogFile(logpath)  # a blank stepped log object
+    log = SteppedLog(logpath)  # a blank stepped log object
   else 
-    log = NonSteppedLogFile(logpath) # a blank non stepped log object
+    log = NonSteppedLog(logpath) # a blank non stepped log object
   end
   return log
 end

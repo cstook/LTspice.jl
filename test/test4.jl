@@ -5,7 +5,7 @@ test4file = "test4.asc"
 exc = ""
 test4 = LTspiceSimulation(test4file,exc)
 show(test4)
-show(test4.circuit)
+show(LTspice.circuitparsed(test4))
 show(test4.log)
 
 alist = [1.0,2.0]
@@ -54,6 +54,6 @@ end
 
 @test measurementvalues(test4) == verify
 show(test4)
-show(test4.circuit)
+show(LTspice.circuitparsed(test4))
 show(test4.log)
 

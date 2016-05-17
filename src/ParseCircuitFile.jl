@@ -1,9 +1,9 @@
 # overloard parse for the CircuitParsed type
-# used to parse LTspice circuit files *.asc
+# used to parse LTspice circuitparsed files *.asc
 
 type CircuitParsed
   circuitpath     :: ASCIIString
-  circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
+  circuitfilearray:: Array{ASCIIString,1}    # text of circuitparsed file
   parameternames  :: Array{ASCIIString,1}
   parameters      :: Array{Tuple{Float64,Float64,Int},1}  # array of parameters (value, multiplier, index)
   measurementnames:: Array{ASCIIString,1}              # measurment names
@@ -242,10 +242,10 @@ function Base.parse(::Type{CircuitParsed}, circuitpath::ASCIIString)
     return cf
 end
 
-"writes circuit file back to disk if any parameters have changed"
+"writes circuitparsed file back to disk if any parameters have changed"
 function Base.flush(x::CircuitParsed)
 	if needsupdate(x)
-		io = open(circuitpath(x),false,true,false,true,false)  # open circuit file to be overwritten
+		io = open(circuitpath(x),false,true,false,true,false)  # open circuitparsed file to be overwritten
 		for text in circuitfilearray(x)
       print(io,text)
 		end

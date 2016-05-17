@@ -29,7 +29,7 @@ end
 @test_approx_eq(test3["z"],0.019685)
 @test_approx_eq(test3["y"],0.984252)
 
-for (key,value) in test3.circuit
+for (key,value) in test3.circuitparsed
   test3[key] = 1.0
 end
 
@@ -37,7 +37,7 @@ dummyread = test3["x"]  # will force parameters to write to file
                         # sim will not run since exc = ""
 
 test3b = LTspiceSimulationTempDir(filename, exc)
-for (key,value) in test3b.circuit
+for (key,value) in LTspice.circuitparsed(test3b)
   @test_approx_eq(test3b[key],1.0)
 end
 

@@ -5,7 +5,7 @@ test7file = "test7.asc"
 exc = ""
 test7 = LTspiceSimulation(test7file,exc)
 show(test7)
-show(test7.circuit)
+show(LTspice.circuitparsed(test7))
 show(test7.log)
 
 @test test7["a"] == 10e-12

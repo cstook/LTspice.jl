@@ -4,9 +4,9 @@
 "Main module for `LTspice.jl` - a Julia interface to LTspice"
 module LTspice
 
-export LTspiceSimulation, LTspiceSimulationTempDir, measurements
+export LTspiceSimulation, LTspiceSimulationTempDir, measurementvalues
 export parametervalues, circuitpath, ltspiceexecutablepath
-export logpath, measurementnames, stepnames, steps
+export logpath, measurementnames, stepnames, stepvalues
 export PerLineIterator, parameternames
 export loadlog!
 
@@ -103,9 +103,9 @@ LTspiceSimulationTempDir
 
 circuit(x::LTspiceSimulation) = x.circuit
 log(x::LTspiceSimulation) = x.log
-function measurements(x::LTspiceSimulation)
+function measurementvalues(x::LTspiceSimulation)
   runifneedsupdate!(x)
-  measurements(log(x))
+  measurementvalues(log(x))
 end
 parameters(x::LTspiceSimulation) = parameters(circuit(x))
 parametervalues(x::LTspiceSimulation) = parametervalues(circuit(x))
@@ -115,9 +115,9 @@ ltspiceexecutablepath(x::LTspiceSimulation) = x.executablepath
 logpath(x::LTspiceSimulation) = logpath(log(x))
 measurementnames(x::LTspiceSimulation) = measurementnames(circuit(x))
 stepnames(x::LTspiceSimulation) = stepnames(log(x))
-function steps(x::LTspiceSimulation)
+function stepvalues(x::LTspiceSimulation)
   runifneedsupdate!(x)
-  steps(log(x))
+  stepvalues(log(x))
 end
 logneedsupdate(x::LTspiceSimulation) = x.logneedsupdate
 setlogneedsupdate!(x::LTspiceSimulation) = x.logneedsupdate = true
@@ -200,15 +200,15 @@ value = measurementvalues(sim)[measurement_name, inner_step, middle_step,
                         outer_step]
 ``` 
 """
-measurements
+measurementvalues
 
 """
     stepvalues(sim)
 
-Returns the steps of `sim` as a tuple of three arrays of 
+Returns the stepvalues of `sim` as a tuple of three arrays of 
 the step values.
 """
-steps
+stepvalues
 
 include("PerLineIterator.jl")  # for delimited output
 
@@ -249,7 +249,7 @@ function Base.show(io::IO, x::LTspiceSimulation)
       end
     else 
       for (i,stepname) in enumerate(stepnames(x))
-        println(io,rpad(stepname,25,' ')," ",length(steps(x)[i])," steps")
+        println(io,rpad(stepname,25,' ')," ",length(stepvalues(x)[i])," stepvalues")
       end
     end
   end
@@ -340,7 +340,7 @@ function Base.call(x::LTspiceSimulation, args...)
   for (i,arg) in enumerate(args)
     x[i] = arg::Float64 
   end
-  return measurements(x)[:,1,1,1]
+  return measurementvalues(x)[:,1,1,1]
 end
 
 """

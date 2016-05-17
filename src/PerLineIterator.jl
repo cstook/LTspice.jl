@@ -28,7 +28,7 @@ immutable PerLineIterator
     stepindexes = Array(Int,0)
     for step in steporder
       index = findfirst(stepnames(simulation),step)
-      push!(args,length(steps(simulation)[index]))
+      push!(args,length(stepvalues(simulation)[index]))
       push!(stepindexes,index)
     end
     resultindexes = Array(Tuple{Bool,Int},0) 
@@ -58,7 +58,7 @@ PerLineIterator(sim :: LTspiceSimulation;
 ```
 
 Creates an iterator in the format required to pass to writecsv or writedlm.
-The step order defaults to the order the steps appear in the circuit file.
+The step order defaults to the order the stepvalues appear in the circuit file.
 Step order can be specified by passing an array of step names.  By default 
 there is one column for each step, measurement, and parameter.  The desired
 measurements and parameters can be set by passing an array of names to
@@ -94,14 +94,14 @@ function Base.next(x :: PerLineIterator, state :: Array{Int,1})
   line = Array(Float64, length(x.stepindexes)+length(x.resultindexes))
   i = 1
   for si in x.stepindexes
-    line[i] = steps(x.simulation)[si][k[si]]
+    line[i] = stepvalues(x.simulation)[si][k[si]]
     i +=1
   end
   for (isparameter,j) in x.resultindexes
     if isparameter
       line[i] = parametervalues(x.simulation)[j]
     else 
-      line[i] = measurements(x.simulation)[j,k...]
+      line[i] = measurementvalues(x.simulation)[j,k...]
     end
     i +=1
   end

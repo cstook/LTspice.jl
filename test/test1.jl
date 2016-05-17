@@ -15,7 +15,7 @@ show(test1.log)
 @test logpath(test1) != ""
 @test circuitpath(test1) != ""
 @test typeof(parametervalues(test1)) == Array{Float64,1}
-@test measurements(test1)[1,1,1,1] == 2.5
+@test measurementvalues(test1)[1,1,1,1] == 2.5
 @test ltspiceexecutablepath(test1) == ""
 @test eltype(test1.circuit) == Type(Float64)
 

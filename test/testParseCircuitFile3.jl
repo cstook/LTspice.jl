@@ -13,8 +13,8 @@ teststepnames = ["2n2222(vaf)","v2","v1"]
 testmeasurementnames = ["aaaaaa", "b43"]
 
 
-@test steps(PCF_test3) == (npnlist,v2list,v1list)
+@test stepvalues(PCF_test3) == (npnlist,v2list,v1list)
 @test measurementnames(PCF_test3) == testmeasurementnames
 @test stepnames(PCF_test3) == teststepnames
 @test stepnames(PCF_test3.log) == teststepnames
-@test length(measurements(PCF_test3)) == length(testmeasurementnames)*length(npnlist)*length(v2list)*length(v1list)
+@test length(measurementvalues(PCF_test3)) == length(testmeasurementnames)*length(npnlist)*length(v2list)*length(v1list)

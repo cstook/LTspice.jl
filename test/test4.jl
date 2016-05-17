@@ -11,7 +11,7 @@ show(test4.log)
 alist = [1.0,2.0]
 blist = [10.0,15.0,20.0,25.0]
 
-@test steps(test4) == (alist,blist,[])
+@test stepvalues(test4) == (alist,blist,[])
 @test measurementnames(test4) == ["sum","sump1000"]
 @test measurementnames(test4.log) == measurementnames(test4)
 @test stepnames(test4) == ["a","b"]
@@ -25,7 +25,7 @@ end
 
 @test typeof(circuitpath(test4.log)) == Type(ASCIIString)
 @test typeof(parametervalues(test4)) == Array{Float64,1}
-@test measurements(test4)[1,1,1,1] == 11.0
+@test measurementvalues(test4)[1,1,1,1] == 11.0
 @test ltspiceexecutablepath(test4) == ""
 @test haskey(test4,"sum") == false  # measurments in stepped files are not a Dict
 @test length(test4.log) == 16
@@ -52,7 +52,7 @@ for line in pli
     @test (line[1]+line[2] == line[3])
 end
 
-@test measurements(test4) == verify
+@test measurementvalues(test4) == verify
 show(test4)
 show(test4.circuit)
 show(test4.log)

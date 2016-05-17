@@ -14,7 +14,7 @@ type Measurement <: LogLine
 end
 type IsStepParameters <: LogLine end
 type StepParameters <: LogLine 
-  steps :: Int
+  stepvalues :: Int
   StepParameters() = new(0)
 end 
 type StepMeasurementName <: LogLine
@@ -52,21 +52,21 @@ duration!(nslf::NonSteppedLogFile,duration) = nslf.duration = duration
 duration(nslf::NonSteppedLogFile) = nslf.duration
 measurementnames!(nslf::NonSteppedLogFile,measurementnames) = nslf.measurementnames = measurementnames
 measurementnames(nslf::NonSteppedLogFile) = nslf.measurementnames
-measurements!(nslf::NonSteppedLogFile,measurements) = nslf.measurements = measurements
-measurements(nslf::NonSteppedLogFile) = nslf.measurements
+measurementvalues!(nslf::NonSteppedLogFile,measurements) = nslf.measurements = measurements
+measurementvalues(nslf::NonSteppedLogFile) = nslf.measurements
 stepnames(nslf::NonSteppedLogFile) = []
 
 type SteppedLogFile <: LogFile
   nonsteppedlogfile :: NonSteppedLogFile
   stepnames         :: Array{ASCIIString,1}
-  steps             :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
+  stepvalues             :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
   SteppedLogFile(nslf::NonSteppedLogFile) = new(nslf,[],([],[],[])) 
 end
 SteppedLogFile() = SteppedLogFile(NonSteppedLogFile())
 SteppedLogFile(logpath::ASCIIString) = SteppedLogFile(NonSteppedLogFile(logpath))
 stepnames!(slf::SteppedLogFile, s::Array{ASCIIString,1}) = slf.stepnames = s
 stepnames(slf::SteppedLogFile) = slf.stepnames
-steps(slf::SteppedLogFile) = slf.steps
+stepvalues(slf::SteppedLogFile) = slf.stepvalues
 logpath(slf::SteppedLogFile) = logpath(slf.nonsteppedlogfile)
 logpath!(slf::SteppedLogFile,path::AbstractString) = logpath!(slf.nonsteppedlogfile,path)
 circuitpath(slf::SteppedLogFile) = circuitpath(slf.nonsteppedlogfile)
@@ -77,8 +77,8 @@ duration(slf::SteppedLogFile) = duration(slf.nonsteppedlogfile)
 duration!(slf::SteppedLogFile,duration) = duration!(slf.nonsteppedlogfile,duration)
 measurementnames(slf::SteppedLogFile) = measurementnames(slf.nonsteppedlogfile)
 measurementnames!(slf::SteppedLogFile,measurementnames) = measurementnames!(slf.nonsteppedlogfile,measurementnames)
-measurements(slf::SteppedLogFile) = measurements(slf.nonsteppedlogfile)
-measurements!(slf::SteppedLogFile,measurements) = measurements!(slf.nonsteppedlogfile,measurements)
+measurementvalues(slf::SteppedLogFile) = measurementvalues(slf.nonsteppedlogfile)
+measurementvalues!(slf::SteppedLogFile,measurements) = measurementvalues!(slf.nonsteppedlogfile,measurements)
 
 # END LogFile
 
@@ -114,7 +114,7 @@ Base.haskey(x::NonSteppedLogFile,key::ASCIIString) = findfirst(measurementnames(
 Base.haskey(x::SteppedLogFile,   key::ASCIIString) = false
 Base.keys(x::NonSteppedLogFile)   = measurementnames(x)
 Base.keys(x::SteppedLogFile)      = []
-Base.values(x::NonSteppedLogFile) = measurements(x)[:,1,1,1]
+Base.values(x::NonSteppedLogFile) = measurementvalues(x)[:,1,1,1]
 Base.values(x::SteppedLogFile)    = []
 Base.length(x::NonSteppedLogFile) = length(measurementnames(x))
 Base.eltype(x::NonSteppedLogFile) = Float64
@@ -123,20 +123,20 @@ function Base.getindex(x::NonSteppedLogFile, key::ASCIIString)
   if i == 0
     throw(KeyError(key))
   end
-  return measurements(x)[i,1,1,1]
+  return measurementvalues(x)[i,1,1,1]
 end
 
 # LogFile can access its measurements as a read only array
-Base.getindex(x::NonSteppedLogFile, index::Integer) = measurements(x)[index,1,1,1]
+Base.getindex(x::NonSteppedLogFile, index::Integer) = measurementvalues(x)[index,1,1,1]
 Base.getindex(x::LogFile, i1::Integer, i2::Integer, i3::Integer, i4::Integer) = 
-  measurements(x)[i1,i2,i3,i4]
+  measurementvalues(x)[i1,i2,i3,i4]
 
-Base.length(x::SteppedLogFile) = length(measurements(x))
+Base.length(x::SteppedLogFile) = length(measurementvalues(x))
 
 # NonSteppedLogFile iterates over its Dict
 Base.start(x::NonSteppedLogFile) = 1
 function Base.next(x::NonSteppedLogFile,state)
-  return (measurementnames(x)[state]=>measurements(x)[state,1,1,1],state+1)
+  return (measurementnames(x)[state]=>measurementvalues(x)[state,1,1,1],state+1)
 end
 Base.done(x::NonSteppedLogFile, state) = state > length(measurementnames(x))
 
@@ -177,9 +177,9 @@ end
 function parseline!(slf::SteppedLogFile, sp::StepParameters, line::ASCIIString)
   m = match(stepregex, line)
   s_names = stepnames(slf)
-  s_values = steps(slf)
+  s_values = stepvalues(slf)
   if m!=nothing
-    sp.steps += 1
+    sp.stepvalues += 1
     if length(s_names)==0 # if we dont have the step names yet
       for i in (2,4,6)
         if m.captures[i] != nothing  # we have a step name
@@ -297,12 +297,12 @@ function Base.parse(::Type{SteppedLogFile}, logpath::ASCIIString)
     lengthnames = length(measurementnames(slf))
     if lengthnames >0
       zeroisone(x) = x==0?1:x
-      lengthsweep1 = zeroisone(length(steps(slf)[1]))
-      lengthsweep2 = zeroisone(length(steps(slf)[2]))
-      lengthsweep3 = zeroisone(length(steps(slf)[3]))
+      lengthsweep1 = zeroisone(length(stepvalues(slf)[1]))
+      lengthsweep2 = zeroisone(length(stepvalues(slf)[2]))
+      lengthsweep3 = zeroisone(length(stepvalues(slf)[3]))
       measurementdimentions = (lengthnames, lengthsweep1, lengthsweep2, lengthsweep3)
-      measurements!(slf, Array(Float64, measurementdimentions...))
-      m_values = measurements(slf)
+      measurementvalues!(slf, Array(Float64, measurementdimentions...))
+      m_values = measurementvalues(slf)
       i = 1
       for nameindex in 1:lengthnames
         for sweep3index in 1:lengthsweep3
@@ -315,7 +315,7 @@ function Base.parse(::Type{SteppedLogFile}, logpath::ASCIIString)
         end
       end
     else # no measurements is a special case
-      measurements!(slf, Array(Float64,0,0,0,0))
+      measurementvalues!(slf, Array(Float64,0,0,0,0))
     end
     processlines!(io,slf,[footerduration])
     close(io)
@@ -339,7 +339,7 @@ function Base.parse(::Type{NonSteppedLogFile}, logpath::ASCIIString)
   end
   exitcode = processlines!(io, lf, [measurement],[footerdate])
   measurementnames!(lf, measurement.measurementnames)
-  measurements!(lf, reshape(measurement.measurements,length(measurement.measurements),1,1,1))
+  measurementvalues!(lf, reshape(measurement.measurements,length(measurement.measurements),1,1,1))
   processlines!(io,lf,[footerduration])
   close(io)
   return lf

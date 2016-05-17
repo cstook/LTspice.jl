@@ -20,7 +20,7 @@ end
 
 @test typeof(circuitpath(test6.log)) == Type(ASCIIString)
 @test typeof(parametervalues(test6)) == Array{Float64,1}
-#@test measurements(test6)[1,1,1,1] == 1.0
+#@test measurementvalues(test6)[1,1,1,1] == 1.0
 @test ltspiceexecutablepath(test6) == ""
 @test haskey(test6,"sum") == false  # measurments in stepped files are not a Dict
 @test length(test6.log) == 0

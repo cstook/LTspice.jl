@@ -10,7 +10,7 @@ test2 = LTspiceSimulation(filename, exc)
 @test_approx_eq(test2["z"],0.019685)
 @test_approx_eq(test2["y"],0.984252)
 
-@test(length(measurements(test2))==3)
+@test(length(measurementvalues(test2))==3)
 @test(length(parametervalues(test2))==4)
 
 @test(length(keys(test2))==7)

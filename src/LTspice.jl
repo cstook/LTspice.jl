@@ -19,7 +19,6 @@ include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
 include("removetempdirectories.jl")
 
-### BEGIN Type LTspiceSimulationTempDir and constructors ###
 type LTspiceSimulation
   circuit         :: CircuitFile
   log             :: LogFile
@@ -101,7 +100,6 @@ the circuit in a temporary directory. LTspice will need to be able to find all
 """
 LTspiceSimulationTempDir
 
-### END Type LTspice and constructors ###
 
 circuit(x::LTspiceSimulation) = x.circuit
 log(x::LTspiceSimulation) = x.log
@@ -128,9 +126,91 @@ hasparameters(x::LTspiceSimulation) = hasparameters(circuit(x))
 hasmeasurements(x::LTspiceSimulation) = hasmeasurements(circuit(x))
 hassteps(x::LTspiceSimulation) = hassteps(circuit(x))
 
-include("PerLineIterator.jl")  # for delimited output
+"""
+    parameters(sim)
 
-### BEGIN Overloading Base ###
+Retruns array of tuples (value, multiplier, index)
+"""
+parameters
+
+"""
+    parametervalues(sim)
+
+Returns an array of the parameters of `sim` in the order they appear in the
+circuit file
+"""
+parametervalues
+
+"""
+    parameternames(sim)
+
+Returns an array of the parameters names of `sim` in the order they appear in the
+circuit file.
+"""
+parameternames
+
+"""
+
+    circuitpath(sim)
+
+Returns path to the circuit file.
+
+This is the path to the working circuit file.  If LTspiceSimulationTempDir was used 
+or if running under wine, this will not be the path given to the constructor.
+"""
+circuitpath
+
+"""
+    logpath(sim)
+
+Returns path to the log file.
+"""
+logpath
+
+"""
+    ltspiceexecutablepath(sim)
+
+Returns path to the LTspice executable
+"""
+ltspiceexecutablepath
+
+"""
+    measurmentnames(sim)
+
+Returns an array of the measurement names of `sim` in the order they appear in the
+circuit file.
+"""
+measurementnames
+
+"""
+    stepnames(sim)
+
+Returns an array of step names of `sim`.
+"""
+stepnames
+
+"""
+    measurementvalues(sim)
+
+Retruns measurements of `sim` as an a 4-d array of Float64
+values.
+
+```julia
+value = measurementvalues(sim)[measurement_name, inner_step, middle_step,
+                        outer_step]
+``` 
+"""
+measurements
+
+"""
+    stepvalues(sim)
+
+Returns the steps of `sim` as a tuple of three arrays of 
+the step values.
+"""
+steps
+
+include("PerLineIterator.jl")  # for delimited output
 
 function Base.show(io::IO, x::LTspiceSimulation)
   println(io,"LTspiceSimulation:")
@@ -263,73 +343,6 @@ function Base.call(x::LTspiceSimulation, args...)
   return measurements(x)[:,1,1,1]
 end
 
-### END overloading Base ###
-
-### BEGIN LTspiceSimulation specific methods ###
-#=
-"""
-```julia
-getcircuitpath(sim)
-```
-Returns path to the circuit file.
-
-This is the path to the working circuit file.  If LTspiceSimulationTempDir was used 
-or if running under wine, this will not be the path given to the constructor.
-""" 
-getcircuitpath(x::LTspiceSimulation) = getcircuitpath(x.circuit)
-
-"""
-```julia
-getlogpath(sim)
-```
-Returns path to the log file.
-"""
-getlogpath(x::LTspiceSimulation) = getlogpath(x.log)
-
-"""
-```julia
-getltspiceexecutablepath(sim)
-```
-Returns path to the LTspice executable
-"""
-getltspiceexecutablepath(x::LTspiceSimulation) = x.executablepath
-
-"""
-```julia
-getparameternames(sim)
-```
-Returns an array of the parameters names of `sim` in the order they appear in the
-circuit file.
-"""
-getparameternames(x::LTspiceSimulation) = getparameternames(x.circuit)
-
-"""
-```julia
-getparameters(sim)
-```
-Returns an array of the parameters of `sim` in the order they appear in the
-circuit file
-"""
-getparameters(x::LTspiceSimulation) = getparameters(x.circuit)
-
-"""
-```julia
-getmeasurmentnames(sim)
-```
-Returns an array of the measurement names of `sim` in the order they appear in the
-circuit file.
-"""
-getmeasurementnames(x::LTspiceSimulation) = getmeasurementnames(x.circuit)
-
-"""
-```julia
-getstepnames(sim)
-```
-Returns an array of step names of `sim`.
-"""
-getstepnames(x::LTspiceSimulation) = getstepnames(x.circuit)
-
-=#
 """
 ```julia
 loadlog!(sim)
@@ -344,35 +357,6 @@ function loadlog!(x::LTspiceSimulation)
   return nothing
 end
 
-#=
-"""
-```julia
-getmeasurments(sim)
-```
-Retruns measurments of `sim` as an a 4-d array of Float64
-values.
-
-```julia
-value = getmeasurements(sim)[measurement_name, inner_step, middle_step,
-                        outer_step]
-``` 
-"""
-function getmeasurements(x::LTspiceSimulation)
-  run(x)
-  getmeasurements(log(x))
-end
-"""
-```julia
-getsteps(sim)
-```
-Returns the steps of `sim` as a tuple of three arrays of 
-the step values.
-"""
-function getsteps(x::LTspiceSimulation)
-  run(x)
-  getsteps(x.log)
-end
-=#
 """
 ```julia
 flush(sim)
@@ -413,10 +397,6 @@ function run!(x::LTspiceSimulation)
   return nothing 
 end
 
-### END LTspicesSimulation! specific methods
-
-### BEGIN other
-
 "creates a blank log object of appropiate type for circuitfile"
 function blanklog(circuit::CircuitFile, logpath::ASCIIString)
   if hassteps(circuit)
@@ -455,7 +435,7 @@ function defaultltspiceexecutable()
   error("Could not find LTspice executable")
 end
 
-### END other ###
+include("deprecate.jl")
 
 end  # module
 

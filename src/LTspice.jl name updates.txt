@@ -1,0 +1,11 @@
+LTspice.jl name updates
+
+measurments	-> measurementvalues
+steps		-> stepvalues
+CircuitFile	-> CircuitParsed
+LogFile		-> LogParsed
+circuit 	-> circuitparsed
+log 		-> logparsed
+getheaders	-> headernames  = x.header
+header 		-> header = transpose(x.header)
+

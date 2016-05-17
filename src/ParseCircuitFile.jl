@@ -1,7 +1,7 @@
-# overloard parse for the CircuitFile type
+# overloard parse for the CircuitParsed type
 # used to parse LTspice circuit files *.asc
 
-type CircuitFile
+type CircuitParsed
   circuitpath     :: ASCIIString
   circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
   parameternames  :: Array{ASCIIString,1}
@@ -10,34 +10,34 @@ type CircuitFile
   stepnames       :: Array{ASCIIString,1}  
   needsupdate     :: Bool # true if any parameter has been changed
   parsed          :: Bool # true if last parsecard! call was a match
-  CircuitFile() = new("",[],[],[],[],[],false,false) # empty CircuitFile
+  CircuitParsed() = new("",[],[],[],[],[],false,false) # empty CircuitParsed
 end
 
-circuitpath(x::CircuitFile) = x.circuitpath
-circuitpath!(x::CircuitFile, path::ASCIIString) = x.circuitpath = path
-circuitfilearray(x::CircuitFile) = x.circuitfilearray
-parameternames(x::CircuitFile) = x.parameternames
-parameternames!(x::CircuitFile, parameternames::Array{ASCIIString,1}) = x.parameternames = parameternames
-parameters(x::CircuitFile) = x.parameters
-parameters!(x::CircuitFile, parameters::Array{Tuple{Float64,Float64,Int},1}) = x.parameters = parameters
-parametervalues(x::CircuitFile) = [parameter[1] for parameter in x.parameters]
-measurementnames(x::CircuitFile) = x.measurementnames
-measurementnames!(x::CircuitFile, measurementnames::Array{ASCIIString,1}) = x.measurementnames = measurementnames
-stepnames(x::CircuitFile) = x.stepnames
-stepnames!(x::CircuitFile, stepnames::Array{ASCIIString,1}) = x.stepnames = stepnames
-hassteps(x::CircuitFile) = length(x.stepnames) != 0
-hasmeasurements(x::CircuitFile) = length(x.measurementnames) != 0
-hasparameters(x::CircuitFile) = length(x.parameters) != 0
-setneedsupdate!(x::CircuitFile) = x.needsupdate = true
-clearneedsupdate!(x::CircuitFile) = x.needsupdate = false
-needsupdate(x::CircuitFile) = x.needsupdate
-setparsed!(x::CircuitFile) = x.parsed = true
-clearparsed!(x::CircuitFile) = x.parsed = false
-parsed(x::CircuitFile) = x.parsed
+circuitpath(x::CircuitParsed) = x.circuitpath
+circuitpath!(x::CircuitParsed, path::ASCIIString) = x.circuitpath = path
+circuitfilearray(x::CircuitParsed) = x.circuitfilearray
+parameternames(x::CircuitParsed) = x.parameternames
+parameternames!(x::CircuitParsed, parameternames::Array{ASCIIString,1}) = x.parameternames = parameternames
+parameters(x::CircuitParsed) = x.parameters
+parameters!(x::CircuitParsed, parameters::Array{Tuple{Float64,Float64,Int},1}) = x.parameters = parameters
+parametervalues(x::CircuitParsed) = [parameter[1] for parameter in x.parameters]
+measurementnames(x::CircuitParsed) = x.measurementnames
+measurementnames!(x::CircuitParsed, measurementnames::Array{ASCIIString,1}) = x.measurementnames = measurementnames
+stepnames(x::CircuitParsed) = x.stepnames
+stepnames!(x::CircuitParsed, stepnames::Array{ASCIIString,1}) = x.stepnames = stepnames
+hassteps(x::CircuitParsed) = length(x.stepnames) != 0
+hasmeasurements(x::CircuitParsed) = length(x.measurementnames) != 0
+hasparameters(x::CircuitParsed) = length(x.parameters) != 0
+setneedsupdate!(x::CircuitParsed) = x.needsupdate = true
+clearneedsupdate!(x::CircuitParsed) = x.needsupdate = false
+needsupdate(x::CircuitParsed) = x.needsupdate
+setparsed!(x::CircuitParsed) = x.parsed = true
+clearparsed!(x::CircuitParsed) = x.parsed = false
+parsed(x::CircuitParsed) = x.parsed
 
 ### BEGIN overloading Base ###
 
-function Base.show(io::IO, x::CircuitFile)
+function Base.show(io::IO, x::CircuitParsed)
 	println(io,circuitpath(x))
   if length(parameters(x))>0
   	println(io,"")
@@ -62,11 +62,11 @@ function Base.show(io::IO, x::CircuitFile)
   end
 end
 
-# CircuitFile is a Dict of its parameters
-Base.haskey(x::CircuitFile,key::ASCIIString) = findfirst(parameternames(x), key) != 0
-Base.keys(x::CircuitFile) = [key for key in parameternames(x)]
-Base.values(x::CircuitFile) = [parameter[1] for parameter in parameters(x)]
-function Base.getindex(x::CircuitFile, key::ASCIIString)
+# CircuitParsed is a Dict of its parameters
+Base.haskey(x::CircuitParsed,key::ASCIIString) = findfirst(parameternames(x), key) != 0
+Base.keys(x::CircuitParsed) = [key for key in parameternames(x)]
+Base.values(x::CircuitParsed) = [parameter[1] for parameter in parameters(x)]
+function Base.getindex(x::CircuitParsed, key::ASCIIString)
   k = findfirst(parameternames(x), key)
   if k == 0 
     throw(KeyError(key))
@@ -75,7 +75,7 @@ function Base.getindex(x::CircuitFile, key::ASCIIString)
   end
 end
 
-function Base.setindex!(x::CircuitFile, value:: Float64, key::ASCIIString)
+function Base.setindex!(x::CircuitParsed, value:: Float64, key::ASCIIString)
   k = findfirst(parameternames(x), key)
   if k == 0 
     throw(KeyError(key))
@@ -84,7 +84,7 @@ function Base.setindex!(x::CircuitFile, value:: Float64, key::ASCIIString)
   end
 end
 
-function Base.setindex!(x::CircuitFile, value:: Float64, index:: Int)
+function Base.setindex!(x::CircuitParsed, value:: Float64, index:: Int)
   (v,m,i) = parameters(x)[index]
   p = parameters(x)
   c = circuitfilearray(x)
@@ -93,16 +93,16 @@ function Base.setindex!(x::CircuitFile, value:: Float64, index:: Int)
   setneedsupdate!(x)
 end
 
-Base.length(x::CircuitFile) = length(parameters(x))
-Base.eltype(::CircuitFile) = Float64
+Base.length(x::CircuitParsed) = length(parameters(x))
+Base.eltype(::CircuitParsed) = Float64
 
-# CircuitFile iterates over its Dict
-Base.start(x::CircuitFile) = 0
-function Base.next(x::CircuitFile, state)
+# CircuitParsed iterates over its Dict
+Base.start(x::CircuitParsed) = 0
+function Base.next(x::CircuitParsed, state)
   state +=1
   return ((parameternames(x)[state]=>parameters(x)[state][1]),state)
 end
-Base.done(x::CircuitFile, state) = ~(state < length(parameters(x)))
+Base.done(x::CircuitParsed, state) = ~(state < length(parameters(x)))
 
 # LTspice allows multiple directives (cards) in a single block
 # in the GUI, ctrl-M is used to create a new line.
@@ -134,10 +134,10 @@ type Step<:Card end
 type Other<:Card end
 const cardlist = [ResetParsedFlag(), Parameter(), Measure(), Step(), Other()]
 
-parsecard!(cf::CircuitFile, ::ResetParsedFlag, card) = clearparsed!(cf)
+parsecard!(cf::CircuitParsed, ::ResetParsedFlag, card) = clearparsed!(cf)
 
 const parameterregex = r"[.](?:parameter|param)[ ]+([a-z][a-z0-9_@#$.:\\]*)[= ]+([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)(k|meg|g|t|m|u|n|p|f){0,1}[ ]*(?:\\n|\r|$)"ix
-function parsecard!(cf::CircuitFile, ::Parameter, card::ASCIIString)
+function parsecard!(cf::CircuitParsed, ::Parameter, card::ASCIIString)
     if parsed(cf) # exit if card has already been processed
         return
     end
@@ -169,7 +169,7 @@ function parsecard!(cf::CircuitFile, ::Parameter, card::ASCIIString)
 end
 
 const measureregex = r"[.](?:measure|meas)[ ]+(?:ac |dc |op |tran |tf |noise ){0,1}[ ]*([a-z][a-z0-9_@#$.:\\]*)[ ]+"ix
-function parsecard!(cf::CircuitFile, ::Measure, card::ASCIIString)
+function parsecard!(cf::CircuitParsed, ::Measure, card::ASCIIString)
     if parsed(cf) # exit if card has already been processed
         return
     end
@@ -187,7 +187,7 @@ end
 
 const step1regex = r"[.](?:step)[ ]+(?:oct |param ){0,1}[ ]*([a-z][a-z0-9_@#$.:\\]*)[ ]+(?:list ){0,1}[ ]*[0-9.e+-]+[a-z]*[ ]+"ix
 const step2regex = r"[.](?:step)[ ]+(?:\w+)[ ]+(\w+[(]\w+[)])[ ]+"ix
-function parsecard!(cf::CircuitFile, ::Step, card::ASCIIString)
+function parsecard!(cf::CircuitParsed, ::Step, card::ASCIIString)
     if parsed(cf) # exit if card has already been processed
         return
     end
@@ -206,7 +206,7 @@ function parsecard!(cf::CircuitFile, ::Step, card::ASCIIString)
     setparsed!(cf)
 end
 
-function parsecard!(cf::CircuitFile, ::Other, card::ASCIIString)
+function parsecard!(cf::CircuitParsed, ::Other, card::ASCIIString)
     if parsed(cf) # exit if card has already been processed
         return
     end
@@ -215,7 +215,7 @@ function parsecard!(cf::CircuitFile, ::Other, card::ASCIIString)
     setparsed!(cf)
 end
 
-function parsecard!(cf::CircuitFile, card::ASCIIString)
+function parsecard!(cf::CircuitParsed, card::ASCIIString)
     for cardtype in cardlist
         parsecard!(cf,cardtype,card)
     end
@@ -224,9 +224,9 @@ end
 "true if line is comment"
 iscomment(line::ASCIIString) = ismatch(r"^TEXT .* ;",line)
 
-function Base.parse(::Type{CircuitFile}, circuitpath::ASCIIString)
+function Base.parse(::Type{CircuitParsed}, circuitpath::ASCIIString)
     io = open(circuitpath,true,false,false,false,false)
-    cf = CircuitFile()
+    cf = CircuitParsed()
     circuitpath!(cf, circuitpath)
     cfa = circuitfilearray(cf)
     for line in eachline(io)
@@ -243,7 +243,7 @@ function Base.parse(::Type{CircuitFile}, circuitpath::ASCIIString)
 end
 
 "writes circuit file back to disk if any parameters have changed"
-function Base.flush(x::CircuitFile)
+function Base.flush(x::CircuitParsed)
 	if needsupdate(x)
 		io = open(circuitpath(x),false,true,false,true,false)  # open circuit file to be overwritten
 		for text in circuitfilearray(x)

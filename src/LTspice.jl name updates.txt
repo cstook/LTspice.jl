@@ -3,7 +3,7 @@ LTspice.jl name updates
 measurements	-> measurementvalues
 measurements!	-> measurementvalues!
 steps			-> stepvalues
-CircuitFile		-> CircuitParsed
+CircuitParsed		-> CircuitParsed
 LogFile			-> LogParsed
 circuit 		-> circuitparsed
 log 			-> logparsed

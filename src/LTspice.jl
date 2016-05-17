@@ -20,7 +20,7 @@ include("ParseLogFile.jl")
 include("removetempdirectories.jl")
 
 type LTspiceSimulation
-  circuit         :: CircuitFile
+  circuit         :: CircuitParsed
   log             :: LogFile
   executablepath  :: ASCIIString
   logneedsupdate  :: Bool
@@ -40,7 +40,7 @@ type LTspiceSimulation
       end
       circuitpath = convert(ASCIIString,joinpath(templinkdir,"linktocircuit",f))
     end
-    circuit = parse(CircuitFile,circuitpath)
+    circuit = parse(CircuitParsed,circuitpath)
     (everythingbeforedot,dontcare) = splitext(circuitpath)
     logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
     log = blanklog(circuit,logpath) # creates a blank log object
@@ -398,7 +398,7 @@ function run!(x::LTspiceSimulation)
 end
 
 "creates a blank log object of appropiate type for circuitfile"
-function blanklog(circuit::CircuitFile, logpath::ASCIIString)
+function blanklog(circuit::CircuitParsed, logpath::ASCIIString)
   if hassteps(circuit)
     log = SteppedLogFile(logpath)  # a blank stepped log object
   else 

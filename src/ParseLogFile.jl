@@ -29,10 +29,10 @@ type FooterDate <: Footer end
 type FooterDuration <: Footer end
 # END LogLine
 
-# BEGIN LogFile
-abstract LogFile
+# BEGIN LogParsed
+abstract LogParsed
 
-type NonSteppedLogFile <: LogFile
+type NonSteppedLogFile <: LogParsed
   logpath           :: ASCIIString  # path to log file
   circuitpath       :: ASCIIString  # path to circuit file in the log file
   timestamp         :: DateTime
@@ -56,7 +56,7 @@ measurementvalues!(nslf::NonSteppedLogFile,measurements) = nslf.measurements = m
 measurementvalues(nslf::NonSteppedLogFile) = nslf.measurements
 stepnames(nslf::NonSteppedLogFile) = []
 
-type SteppedLogFile <: LogFile
+type SteppedLogFile <: LogParsed
   nonsteppedlogfile :: NonSteppedLogFile
   stepnames         :: Array{ASCIIString,1}
   stepvalues             :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
@@ -80,7 +80,7 @@ measurementnames!(slf::SteppedLogFile,measurementnames) = measurementnames!(slf.
 measurementvalues(slf::SteppedLogFile) = measurementvalues(slf.nonsteppedlogfile)
 measurementvalues!(slf::SteppedLogFile,measurements) = measurementvalues!(slf.nonsteppedlogfile,measurements)
 
-# END LogFile
+# END LogParsed
 
 ### BEGIN overloading Base ###
 
@@ -126,9 +126,9 @@ function Base.getindex(x::NonSteppedLogFile, key::ASCIIString)
   return measurementvalues(x)[i,1,1,1]
 end
 
-# LogFile can access its measurements as a read only array
+# LogParsed can access its measurements as a read only array
 Base.getindex(x::NonSteppedLogFile, index::Integer) = measurementvalues(x)[index,1,1,1]
-Base.getindex(x::LogFile, i1::Integer, i2::Integer, i3::Integer, i4::Integer) = 
+Base.getindex(x::LogParsed, i1::Integer, i2::Integer, i3::Integer, i4::Integer) = 
   measurementvalues(x)[i1,i2,i3,i4]
 
 Base.length(x::SteppedLogFile) = length(measurementvalues(x))
@@ -140,7 +140,7 @@ function Base.next(x::NonSteppedLogFile,state)
 end
 Base.done(x::NonSteppedLogFile, state) = state > length(measurementnames(x))
 
-function parseline!(lf::LogFile, ::HeaderCircuitPath, line::ASCIIString)
+function parseline!(lf::LogParsed, ::HeaderCircuitPath, line::ASCIIString)
   m = match(r"^Circuit: \*\s*([\w\:\\/. ~]+)"i,line)
   if m!=nothing
     circuitpath!(lf,m.captures[1])
@@ -150,7 +150,7 @@ function parseline!(lf::LogFile, ::HeaderCircuitPath, line::ASCIIString)
   end
 end
 
-function parseline!(lf::LogFile, measurement::Measurement, line::ASCIIString)
+function parseline!(lf::LogParsed, measurement::Measurement, line::ASCIIString)
   #m = match(r"^([a-z][a-z0-9_@#$.:\\]*):.*=([0-9.eE+-]+)"i,line)
   m = match(r"^([a-z][a-z0-9_@#$.:\\]*):.*=([\S]+)"i,line)
   value = Float64(NaN)
@@ -231,7 +231,7 @@ function parseline!(::SteppedLogFile, smv::StepMeasurementValue, line::ASCIIStri
   end
 end
 
-function parseline!(lf::LogFile, ::FooterDate, line::ASCIIString)
+function parseline!(lf::LogParsed, ::FooterDate, line::ASCIIString)
   m = match(r"Date:\s*(.*?)\s*$",line)
   if m!=nothing
     timestamp = DateTime(m.captures[1],"e u d HH:MM:SS yyyy")
@@ -242,7 +242,7 @@ function parseline!(lf::LogFile, ::FooterDate, line::ASCIIString)
   end
 end
 
-function parseline!(lf::LogFile, ::FooterDuration, line::ASCIIString)
+function parseline!(lf::LogParsed, ::FooterDuration, line::ASCIIString)
   m = match(r"Total[ ]elapsed[ ]time:\s*([\w.]+)\s+seconds.\s*$",line)
   if m!=nothing
     duration = parse(Float64,m.captures[1])
@@ -253,7 +253,7 @@ function parseline!(lf::LogFile, ::FooterDuration, line::ASCIIString)
   end
 end
 
-function processlines!(io::IO, lf::LogFile, findlines, untillines=[])
+function processlines!(io::IO, lf::LogParsed, findlines, untillines=[])
   while ~eof(io)
     line = readline(io)
     for f in findlines
@@ -345,4 +345,4 @@ function Base.parse(::Type{NonSteppedLogFile}, logpath::ASCIIString)
   return lf
 end
 
-Base.parse{T<:LogFile}(x::T) = parse(T, logpath(x))  
+Base.parse{T<:LogParsed}(x::T) = parse(T, logpath(x))  

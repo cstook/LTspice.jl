@@ -21,7 +21,7 @@ include("removetempdirectories.jl")
 
 type LTspiceSimulation
   circuit         :: CircuitParsed
-  log             :: LogFile
+  log             :: LogParsed
   executablepath  :: ASCIIString
   logneedsupdate  :: Bool
 

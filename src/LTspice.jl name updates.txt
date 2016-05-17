@@ -3,8 +3,10 @@ LTspice.jl name updates
 measurements	-> measurementvalues
 measurements!	-> measurementvalues!
 steps			-> stepvalues
-CircuitParsed		-> CircuitParsed
-LogFile			-> LogParsed
+CircuitFile		-> CircuitParsed
+LogParsed			-> LogParsed
+NonSteppedLogFile 	-> NonSteppedLog
+SteppedLogFile 	   	-> SteppedLog
 circuit 		-> circuitparsed
 log 			-> logparsed
 getheaders		-> headernames  = x.header

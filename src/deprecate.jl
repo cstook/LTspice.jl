@@ -53,3 +53,9 @@ function getsteps(x::LTspiceSimulation)
   warn("getsteps(x) is deprecated, use stepvalues(x) instead")
   stepvalues(x)
 end
+
+export getheaders
+function getheaders(x :: PerLineIterator)
+  warn("getheaders(x) is deprecated, use headernames(x) instead")
+  headernames(x)
+end

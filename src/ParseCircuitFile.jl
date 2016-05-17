@@ -1,11 +1,6 @@
 # overloard parse for the CircuitFile type
 # used to parse LTspice circuit files *.asc
 
-#export CircuitFile, getcircuitpath, getmeasurmentnames, getstepnames
-#export isneedsupdate
-
-### BEGIN Type CircuitFile and constructors ###
-
 type CircuitFile
   circuitpath     :: ASCIIString
   circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
@@ -17,14 +12,6 @@ type CircuitFile
   parsed          :: Bool # true if last parsecard! call was a match
   CircuitFile() = new("",[],[],[],[],[],false,false) # empty CircuitFile
 end
-
-### END Type CircuitFile and constructors ###
-
-getcircuitpath(x::CircuitFile) = x.circuitpath
-getparameternames(x::CircuitFile) = x.parameternames
-getparameters(x::CircuitFile) = [parameter[1] for parameter in x.parameters]
-getmeasurementnames(x::CircuitFile) = x.measurementnames
-getstepnames(x::CircuitFile) = x.stepnames
 
 circuitpath(x::CircuitFile) = x.circuitpath
 circuitpath!(x::CircuitFile, path::ASCIIString) = x.circuitpath = path
@@ -255,10 +242,6 @@ function Base.parse(::Type{CircuitFile}, circuitpath::ASCIIString)
     return cf
 end
 
-### END overloading Base ###
-
-### BEGIN CircuitFile specific methods ###
-
 "writes circuit file back to disk if any parameters have changed"
 function Base.flush(x::CircuitFile)
 	if needsupdate(x)
@@ -271,10 +254,6 @@ function Base.flush(x::CircuitFile)
   end
   return nothing
 end
-
-### END CircuitFile specific methods ###
-
-### Begin other ###
 
 # units as defined in LTspice
 units = Dict()
@@ -296,5 +275,3 @@ units["P"] = 1.0e-12
 units["p"] = 1.0e-12
 units["F"] = 1.0e-15
 units["f"] = 1.0e-15
-
-### END other ###

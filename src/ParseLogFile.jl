@@ -131,7 +131,7 @@ Base.getindex(x::NonSteppedLogFile, index::Integer) = measurements(x)[index,1,1,
 Base.getindex(x::LogFile, i1::Integer, i2::Integer, i3::Integer, i4::Integer) = 
   measurements(x)[i1,i2,i3,i4]
 
-Base.length(x::SteppedLogFile) = length(getmeasurements(x))
+Base.length(x::SteppedLogFile) = length(measurements(x))
 
 # NonSteppedLogFile iterates over its Dict
 Base.start(x::NonSteppedLogFile) = 1
@@ -346,26 +346,3 @@ function Base.parse(::Type{NonSteppedLogFile}, logpath::ASCIIString)
 end
 
 Base.parse{T<:LogFile}(x::T) = parse(T, logpath(x))  
-
-### END overloading Base ###
-
-### BEGIN LogFile specific methods ###
-
-getlogpath(x::NonSteppedLogFile) = x.logpath
-getlogpath(x::SteppedLogFile) = getlogpath(x.nonsteppedlogfile)
-getcircuitpath(x::NonSteppedLogFile) = x.circuitpath
-getcircuitpath(x::SteppedLogFile) = getcircuitpath(x.nonsteppedlogfile)
-getmeasurementnames(x::NonSteppedLogFile) = x.measurementnames
-getmeasurementnames(x::SteppedLogFile) = getmeasurementnames(x.nonsteppedlogfile)
-getmeasurements(x::NonSteppedLogFile) = x.measurements
-getmeasurements(x::SteppedLogFile) = getmeasurements(x.nonsteppedlogfile)
-getstepnames(x::SteppedLogFile) = x.stepnames
-getsteps(x::SteppedLogFile) = x.steps
-
-### END LogFile specific methods ###
-
-### BEGIN other ###
-
-
-
-### END other

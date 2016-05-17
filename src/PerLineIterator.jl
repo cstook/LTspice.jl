@@ -112,16 +112,14 @@ Base.done(x :: PerLineIterator, state) = done(x.mli, state)
 Base.length(x :: PerLineIterator) = length(x.mli)
 
 """
-```julia
-getheaders(perlineiterator)
-```
+    headernames(perlineiterator)
+
 Returns an array of strings of parameter and measurement names of `perlineiterator`.
 """
-getheaders(x :: PerLineIterator) = x.header
+headernames(x :: PerLineIterator) = x.header
 """
-```julia
-header(Perlineiterator)
-```
+    header(Perlineiterator)
+
 Returns the header for `perlineterator` in the format needed for writecsv or 
 writedlm.  this is equivalent to 
 ```julia

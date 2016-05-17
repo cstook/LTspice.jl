@@ -29,7 +29,6 @@ type FooterDate <: Footer end
 type FooterDuration <: Footer end
 # END LogLine
 
-# BEGIN LogParsed
 abstract LogParsed
 
 type NonSteppedLog <: LogParsed
@@ -79,10 +78,6 @@ measurementnames(slf::SteppedLog) = measurementnames(slf.nonsteppedlogfile)
 measurementnames!(slf::SteppedLog,measurementnames) = measurementnames!(slf.nonsteppedlogfile,measurementnames)
 measurementvalues(slf::SteppedLog) = measurementvalues(slf.nonsteppedlogfile)
 measurementvalues!(slf::SteppedLog,measurements) = measurementvalues!(slf.nonsteppedlogfile,measurements)
-
-# END LogParsed
-
-### BEGIN overloading Base ###
 
 function Base.show(io::IO, x::NonSteppedLog)
   println(io,logpath(x))  

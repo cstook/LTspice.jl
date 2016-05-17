@@ -242,7 +242,6 @@ function Base.parse(::Type{CircuitParsed}, circuitpath::ASCIIString)
     return cf
 end
 
-"writes circuitparsed file back to disk if any parameters have changed"
 function Base.flush(x::CircuitParsed)
 	if needsupdate(x)
 		io = open(circuitpath(x),false,true,false,true,false)  # open circuitparsed file to be overwritten

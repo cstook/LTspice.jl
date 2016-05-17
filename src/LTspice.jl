@@ -77,8 +77,8 @@ LTspiceSimulation(circuitpath, executablepath)
 ```
 
 Creates an `LTspiceSimulation` object.    `circuitpath` and `execuatblepath` 
-are the path to the circuitparsed file (.asc) and the LTspice executable.  Operations 
-on `LTspiceSimulation` will modify the circuitparsed file.
+are the path to the circuit file (.asc) and the LTspice executable.  Operations 
+on `LTspiceSimulation` will modify the circuit file.
 
 If `executablepath` is not specified, an attempt will be made to find it in the default
 location for your operating system.
@@ -93,7 +93,7 @@ LTspiceSimulationTempDir(circuitpath, executablepath)
 ```
 
 Same as `LTspiceSimulation` except creates an object which works on a copy of 
-the circuitparsed in a temporary directory. LTspice will need to be able to find all
+the circuit in a temporary directory. LTspice will need to be able to find all
  sub-circuits and libraries from the temporary directory or the simulation will not run.  
    Anything included with .include or .lib directives will be changed to work 
  correctly in temp directory.
@@ -137,7 +137,7 @@ parameters
     parametervalues(sim)
 
 Returns an array of the parameters of `sim` in the order they appear in the
-circuitparsed file
+circuit file
 """
 parametervalues
 
@@ -145,7 +145,7 @@ parametervalues
     parameternames(sim)
 
 Returns an array of the parameters names of `sim` in the order they appear in the
-circuitparsed file.
+circuit file.
 """
 parameternames
 
@@ -153,9 +153,9 @@ parameternames
 
     circuitpath(sim)
 
-Returns path to the circuitparsed file.
+Returns path to the circuit file.
 
-This is the path to the working circuitparsed file.  If LTspiceSimulationTempDir was used 
+This is the path to the working circuit file.  If LTspiceSimulationTempDir was used 
 or if running under wine, this will not be the path given to the constructor.
 """
 circuitpath
@@ -163,7 +163,7 @@ circuitpath
 """
     logpath(sim)
 
-Returns path to the logparsed file.
+Returns path to the log file.
 """
 logpath
 
@@ -178,7 +178,7 @@ ltspiceexecutablepath
     measurmentnames(sim)
 
 Returns an array of the measurement names of `sim` in the order they appear in the
-circuitparsed file.
+circuit file.
 """
 measurementnames
 
@@ -205,7 +205,7 @@ measurementvalues
 """
     stepvalues(sim)
 
-Returns the stepvalues of `sim` as a tuple of three arrays of 
+Returns the steps of `sim` as a tuple of three arrays of 
 the step values.
 """
 stepvalues
@@ -230,7 +230,7 @@ function Base.show(io::IO, x::LTspiceSimulation)
         if logneedsupdate(x)
           value = convert(Float64,NaN)
         elseif haskey(logparsed(x),key)
-          value = logparsed(x)[key] #getmeasurements(x.log)[i,1,1,1]
+          value = logparsed(x)[key]
         else
           value = "measurement failed"
         end
@@ -317,7 +317,7 @@ end
 
 # LTspiceSimulationTempDir is an read only array of its measurements
 # Intended for use in interactive sessions only.
-# For type stablity use getmeasurements()
+# For type stablity use measurementvalues()
 function Base.getindex(x::LTspiceSimulation,index::Int)
   runifneedsupdate!(x)
   logparsed(x)[index]
@@ -350,7 +350,7 @@ loadlog!(sim)
 Loads logparsed file of `sim` without running simulation.
 """
 function loadlog!(x::LTspiceSimulation)
-# loads logparsed file without running simulation
+# loads log file without running simulation
 # sets logneedsupdate to false
   x.logparsed = parse(x.logparsed)
   clearlogneedsupdate!(x)
@@ -361,10 +361,10 @@ end
 ```julia
 flush(sim)
 ```
-Writes `sim`'s circuitparsed file back to disk if any parameters have changed.  The 
+Writes `sim`'s circuit file back to disk if any parameters have changed.  The 
 user does not usualy need to call this.  It will be called automatically
- when a measurment is requested and the logparsed file needs to be updated.  It can be used
- to update a circuitparsed file using julia for simulation with the LTspice GUI.  
+ when a measurment is requested and the log file needs to be updated.  It can be used
+ to update a circuit file using julia for simulation with the LTspice GUI.  
 """
 Base.flush(x::LTspiceSimulation) = flush(circuitparsed(x))
 
@@ -379,7 +379,7 @@ end
 ```julia
 run(sim)
 ```
-writes circuitparsed changes and calls LTspice to run `sim`.
+writes circuit changes and calls LTspice to run `sim`.
 """
 function run!(x::LTspiceSimulation)
   flush(x)
@@ -398,9 +398,9 @@ end
 "creates a blank logparsed object of appropiate type for circuitfile"
 function blanklog(circuit::CircuitParsed, logpath::ASCIIString)
   if hassteps(circuit)
-    logparsed = SteppedLog(logpath)  # a blank stepped logparsed object
+    logparsed = SteppedLog(logpath)  # a blank stepped log object
   else 
-    logparsed = NonSteppedLog(logpath) # a blank non stepped logparsed object
+    logparsed = NonSteppedLog(logpath) # a blank non stepped log object
   end
   return logparsed
 end

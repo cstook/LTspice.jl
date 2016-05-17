@@ -9,18 +9,18 @@
 	LTspice
 	LTspiceSimulation(x)
 	LTspiceSimulationTempDir
-	getcircuitpath
-	getltspiceexecutablepath
-	getlogpath
-	getparameters
-	getparameternames
-	getmeasurements
-	getmeasurementnames
-	getsteps
-	getstepnames
+	circuitpath
+	ltspiceexecutablepath
+	logpath
+	parametervalues
+	parameternames
+	measurementvalues
+	measurementnames
+	stepvalues
+	stepnames
 	PerLineIterator
 	PerLineIterator(x)
-	getheaders
+	headernames
 	header
 	loadlog!
 	flush(::LTspiceSimulation)

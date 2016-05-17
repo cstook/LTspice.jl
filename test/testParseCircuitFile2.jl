@@ -23,6 +23,6 @@ teststepnames = ["v1","b","c"]
 pli = PerLineIterator(PCF_test2)
 show(pli)
 @test length(collect(pli)) == length(v1list)*length(blist)*length(clist)
-h = getheaders(pli)
+h = headernames(pli)
 @test h == ["v1","b","c","a"]
 @test header(pli) == transpose(h)

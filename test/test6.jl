@@ -29,7 +29,7 @@ end
 pli = PerLineIterator(test6)
 show(pli)
 @test length(pli) == 0
-@test getheaders(pli) == []
+@test headernames(pli) == []
 
 
 show(test6)

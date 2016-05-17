@@ -2,7 +2,7 @@
 #
 # used to pass to writedlm to create a delimited file
 
-export getheaders, header
+export headernames, header
 
 "Iterator used to dump result of simulations to csv"
 immutable PerLineIterator
@@ -123,8 +123,8 @@ headernames(x :: PerLineIterator) = x.header
 Returns the header for `perlineterator` in the format needed for writecsv or 
 writedlm.  this is equivalent to 
 ```julia
-transpose(getheaders(perlineiterator))
+transpose(headernames(perlineiterator))
 ```
 """
-header(x::PerLineIterator) = transpose(x.header) 
+header(x::PerLineIterator) = transpose(headernames(x)) 
 

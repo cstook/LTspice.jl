@@ -17,7 +17,7 @@ teststepnames = ["v1","b","c"]
 @test stepvalues(PCF_test2) == (v1list, blist, clist)
 @test measurementnames(PCF_test2) == []
 @test stepnames(PCF_test2) == teststepnames
-@test stepnames(PCF_test2.log) == teststepnames
+@test stepnames(LTspice.logparsed(PCF_test2)) == teststepnames
 @test measurementvalues(PCF_test2) == Array(Float64,0,0,0,0)
 
 pli = PerLineIterator(PCF_test2)

@@ -16,5 +16,5 @@ testmeasurementnames = ["aaaaaa", "b43"]
 @test stepvalues(PCF_test3) == (npnlist,v2list,v1list)
 @test measurementnames(PCF_test3) == testmeasurementnames
 @test stepnames(PCF_test3) == teststepnames
-@test stepnames(PCF_test3.log) == teststepnames
+@test stepnames(LTspice.logparsed(PCF_test3)) == teststepnames
 @test length(measurementvalues(PCF_test3)) == length(testmeasurementnames)*length(npnlist)*length(v2list)*length(v1list)

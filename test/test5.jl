@@ -6,15 +6,15 @@ exc = ""
 test5 = LTspiceSimulation(test5file,exc)
 show(test5)
 show(LTspice.circuitparsed(test5))
-show(test5.log)
+show(LTspice.logparsed(test5))
 
 alist = [1.0,2.0]
 
 @test stepvalues(test5) == (alist,[],[])
 @test measurementnames(test5) == ["sum","sump1000"]
-@test measurementnames(test5.log) == measurementnames(test5)
+@test measurementnames(LTspice.logparsed(test5)) == measurementnames(test5)
 @test stepnames(test5) == ["a"]
-@test stepnames(test5.log) == stepnames(test5)
+@test stepnames(LTspice.logparsed(test5)) == stepnames(test5)
 @test logpath(test5) != ""
 
 islinux = @linux? true:false
@@ -22,12 +22,12 @@ if ~islinux
     @test circuitpath(test5) == test5file
 end
 
-@test typeof(circuitpath(test5.log)) == Type(ASCIIString)
+@test typeof(circuitpath(LTspice.logparsed(test5))) == Type(ASCIIString)
 @test typeof(parametervalues(test5)) == Array{Float64,1}
 @test measurementvalues(test5)[1,1,1,1] == 1.0
 @test ltspiceexecutablepath(test5) == ""
 @test haskey(test5,"sum") == false  # measurments in stepped files are not a Dict
-@test length(test5.log) == 4
+@test length(LTspice.logparsed(test5)) == 4
 
 verify = zeros(Float64,2,2,1,1)
 for (i,a) in enumerate(alist)
@@ -48,5 +48,5 @@ end
 @test measurementvalues(test5) == verify
 show(test5)
 show(LTspice.circuitparsed(test5))
-show(test5.log)
+show(LTspice.logparsed(test5))
 

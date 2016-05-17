@@ -6,7 +6,7 @@ exc = ""
 test8 = LTspiceSimulation(test8file,exc)
 show(test8)
 show(LTspice.circuitparsed(test8))
-show(test8.log)
+show(LTspice.logparsed(test8))
 
 @test test8["a@"] == 1.0
 @test test8["b#"] == 2.0

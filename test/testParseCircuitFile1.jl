@@ -6,7 +6,7 @@ exc = ""
 PCF_test1 = LTspiceSimulation(PCF_test1file,exc)
 show(PCF_test1)
 show(LTspice.circuitparsed(PCF_test1))
-show(PCF_test1.log)
+show(LTspice.logparsed(PCF_test1))
 
 alist = [1.0,2.0]
 blist = [10.0,15.0,20.0,25.0]
@@ -14,20 +14,20 @@ clist = [100.0,200.0,300.0]
 
 @test stepvalues(PCF_test1) == (alist,blist,clist)
 @test measurementnames(PCF_test1) == ["sum","sump1000"]
-@test measurementnames(PCF_test1.log) == measurementnames(PCF_test1)
+@test measurementnames(LTspice.logparsed(PCF_test1)) == measurementnames(PCF_test1)
 @test stepnames(PCF_test1) == ["a","b","c"]
-@test stepnames(PCF_test1.log) == stepnames(PCF_test1)
+@test stepnames(LTspice.logparsed(PCF_test1)) == stepnames(PCF_test1)
 @test logpath(PCF_test1) != ""
 islinux = @linux? true:false
 if ~islinux
     @test circuitpath(PCF_test1) == PCF_test1file
 end
-@test typeof(circuitpath(PCF_test1.log)) == Type(ASCIIString)
+@test typeof(circuitpath(LTspice.logparsed(PCF_test1))) == Type(ASCIIString)
 @test typeof(parametervalues(PCF_test1)) == Array{Float64,1}
 @test measurementvalues(PCF_test1)[1,1,1,1] == 111.0
 @test ltspiceexecutablepath(PCF_test1) == ""
 @test haskey(PCF_test1,"sum") == false  # measurments in stepped files are not a Dict
-@test length(PCF_test1.log) == 48
+@test length(LTspice.logparsed(PCF_test1)) == 48
 
 
 verify = zeros(Float64,2,2,4,3)
@@ -58,5 +58,5 @@ end
 @test measurementvalues(PCF_test1) == verify
 show(PCF_test1)
 show(LTspice.circuitparsed(PCF_test1))
-show(PCF_test1.log)
+show(LTspice.logparsed(PCF_test1))
 

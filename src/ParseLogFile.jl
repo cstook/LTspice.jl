@@ -33,8 +33,8 @@ type FooterDuration <: Footer end
 abstract LogParsed
 
 type NonSteppedLog <: LogParsed
-  logpath           :: ASCIIString  # path to log file
-  circuitpath       :: ASCIIString  # path to circuitparsed file in the log file
+  logpath           :: ASCIIString  # path to logparsed file
+  circuitpath       :: ASCIIString  # path to circuitparsed file in the logparsed file
   timestamp         :: DateTime
   duration          :: Float64  # simulation time in seconds
   measurementnames  :: Array{ASCIIString,1}   
@@ -281,10 +281,10 @@ function Base.parse(::Type{SteppedLog}, logpath::ASCIIString)
   slf = SteppedLog(lf)
   io = open(logpath,true,false,false,false,false)
   exitcode = processlines!(io, slf, [header],[measurement,stepparameters])
-  if exitcode == 1 # a non-steped log file
+  if exitcode == 1 # a non-steped logparsed file
     close(io)
     throw(ParseError(".log file is not expected type.  expexted SteppedLog, got NonSteppedLog"))
-  else # a steped log file
+  else # a steped logparsed file
     stepmeasurementname = StepMeasurementName()
     stepmeasurementvalue = StepMeasurementValue()
     footerdate = FooterDate()

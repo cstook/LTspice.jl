@@ -21,7 +21,7 @@ include("removetempdirectories.jl")
 
 type LTspiceSimulation
   circuitparsed         :: CircuitParsed
-  log             :: LogParsed
+  logparsed             :: LogParsed
   executablepath  :: ASCIIString
   logneedsupdate  :: Bool
 
@@ -42,9 +42,9 @@ type LTspiceSimulation
     end
     circuitparsed = parse(CircuitParsed,circuitpath)
     (everythingbeforedot,dontcare) = splitext(circuitpath)
-    logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
-    log = blanklog(circuitparsed,logpath) # creates a blank log object
-    new(circuitparsed,log,executablepath,true)
+    logpath = "$everythingbeforedot.log"  # logparsed file is .log instead of .asc
+    logparsed = blanklog(circuitparsed,logpath) # creates a blank logparsed object
+    new(circuitparsed,logparsed,executablepath,true)
   end
 end
 
@@ -102,22 +102,22 @@ LTspiceSimulationTempDir
 
 
 circuitparsed(x::LTspiceSimulation) = x.circuitparsed
-log(x::LTspiceSimulation) = x.log
+logparsed(x::LTspiceSimulation) = x.logparsed
 function measurementvalues(x::LTspiceSimulation)
   runifneedsupdate!(x)
-  measurementvalues(log(x))
+  measurementvalues(logparsed(x))
 end
 parameters(x::LTspiceSimulation) = parameters(circuitparsed(x))
 parametervalues(x::LTspiceSimulation) = parametervalues(circuitparsed(x))
 parameternames(x::LTspiceSimulation) = parameternames(circuitparsed(x))
 circuitpath(x::LTspiceSimulation) = circuitpath(circuitparsed(x))
 ltspiceexecutablepath(x::LTspiceSimulation) = x.executablepath
-logpath(x::LTspiceSimulation) = logpath(log(x))
+logpath(x::LTspiceSimulation) = logpath(logparsed(x))
 measurementnames(x::LTspiceSimulation) = measurementnames(circuitparsed(x))
-stepnames(x::LTspiceSimulation) = stepnames(log(x))
+stepnames(x::LTspiceSimulation) = stepnames(logparsed(x))
 function stepvalues(x::LTspiceSimulation)
   runifneedsupdate!(x)
-  stepvalues(log(x))
+  stepvalues(logparsed(x))
 end
 logneedsupdate(x::LTspiceSimulation) = x.logneedsupdate
 setlogneedsupdate!(x::LTspiceSimulation) = x.logneedsupdate = true
@@ -163,7 +163,7 @@ circuitpath
 """
     logpath(sim)
 
-Returns path to the log file.
+Returns path to the logparsed file.
 """
 logpath
 
@@ -229,8 +229,8 @@ function Base.show(io::IO, x::LTspiceSimulation)
       if stepnames(x) == []
         if logneedsupdate(x)
           value = convert(Float64,NaN)
-        elseif haskey(log(x),key)
-          value = log(x)[key] #getmeasurements(x.log)[i,1,1,1]
+        elseif haskey(logparsed(x),key)
+          value = logparsed(x)[key] #getmeasurements(x.log)[i,1,1,1]
         else
           value = "measurement failed"
         end
@@ -258,17 +258,17 @@ end
 # LTspiceSimulation is a Dict 
 #   of its parameters and measurements for non stepped simulations (measurements read only)
 #   of its parameters for stepped simulations
-Base.haskey(x::LTspiceSimulation, key::ASCIIString) = haskey(circuitparsed(x),key) | haskey(log(x),key)
+Base.haskey(x::LTspiceSimulation, key::ASCIIString) = haskey(circuitparsed(x),key) | haskey(logparsed(x),key)
 
 function Base.keys(x::LTspiceSimulation)
   # returns an array all keys (param and meas)
-  vcat(collect(keys(circuitparsed(x))),collect(keys(log(x))))
+  vcat(collect(keys(circuitparsed(x))),collect(keys(logparsed(x))))
 end
 
   # returns an array of all values (param and meas)
 function Base.values(x::LTspiceSimulation)
   runifneedsupdate!(x)
-  vcat(collect(values(circuitparsed(x))),collect(values(log(x))))
+  vcat(collect(values(circuitparsed(x))),collect(values(logparsed(x))))
 end
 
 function Base.getindex(x::LTspiceSimulation, key::ASCIIString)
@@ -277,7 +277,7 @@ function Base.getindex(x::LTspiceSimulation, key::ASCIIString)
   # dosen't handle multiple keys, but neither does standard julia library for Dict
   if findfirst(measurementnames(x),key) > 0
     runifneedsupdate!(x)
-    v = log(x)[key]
+    v = logparsed(x)[key]
   elseif haskey(circuitparsed(x),key)
     v = circuitparsed(x)[key]
   else
@@ -303,7 +303,7 @@ function Base.setindex!(x::LTspiceSimulation, value:: Float64, key::ASCIIString)
   if haskey(circuitparsed(x),key)
     setlogneedsupdate!(x)
     circuitparsed(x)[key] = value
-  elseif haskey(log(x),key)
+  elseif haskey(logparsed(x),key)
     error("measurements cannot be set.")
   else
     throw(KeyError(key))
@@ -320,21 +320,21 @@ end
 # For type stablity use getmeasurements()
 function Base.getindex(x::LTspiceSimulation,index::Int)
   runifneedsupdate!(x)
-  log(x)[index]
+  logparsed(x)[index]
 end
 function Base.getindex(x::LTspiceSimulation, i1::Int, i2::Int, i3::Int, i4::Int)
   runifneedsupdate!(x)
-  log(x)[i1,i2,i3,i4] 
+  logparsed(x)[i1,i2,i3,i4] 
 end
 
 Base.eltype(x::LTspiceSimulation) = Float64 
-Base.length(x::LTspiceSimulation) = length(log(x)) + length(circuitparsed(x))
+Base.length(x::LTspiceSimulation) = length(logparsed(x)) + length(circuitparsed(x))
 
 function Base.call(x::LTspiceSimulation, args...)
   if length(args) != length(circuitparsed(x))
     throw(ArgumentError("number of arguments must match number of parameters"))
   end
-  if typeof(log(x)) == Type(SteppedLog)
+  if typeof(logparsed(x)) == Type(SteppedLog)
     error("call only for non stepped simulations")
   end
   for (i,arg) in enumerate(args)
@@ -347,12 +347,12 @@ end
 ```julia
 loadlog!(sim)
 ```
-Loads log file of `sim` without running simulation.
+Loads logparsed file of `sim` without running simulation.
 """
 function loadlog!(x::LTspiceSimulation)
-# loads log file without running simulation
+# loads logparsed file without running simulation
 # sets logneedsupdate to false
-  x.log = parse(x.log)
+  x.logparsed = parse(x.logparsed)
   clearlogneedsupdate!(x)
   return nothing
 end
@@ -363,7 +363,7 @@ flush(sim)
 ```
 Writes `sim`'s circuitparsed file back to disk if any parameters have changed.  The 
 user does not usualy need to call this.  It will be called automatically
- when a measurment is requested and the log file needs to be updated.  It can be used
+ when a measurment is requested and the logparsed file needs to be updated.  It can be used
  to update a circuitparsed file using julia for simulation with the LTspice GUI.  
 """
 Base.flush(x::LTspiceSimulation) = flush(circuitparsed(x))
@@ -392,19 +392,17 @@ function run!(x::LTspiceSimulation)
       run(`$(ltspiceexecutablepath(x)) -b -Run $(circuitpath(x))`)
     end
   end
-  x.log = parse(x.log)
-  clearlogneedsupdate!(x)
-  return nothing 
+  loadlog!(x)
 end
 
-"creates a blank log object of appropiate type for circuitfile"
+"creates a blank logparsed object of appropiate type for circuitfile"
 function blanklog(circuit::CircuitParsed, logpath::ASCIIString)
   if hassteps(circuit)
-    log = SteppedLog(logpath)  # a blank stepped log object
+    logparsed = SteppedLog(logpath)  # a blank stepped logparsed object
   else 
-    log = NonSteppedLog(logpath) # a blank non stepped log object
+    logparsed = NonSteppedLog(logpath) # a blank non stepped logparsed object
   end
-  return log
+  return logparsed
 end
 
 """

@@ -17,5 +17,5 @@ test2 = LTspiceSimulation(filename, exc)
 @test(length(values(test2))==7)
 @test(length(test2)==7)
 
-@test keys(test2.log) == measurementnames(test2)
-@test eltype(test2.log) == Type(Float64)
+@test keys(LTspice.logparsed(test2)) == measurementnames(test2)
+@test eltype(LTspice.logparsed(test2)) == Type(Float64)

@@ -6,16 +6,16 @@ exc = ""
 test4 = LTspiceSimulation(test4file,exc)
 show(test4)
 show(LTspice.circuitparsed(test4))
-show(test4.log)
+show(LTspice.logparsed(test4))
 
 alist = [1.0,2.0]
 blist = [10.0,15.0,20.0,25.0]
 
 @test stepvalues(test4) == (alist,blist,[])
 @test measurementnames(test4) == ["sum","sump1000"]
-@test measurementnames(test4.log) == measurementnames(test4)
+@test measurementnames(LTspice.logparsed(test4)) == measurementnames(test4)
 @test stepnames(test4) == ["a","b"]
-@test stepnames(test4.log) == stepnames(test4)
+@test stepnames(LTspice.logparsed(test4)) == stepnames(test4)
 @test logpath(test4) != ""
 
 islinux = @linux? true:false
@@ -23,12 +23,12 @@ if ~islinux
     @test circuitpath(test4) == test4file
 end
 
-@test typeof(circuitpath(test4.log)) == Type(ASCIIString)
+@test typeof(circuitpath(LTspice.logparsed(test4))) == Type(ASCIIString)
 @test typeof(parametervalues(test4)) == Array{Float64,1}
 @test measurementvalues(test4)[1,1,1,1] == 11.0
 @test ltspiceexecutablepath(test4) == ""
 @test haskey(test4,"sum") == false  # measurments in stepped files are not a Dict
-@test length(test4.log) == 16
+@test length(LTspice.logparsed(test4)) == 16
 
 verify = zeros(Float64,2,2,4,1)
 for (i,a) in enumerate(alist)
@@ -55,5 +55,5 @@ end
 @test measurementvalues(test4) == verify
 show(test4)
 show(LTspice.circuitparsed(test4))
-show(test4.log)
+show(LTspice.logparsed(test4))
 

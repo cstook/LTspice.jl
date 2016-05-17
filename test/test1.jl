@@ -3,14 +3,14 @@ exc = ""  # null string will not run LTspice.exe.  Test parsing only.
 test1 = LTspiceSimulation(filename,exc)
 show(test1)
 show(test1.circuitparsed)
-show(test1.log)
+show(LTspice.logparsed(test1))
 loadlog!(test1)
 @test test1["vin"] == 5
 @test test1["load"] == 2
 @test test1["current"] == 2.5
 show(test1)
 show(test1.circuitparsed)
-show(test1.log)
+show(LTspice.logparsed(test1))
 @test measurementnames(test1) == ["current"]
 @test logpath(test1) != ""
 @test circuitpath(test1) != ""
@@ -51,7 +51,7 @@ end
 
 @test eltype(test1) == Type(Float64)
 
-for (key,value) in test1.log
+for (key,value) in LTspice.logparsed(test1)
   i = findfirst(keyss,key)
   @test value == valuess[i]
 end

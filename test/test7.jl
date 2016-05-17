@@ -6,7 +6,7 @@ exc = ""
 test7 = LTspiceSimulation(test7file,exc)
 show(test7)
 show(LTspice.circuitparsed(test7))
-show(test7.log)
+show(LTspice.logparsed(test7))
 
 @test test7["a"] == 10e-12
 @test ~haskey(test7,"b")

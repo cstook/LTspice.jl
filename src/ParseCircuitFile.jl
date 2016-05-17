@@ -1,12 +1,12 @@
-# overloard parse for the CircuitParsed type
-# used to parse LTspice circuitparsed files *.asc
+# overload parse for the CircuitParsed type
+# used to parse LTspice circuit files *.asc
 
 type CircuitParsed
   circuitpath     :: ASCIIString
-  circuitfilearray:: Array{ASCIIString,1}    # text of circuitparsed file
+  circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
   parameternames  :: Array{ASCIIString,1}
   parameters      :: Array{Tuple{Float64,Float64,Int},1}  # array of parameters (value, multiplier, index)
-  measurementnames:: Array{ASCIIString,1}              # measurment names
+  measurementnames:: Array{ASCIIString,1}              # measurement names
   stepnames       :: Array{ASCIIString,1}  
   needsupdate     :: Bool # true if any parameter has been changed
   parsed          :: Bool # true if last parsecard! call was a match
@@ -48,7 +48,7 @@ function Base.show(io::IO, x::CircuitParsed)
   end
  	if length(measurementnames(x))>0 
  		println(io,"")
- 		println(io,"Measurments")
+ 		println(io,"Measurements")
  	  for name in measurementnames(x)
  		 println(io,"  $name")
  	  end
@@ -108,7 +108,7 @@ Base.done(x::CircuitParsed, state) = ~(state < length(parameters(x)))
 # in the GUI, ctrl-M is used to create a new line.
 # this puts a backslash n in the file, NOT a newline character.
 #
-# eachcard is an iterator that seperates the lines around the backslash n
+# eachcard is an iterator that separates the lines around the backslash n
 immutable eachcard 
     line :: ASCIIString
 end
@@ -147,9 +147,9 @@ function parsecard!(cf::CircuitParsed, ::Parameter, card::ASCIIString)
     end
     name = m.captures[1]
     value = m.captures[2]
-    valueoffset = m.offsets[2] # pos of start of value in card
+    valueoffset = m.offsets[2] # position of start of value in card
     valuelength = length(value)
-    valueend = valuelength + valueoffset-1 # pos of end of value in card
+    valueend = valuelength + valueoffset-1 # position of end of value in card
     unit = m.captures[3]
     cfa = circuitfilearray(cf)
     p_names = parameternames(cf)
@@ -244,7 +244,7 @@ end
 
 function Base.flush(x::CircuitParsed)
 	if needsupdate(x)
-		io = open(circuitpath(x),false,true,false,true,false)  # open circuitparsed file to be overwritten
+		io = open(circuitpath(x),false,true,false,true,false)  # open circuit file to be overwritten
 		for text in circuitfilearray(x)
       print(io,text)
 		end

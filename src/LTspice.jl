@@ -42,7 +42,7 @@ type LTspiceSimulation
     end
     circuitparsed = parse(CircuitParsed,circuitpath)
     (everythingbeforedot,dontcare) = splitext(circuitpath)
-    logpath = "$everythingbeforedot.log"  # logparsed file is .log instead of .asc
+    logpath = "$everythingbeforedot.log"  # log file is .log instead of .asc
     logparsed = blanklog(circuitparsed,logpath) # creates a blank logparsed object
     new(circuitparsed,logparsed,executablepath,true)
   end
@@ -76,7 +76,7 @@ LTspiceSimulation(circuitpath)
 LTspiceSimulation(circuitpath, executablepath)
 ```
 
-Creates an `LTspiceSimulation` object.    `circuitpath` and `execuatblepath` 
+Creates an `LTspiceSimulation` object.    `circuitpath` and `executablepath` 
 are the path to the circuit file (.asc) and the LTspice executable.  Operations 
 on `LTspiceSimulation` will modify the circuit file.
 
@@ -129,7 +129,7 @@ hassteps(x::LTspiceSimulation) = hassteps(circuitparsed(x))
 """
     parameters(sim)
 
-Retruns array of tuples (value, multiplier, index)
+Returns array of tuples (value, multiplier, index)
 """
 parameters
 
@@ -175,7 +175,7 @@ Returns path to the LTspice executable
 ltspiceexecutablepath
 
 """
-    measurmentnames(sim)
+    measurementnames(sim)
 
 Returns an array of the measurement names of `sim` in the order they appear in the
 circuit file.
@@ -274,7 +274,7 @@ end
 function Base.getindex(x::LTspiceSimulation, key::ASCIIString)
   # returns value for key in either param or meas
   # value = x[key]
-  # dosen't handle multiple keys, but neither does standard julia library for Dict
+  # doesn't handle multiple keys, but neither does standard julia library for Dict
   if findfirst(measurementnames(x),key) > 0
     runifneedsupdate!(x)
     v = logparsed(x)[key]
@@ -317,7 +317,7 @@ end
 
 # LTspiceSimulationTempDir is an read only array of its measurements
 # Intended for use in interactive sessions only.
-# For type stablity use measurementvalues()
+# For type stability use measurementvalues()
 function Base.getindex(x::LTspiceSimulation,index::Int)
   runifneedsupdate!(x)
   logparsed(x)[index]
@@ -347,7 +347,8 @@ end
 ```julia
 loadlog!(sim)
 ```
-Loads logparsed file of `sim` without running simulation.
+Loads log file of `sim` without running simulation.  The user does not normally 
+need to call `loadlog!`.
 """
 function loadlog!(x::LTspiceSimulation)
 # loads log file without running simulation
@@ -362,8 +363,8 @@ end
 flush(sim)
 ```
 Writes `sim`'s circuit file back to disk if any parameters have changed.  The 
-user does not usualy need to call this.  It will be called automatically
- when a measurment is requested and the log file needs to be updated.  It can be used
+user does not usually need to call `flush`.  It will be called automatically
+ when a measurement is requested and the log file needs to be updated.  It can be used
  to update a circuit file using julia for simulation with the LTspice GUI.  
 """
 Base.flush(x::LTspiceSimulation) = flush(circuitparsed(x))
@@ -377,9 +378,10 @@ end
 
 """
 ```julia
-run(sim)
+run!(sim)
 ```
-writes circuit changes and calls LTspice to run `sim`.
+writes circuit changes, calls LTspice to run `sim`, and reloads the log file.  The user
+normally does not need to call this.
 """
 function run!(x::LTspiceSimulation)
   flush(x)
@@ -395,7 +397,7 @@ function run!(x::LTspiceSimulation)
   loadlog!(x)
 end
 
-"creates a blank logparsed object of appropiate type for circuitfile"
+"creates a blank logparsed object of appropriate type for circuitfile"
 function blanklog(circuit::CircuitParsed, logpath::ASCIIString)
   if hassteps(circuit)
     logparsed = SteppedLog(logpath)  # a blank stepped log object

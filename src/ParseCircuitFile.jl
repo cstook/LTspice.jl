@@ -1,6 +1,21 @@
 # overload parse for the CircuitParsed type
 # used to parse LTspice circuit files *.asc
+"""
+Stores data from the circuit file.
 
+**Fields**
+
+- `circuitpath`       -- Path to the circuit file
+- `circuitfilearray`  -- Array of all the text of the circuit file, split
+                         around values which need to be edited.
+- `parameternames`    -- Array of parameter names
+- `parameters`        -- Array of tuples (value, multiplier, index into `circuitfilearray`)       
+- `measurementnames`  -- Array of measurement names
+- `stepnames`         -- Array of step names
+- `needsupdate`       -- `true` if parameter value has beed changed.
+                         `false` after `circuitfilearray` is written.
+- `parsed`            -- `true` if last `parsecard!` call was a match
+"""
 type CircuitParsed
   circuitpath     :: ASCIIString
   circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
@@ -125,7 +140,16 @@ function Base.next(ec::eachcard, state)
     return (card, state)
 end
 Base.done(ec::eachcard, state) = state>=length(ec.line)
+"""
+Subtypes of `Card` are used to dispach `parsecard!` to process a specific type of card
 
+**Subtypes**
+- `ResetParsedFlag`
+- `Parameter`
+- `Measure`
+- `Step`
+- `Other`
+"""
 abstract Card
 type ResetParsedFlag end
 type Parameter<:Card end
@@ -221,7 +245,21 @@ function parsecard!(cf::CircuitParsed, card::ASCIIString)
     end
 end
 
-"true if line is comment"
+"""
+    parsecard!(cf::CircuitParsed, ::Card, card::ASCIIString)
+    parsecard!(cf::CircuitParsed, card::ASCIIString)
+
+Test to see if a `card` is a type of `Card` and if so update `cp`.  The
+second form tries all subtypes of `Card` in global `cardlist`, which is
+just a list of all `Card` subtypes.
+"""
+parsecard!
+
+"""
+    iscomment(line::ASCIIString)
+
+`true` if line is comment
+"""
 iscomment(line::ASCIIString) = ismatch(r"^TEXT .* ;",line)
 
 function Base.parse(::Type{CircuitParsed}, circuitpath::ASCIIString)
@@ -255,22 +293,21 @@ function Base.flush(x::CircuitParsed)
 end
 
 # units as defined in LTspice
-units = Dict()
-units["K"] = 1.0e3
-units["k"] = 1.0e3
-units["MEG"] = 1.0e6
-units["meg"] = 1.0e6
-units["G"] = 1.0e9
-units["g"] = 1.0e9
-units["T"] = 1.0e12
-units["t"] = 1.0e12
-units["M"] = 1.0e-3
-units["m"] = 1.0e-3
-units["U"] = 1.0e-6
-units["u"] = 1.0e-6
-units["N"] = 1.0e-9
-units["n"] = 1.0e-9
-units["P"] = 1.0e-12
-units["p"] = 1.0e-12
-units["F"] = 1.0e-15
-units["f"] = 1.0e-15
+const units = Dict("K" => 1.0e3,
+                   "k" => 1.0e3,
+                   "MEG" => 1.0e6,
+                   "meg" => 1.0e6,
+                   "G" => 1.0e9,
+                   "g" => 1.0e9,
+                   "T" => 1.0e12,
+                   "t" => 1.0e12,
+                   "M" => 1.0e-3,
+                   "m" => 1.0e-3,
+                   "U" => 1.0e-6,
+                   "u" => 1.0e-6,
+                   "N" => 1.0e-9,
+                   "n" => 1.0e-9,
+                   "P" => 1.0e-12,
+                   "p" => 1.0e-12,
+                   "F" => 1.0e-15,
+                   "f" => 1.0e-15)

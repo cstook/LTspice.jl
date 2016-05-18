@@ -13,6 +13,9 @@
 
 ## Circuit File Parsing
 	{docs}
+	LTspice.CircuitParsed
+	LTspice.Card
+	LTspice.parsecard!
 	LTspice.iscomment
 
 
@@ -24,3 +27,4 @@
 	LTspice.makecircuitfileincludeabsolutepath
 	LTspice.blanklog
 	LTspice.defaultltspiceexecutable
+	MultiLevelIterator

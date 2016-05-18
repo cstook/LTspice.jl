@@ -1,6 +1,20 @@
 import Base:start, next, done, eltype, length
 
-# muli-lever iterator
+"""
+Generates a sequence of arrays for indexing into multi dimensional arrays.
+
+```julia
+for k in MultiLevelIterator([2,3])
+    println(k)
+end
+[1,1]
+[2,1]
+[1,2]
+[2,2]
+[1,3]
+[2,3]
+```
+"""
 immutable MultiLevelIterator
     max :: Array{Int,1}
 end

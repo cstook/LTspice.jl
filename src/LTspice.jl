@@ -21,7 +21,30 @@ include("ParseLogFile.jl")
 include("removetempdirectories.jl")
 
 """
+Access parameters and measurements of an LTspice simulation.  Runs simulation
+as needed.
 
+Access as a dictionary:
+```julia
+measurement_value = sim["measurement_name"]
+parameter_value = sim["parameter_name"]
+sim["parameter_name"] = new_parameter_value
+```
+
+Access as a function:
+```julia
+(m1,m2,m3) = sim(p1,p2,p3)  # simulation with three measurements and three parameters
+```
+
+Access as arrays:
+```julia
+pnames = parameternames(sim)
+mnames = measurementnames(sim)
+snames = stepnames(sim)
+pvalues = parametervalues(sim)
+mvalues = measurementvalues(sim)
+svalues = stepvalues(sim)
+```
 """
 type LTspiceSimulation
   circuitparsed         :: CircuitParsed
@@ -87,7 +110,7 @@ on `LTspiceSimulation` will modify the circuit file.
 If `executablepath` is not specified, an attempt will be made to find it in the default
 location for your operating system.
 """
-LTspiceSimulation
+LTspiceSimulation(x)
 
 """
 
@@ -102,7 +125,7 @@ the circuit in a temporary directory. LTspice will need to be able to find all
    Anything included with .include or .lib directives will be changed to work 
  correctly in temp directory.
 """
-LTspiceSimulationTempDir
+LTspiceSimulationTempDir(x)
 
 """
     circuitparsed(sim)

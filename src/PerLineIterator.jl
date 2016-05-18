@@ -58,7 +58,7 @@ PerLineIterator(sim :: LTspiceSimulation;
 ```
 
 Creates an iterator in the format required to pass to writecsv or writedlm.
-The step order defaults to the order the stepvalues appear in the circuitparsed file.
+The step order defaults to the order the stepvalues appear in the circuit file.
 Step order can be specified by passing an array of step names.  By default 
 there is one column for each step, measurement, and parameter.  The desired
 measurements and parameters can be set by passing an array of names to

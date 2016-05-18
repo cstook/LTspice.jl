@@ -12,6 +12,7 @@ Documentation for `LTspice.jl`'s public interface
 
 	{docs}
 	LTspice
+	LTspiceSimulation
 	LTspiceSimulation(x)
 	LTspiceSimulationTempDir
 	parametervalues

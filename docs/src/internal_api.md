@@ -21,10 +21,24 @@
 
 ## Log File Parsing
 	{docs}
+	LTspice.LogParsed
+	LTspice.NonSteppedLog
+	LTspice.SteppedLog
+	parse(::LTspice.SteppedLog)
+	LTspice.LogLine
+	LTspice.Header
+	LTspice.Footer
+	LTspice.Measurement
+	LTspice.StepParameters
+	LTspice.StepMeasurementName
+	LTspice.StepMeasurementValue
+	LTspice.parseline!
+	LTspice.processlines!
 
 ## Utilities
 	{docs}
 	LTspice.makecircuitfileincludeabsolutepath
 	LTspice.blanklog
 	LTspice.defaultltspiceexecutable
-	MultiLevelIterator
+	LTspice.MultiLevelIterator
+	LTspice.removetempdirectories

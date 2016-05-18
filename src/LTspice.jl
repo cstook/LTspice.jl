@@ -437,7 +437,7 @@ end
     blanklog(circuit::CircuitParsed, logpath::ASCIIString)
 
 Creates a blank `LogParsed` of appropriate type, either 
-`NonSteppedLog` or `SteppedLog` for circuit.
+`NonSteppedLog` or `SteppedLog`, for circuit.
 """
 function blanklog(circuit::CircuitParsed, logpath::ASCIIString)
   if hassteps(circuit)

@@ -144,6 +144,7 @@ Base.done(ec::eachcard, state) = state>=length(ec.line)
 Subtypes of `Card` are used to dispach `parsecard!` to process a specific type of card
 
 **Subtypes**
+
 - `ResetParsedFlag`
 - `Parameter`
 - `Measure`

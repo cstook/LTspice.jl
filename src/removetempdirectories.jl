@@ -1,7 +1,11 @@
 
 
 const dirlist = Array(ASCIIString,0) # list of directories to remove on exit
+"""
+    removetempdirectories()
 
+Deletes directories in global array `dirlist`.
+"""
 function removetempdirectories()
   for dir in dirlist
   	if ispath(dir)

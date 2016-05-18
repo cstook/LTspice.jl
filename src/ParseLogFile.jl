@@ -3,24 +3,70 @@ include("MultiLevelIterator.jl")
 
 
 # BEGIN LogLine
+"""
+Subtypes of `LogLine` are used to dispatch `parseline!` to process a 
+specific type of log file line.  Some of the subtypes also hold temporary 
+data for the lines they process.
+
+**Subtypes**
+
+- `Header`                -- abstract type for all header lines
+- `Measurement`           -- measurement of a non stepped simulation
+- `StepParameters`        -- stepped parameters of a stepped simulation
+- `IsStepParameters`      -- same as `StepParameters`, but doesn't save data
+- `StepMeasurementName`   -- measurement name of a stepped simulation
+- `StepMeasurementValue`  -- measurement value of a stepped simulation
+- `Footer`                -- abstract type for all footer lines
+"""
 abstract LogLine
+
+"""
+`Footer` is an abstract type for all footer lines.
+
+**Subtypes**
+
+- `FooterDate`      -- time and date simulation was run
+- `FooterDuration`  -- time simulation took to run
+"""
 abstract Footer <: LogLine
-abstract Header <: LogLine
+
+"""
+`Header` is an abstract type for all header lines.  Currently, there is only 
+one subtype `HeaderCircuitPath`.
+"""
+abstract Header <: LogLine 
 type HeaderCircuitPath <: Header end
+
+"""
+`Measurement` holds the measurement names and values in 1d arrays for 
+non stepped simulations.
+"""
 type Measurement <: LogLine
   measurementnames :: Array{ASCIIString,1}
   measurements :: Array{Float64,1}
   Measurement() = new([],[])
 end
 type IsStepParameters <: LogLine end
+
+"""
+`StepParameters` holds the step values in a 1d array.
+"""
 type StepParameters <: LogLine 
   stepvalues :: Int
   StepParameters() = new(0)
-end 
+end
+
+"""
+`StepMeasurementName` holds the step measurement names in a 1d array.
+"""
 type StepMeasurementName <: LogLine
   name :: ASCIIString
   StepMeasurementName() = new("")
-end 
+end
+
+"""
+`StepMeasurementValue` holds the step measurement values in a 1d array.
+"""
 type StepMeasurementValue <: LogLine
   values :: Array{Float64,1}
   StepMeasurementValue() = new([])
@@ -29,11 +75,31 @@ type FooterDate <: Footer end
 type FooterDuration <: Footer end
 # END LogLine
 
+"""
+Subtypes of `LogParsed` store data from the log file.
+
+**Subtypes**
+
+- `NonSteppedLog` -- stores data from non stepped log file
+- `SteppedLog`    -- stores data from a stepped log file
+"""
 abstract LogParsed
 
+"""
+Stores data from a non stepped log file.
+
+**Fields**
+
+- `logpath`           -- path to log file
+- `circuitpath`       -- path to circuit file in the log file
+- `timestamp`         -- time and date of the simulation was run
+- `duration`          -- simulation time in seconds
+- `measurementnames`  -- 1d array of measurement names
+- `measurements`      -- 4d array of measurement values
+"""
 type NonSteppedLog <: LogParsed
-  logpath           :: ASCIIString  # path to logparsed file
-  circuitpath       :: ASCIIString  # path to circuitparsed file in the logparsed file
+  logpath           :: ASCIIString  # path to log file
+  circuitpath       :: ASCIIString  # path to circuit file in the log file
   timestamp         :: DateTime
   duration          :: Float64  # simulation time in seconds
   measurementnames  :: Array{ASCIIString,1}   
@@ -55,6 +121,15 @@ measurementvalues!(nslf::NonSteppedLog,measurements) = nslf.measurements = measu
 measurementvalues(nslf::NonSteppedLog) = nslf.measurements
 stepnames(nslf::NonSteppedLog) = []
 
+"""
+Stores data from a stepped log file.
+
+**Fields**
+
+- `nonsteppedlogfile`  -- instance of `NonSteppedLog`
+- `stepnames`          -- 1d array of step names
+- `stepvalues`         -- tuple of 3 1d arrays to hold the step values
+"""
 type SteppedLog <: LogParsed
   nonsteppedlogfile :: NonSteppedLog
   stepnames         :: Array{ASCIIString,1}
@@ -248,6 +323,24 @@ function parseline!(lf::LogParsed, ::FooterDuration, line::ASCIIString)
   end
 end
 
+"""
+    parseline!(log::LogParsed, logline::LogLine, line::ASCIIString)
+
+Test to see if `line` is type `logline`, if so, process line and return `true`,
+otherwise return `false`.  Data will be returned in either `log` or `logline`
+ depending on the type of `logline`.
+"""
+parseline!
+
+"""
+    processlines!(io::IO, log::LogParsed, findlines, untillines=[])
+
+Process lines of `io` for `findlines` until a `untillines` is found.
+`findlines` and `untillines` are both arrays of `LogLine`.  Data is returned 
+in `log`, `findlines`, and `untillines` depending on what lines were found.
+`processlines!` returns the index into `untillines` of the `LogLine` which 
+caused it to stop.
+"""
 function processlines!(io::IO, lf::LogParsed, findlines, untillines=[])
   while ~eof(io)
     line = readline(io)
@@ -276,10 +369,10 @@ function Base.parse(::Type{SteppedLog}, logpath::ASCIIString)
   slf = SteppedLog(lf)
   io = open(logpath,true,false,false,false,false)
   exitcode = processlines!(io, slf, [header],[measurement,stepparameters])
-  if exitcode == 1 # a non-steped logparsed file
+  if exitcode == 1 # a non-stepped log file
     close(io)
-    throw(ParseError(".log file is not expected type.  expexted SteppedLog, got NonSteppedLog"))
-  else # a steped logparsed file
+    throw(ParseError(".log file is not expected type.  expected SteppedLog, got NonSteppedLog"))
+  else # a stepped log file
     stepmeasurementname = StepMeasurementName()
     stepmeasurementvalue = StepMeasurementValue()
     footerdate = FooterDate()
@@ -330,7 +423,7 @@ function Base.parse(::Type{NonSteppedLog}, logpath::ASCIIString)
   exitcode = processlines!(io, lf, [header],[measurement,isstepparameters])
   if exitcode == 2 # this was supposed to be a NonSteppedFile
     close(io)
-    throw(ParseError(".log file is not expected type.  expexted NonSteppedLog, got SteppedLog"))
+    throw(ParseError(".log file is not expected type.  expected NonSteppedLog, got SteppedLog"))
   end
   exitcode = processlines!(io, lf, [measurement],[footerdate])
   measurementnames!(lf, measurement.measurementnames)
@@ -341,3 +434,11 @@ function Base.parse(::Type{NonSteppedLog}, logpath::ASCIIString)
 end
 
 Base.parse{T<:LogParsed}(x::T) = parse(T, logpath(x))  
+
+"""
+    parse{T<:LogParsed}(x::T)
+    parse(::Type{LogParsed}, logpath::ASCIIString)
+
+Parse a LTspice log file and return the appropriate `LogParsed` object.
+"""
+Base.parse(::LogParsed), Base.parse(::Type{LogParsed},::ASCIIString)

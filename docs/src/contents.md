@@ -1,5 +1,5 @@
 # Contents
 
 	{contents}
-	Pages = ["index.md", "install.md","quickstart.md","newapi.md"]
+	Pages = ["install.md","quickstart.md","public_api.md","internal_api.md"]
 	Depth = 2

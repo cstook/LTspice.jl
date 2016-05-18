@@ -1,7 +1,10 @@
 """
-parses the circuitparsed file changing all paths
+    makecircuitfileincludeabsolutepath(originalcircuitpath, workingcircuitpath, executablepath)
+
+Modifies the circuit file changing all paths
 in .inc, .include, and .lib directives to 
-absolute paths
+absolute paths.  This function is used for running simulations 
+from a temporary directory.
 """
 function makecircuitfileincludeabsolutepath(originalcircuitpath::ASCIIString,
                                      workingcircuitpath::ASCIIString,

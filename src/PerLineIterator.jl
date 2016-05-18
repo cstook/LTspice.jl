@@ -121,7 +121,7 @@ headernames(x :: PerLineIterator) = x.header
     header(Perlineiterator)
 
 Returns the header for `perlineterator` in the format needed for writecsv or 
-writedlm.  this is equivalent to 
+writedlm.  This is equivalent to 
 ```julia
 transpose(headernames(perlineiterator))
 ```

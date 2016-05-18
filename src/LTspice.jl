@@ -4,10 +4,11 @@
 "Main module for `LTspice.jl` - a Julia interface to LTspice"
 module LTspice
 
-export LTspiceSimulation, LTspiceSimulationTempDir, measurementvalues
-export parametervalues, circuitpath, ltspiceexecutablepath
-export logpath, measurementnames, stepnames, stepvalues
-export PerLineIterator, parameternames
+export LTspiceSimulation, LTspiceSimulationTempDir
+export circuitpath, logpath, ltspiceexecutablepath
+export parameternames,  measurementnames,  stepnames 
+export parametervalues, measurementvalues, stepvalues
+export PerLineIterator
 export loadlog!
 
 const islinux = @linux? true:false
@@ -19,11 +20,14 @@ include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
 include("removetempdirectories.jl")
 
+"""
+
+"""
 type LTspiceSimulation
   circuitparsed         :: CircuitParsed
   logparsed             :: LogParsed
-  executablepath  :: ASCIIString
-  logneedsupdate  :: Bool
+  executablepath        :: ASCIIString
+  logneedsupdate        :: Bool
 
   function LTspiceSimulation(circuitpath::ASCIIString,
                               executablepath::ASCIIString)
@@ -100,8 +104,17 @@ the circuit in a temporary directory. LTspice will need to be able to find all
 """
 LTspiceSimulationTempDir
 
+"""
+    circuitparsed(sim)
 
+Returns the `CircuitParsed` for `sim`.
+"""
 circuitparsed(x::LTspiceSimulation) = x.circuitparsed
+"""
+    logparsed(sim)
+
+Returns the `LogParsed` for `sim`.
+"""
 logparsed(x::LTspiceSimulation) = x.logparsed
 function measurementvalues(x::LTspiceSimulation)
   runifneedsupdate!(x)
@@ -155,7 +168,7 @@ parameternames
 
 Returns path to the circuit file.
 
-This is the path to the working circuit file.  If LTspiceSimulationTempDir was used 
+This is the path to the working circuit file.  If `LTspiceSimulationTempDir` was used 
 or if running under wine, this will not be the path given to the constructor.
 """
 circuitpath
@@ -380,7 +393,7 @@ end
 ```julia
 run!(sim)
 ```
-writes circuit changes, calls LTspice to run `sim`, and reloads the log file.  The user
+Writes circuit changes, calls LTspice to run `sim`, and reloads the log file.  The user
 normally does not need to call this.
 """
 function run!(x::LTspiceSimulation)
@@ -397,7 +410,12 @@ function run!(x::LTspiceSimulation)
   loadlog!(x)
 end
 
-"creates a blank logparsed object of appropriate type for circuitfile"
+"""
+    blanklog(circuit::CircuitParsed, logpath::ASCIIString)
+
+Creates a blank `LogParsed` of appropriate type, either 
+`NonSteppedLog` or `SteppedLog` for circuit.
+"""
 function blanklog(circuit::CircuitParsed, logpath::ASCIIString)
   if hassteps(circuit)
     logparsed = SteppedLog(logpath)  # a blank stepped log object
@@ -408,10 +426,9 @@ function blanklog(circuit::CircuitParsed, logpath::ASCIIString)
 end
 
 """
-```julia
-defaultltspiceexecutable()Base.
-```
-returns the default LTspice executable path for the operating system
+    defaultltspiceexecutable()
+
+Returns the default LTspice executable path for the operating system.
 """
 function defaultltspiceexecutable()
   os = @windows? 1 : (@osx? 2 : 3)

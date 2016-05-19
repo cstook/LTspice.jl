@@ -1,5 +1,6 @@
 # Contents
 
-	{contents}
-	Pages = ["index.md", "install.md","quickstart.md","newapi.md"]
-	Depth = 2
+```@contents
+Pages = ["index.md", "install.md","quickstart.md","newapi.md"]
+Depth = 2
+```

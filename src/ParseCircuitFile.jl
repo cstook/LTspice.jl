@@ -250,7 +250,7 @@ end
     parsecard!(cf::CircuitParsed, ::Card, card::ASCIIString)
     parsecard!(cf::CircuitParsed, card::ASCIIString)
 
-Test to see if a `card` is a type of `Card` and if so update `cp`.  The
+Test to see if `card` is a type of `Card` and if so update `cp`.  The
 second form tries all subtypes of `Card` in global `cardlist`, which is
 just a list of all `Card` subtypes.
 """
@@ -263,6 +263,12 @@ parsecard!
 """
 iscomment(line::ASCIIString) = ismatch(r"^TEXT .* ;",line)
 
+
+"""
+    parse(::Type{CircuitParsed}, circuitpath::ASCIIString)
+
+Parse a LTspice circuit file and return `CircuitParsed` object.
+"""
 function Base.parse(::Type{CircuitParsed}, circuitpath::ASCIIString)
     io = open(circuitpath,true,false,false,false,false)
     cf = CircuitParsed()

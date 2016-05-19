@@ -29,7 +29,7 @@ loadlog!
 flush(::LTspiceSimulation)
 ```
 
-## Exporrting Data
+## Exporting Data
 	
 ```@docs
 PerLineIterator

@@ -285,7 +285,7 @@ function Base.show(io::IO, x::LTspiceSimulation)
       end
     else 
       for (i,stepname) in enumerate(stepnames(x))
-        println(io,rpad(stepname,25,' ')," ",length(stepvalues(x)[i])," stepvalues")
+        println(io,rpad(stepname,25,' ')," ",length(stepvalues(x)[i])," steps")
       end
     end
   end

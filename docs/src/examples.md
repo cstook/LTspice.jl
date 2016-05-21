@@ -6,10 +6,10 @@ In this example, the efficiency of a LTM6423 will be measured vs Vin and Iout.
 
 ![example2](img/example2.jpg)
 
-Import modules.  For the plot `Plots` and `PlotlyJS` modules are used.
+Import modules.  For the plot `Plots` and `PyPlot` modules are used.
 ```@example 2
 using LTspice, Plots
-plotlyjs()
+pyplot()
 ```
 
 Create an instance of `LTspiceSimulation`.
@@ -45,6 +45,9 @@ plt = plot()
 for iout_index in eachindex(iout_list)
     plot!(plt,vin_list,efficiency[:,iout_index],label = "Iout="*@sprintf("%2.2f",iout_list[iout_index]))
 end
-plot!(plt, title = "LTM6423 Efficiency, Vout = 3.3V")
+plot!(plt, title = "LTM6423 Efficiency @ Vout = 3.3V")
 plot!(plt, xlabel = "Vin (V)", ylabel = "Efficiency")
+savefig(plt,"example2.svg"); nothing # hide
 ```
+
+![](example2.svg)

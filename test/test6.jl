@@ -18,7 +18,7 @@ if ~islinux
     @test circuitpath(test6) == test6file
 end
 
-@test typeof(circuitpath(LTspice.logparsed(test6))) == Type(ASCIIString)
+@test issubtype(typeof(circuitpath(LTspice.logparsed(test6))),AbstractString)
 @test typeof(parametervalues(test6)) == Array{Float64,1}
 #@test measurementvalues(test6)[1,1,1,1] == 1.0
 @test ltspiceexecutablepath(test6) == ""

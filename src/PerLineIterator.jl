@@ -7,7 +7,7 @@ export headernames, header
 "Iterator used to dump result of simulations to csv"
 immutable PerLineIterator
   simulation        :: LTspiceSimulation
-  header            :: Array{ASCIIString,1}
+  header            :: Array{AbstractString,1}
   stepindexes       :: Array{Int,1}
   resultindexes     :: Array{Tuple{Bool,Int},1} # is parameter and index into array
   mli               :: MultiLevelIterator

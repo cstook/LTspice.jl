@@ -22,7 +22,7 @@ if ~islinux
     @test circuitpath(test5) == test5file
 end
 
-@test typeof(circuitpath(LTspice.logparsed(test5))) == Type(ASCIIString)
+@test issubtype(typeof(circuitpath(LTspice.logparsed(test5))),AbstractString)
 @test typeof(parametervalues(test5)) == Array{Float64,1}
 @test measurementvalues(test5)[1,1,1,1] == 1.0
 @test ltspiceexecutablepath(test5) == ""

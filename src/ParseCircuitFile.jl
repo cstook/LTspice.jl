@@ -17,29 +17,29 @@ Stores data from the circuit file.
 - `parsed`            -- `true` if last `parsecard!` call was a match
 """
 type CircuitParsed
-  circuitpath     :: ASCIIString
-  circuitfilearray:: Array{ASCIIString,1}    # text of circuit file
-  parameternames  :: Array{ASCIIString,1}
+  circuitpath     :: AbstractString
+  circuitfilearray:: Array{AbstractString,1}    # text of circuit file
+  parameternames  :: Array{AbstractString,1}
   parameters      :: Array{Tuple{Float64,Float64,Int},1}  # array of parameters (value, multiplier, index)
-  measurementnames:: Array{ASCIIString,1}              # measurement names
-  stepnames       :: Array{ASCIIString,1}  
+  measurementnames:: Array{AbstractString,1}              # measurement names
+  stepnames       :: Array{AbstractString,1}  
   needsupdate     :: Bool # true if any parameter has been changed
   parsed          :: Bool # true if last parsecard! call was a match
   CircuitParsed() = new("",[],[],[],[],[],false,false) # empty CircuitParsed
 end
 
 circuitpath(x::CircuitParsed) = x.circuitpath
-circuitpath!(x::CircuitParsed, path::ASCIIString) = x.circuitpath = path
+circuitpath!(x::CircuitParsed, path::AbstractString) = x.circuitpath = path
 circuitfilearray(x::CircuitParsed) = x.circuitfilearray
 parameternames(x::CircuitParsed) = x.parameternames
-parameternames!(x::CircuitParsed, parameternames::Array{ASCIIString,1}) = x.parameternames = parameternames
+parameternames!(x::CircuitParsed, parameternames::Array{AbstractString,1}) = x.parameternames = parameternames
 parameters(x::CircuitParsed) = x.parameters
 parameters!(x::CircuitParsed, parameters::Array{Tuple{Float64,Float64,Int},1}) = x.parameters = parameters
 parametervalues(x::CircuitParsed) = [parameter[1] for parameter in x.parameters]
 measurementnames(x::CircuitParsed) = x.measurementnames
-measurementnames!(x::CircuitParsed, measurementnames::Array{ASCIIString,1}) = x.measurementnames = measurementnames
+measurementnames!(x::CircuitParsed, measurementnames::Array{AbstractString,1}) = x.measurementnames = measurementnames
 stepnames(x::CircuitParsed) = x.stepnames
-stepnames!(x::CircuitParsed, stepnames::Array{ASCIIString,1}) = x.stepnames = stepnames
+stepnames!(x::CircuitParsed, stepnames::Array{AbstractString,1}) = x.stepnames = stepnames
 hassteps(x::CircuitParsed) = length(x.stepnames) != 0
 hasmeasurements(x::CircuitParsed) = length(x.measurementnames) != 0
 hasparameters(x::CircuitParsed) = length(x.parameters) != 0
@@ -78,10 +78,10 @@ function Base.show(io::IO, x::CircuitParsed)
 end
 
 # CircuitParsed is a Dict of its parameters
-Base.haskey(x::CircuitParsed,key::ASCIIString) = findfirst(parameternames(x), key) != 0
+Base.haskey(x::CircuitParsed,key::AbstractString) = findfirst(parameternames(x), key) != 0
 Base.keys(x::CircuitParsed) = [key for key in parameternames(x)]
 Base.values(x::CircuitParsed) = [parameter[1] for parameter in parameters(x)]
-function Base.getindex(x::CircuitParsed, key::ASCIIString)
+function Base.getindex(x::CircuitParsed, key::AbstractString)
   k = findfirst(parameternames(x), key)
   if k == 0 
     throw(KeyError(key))
@@ -90,7 +90,7 @@ function Base.getindex(x::CircuitParsed, key::ASCIIString)
   end
 end
 
-function Base.setindex!(x::CircuitParsed, value:: Float64, key::ASCIIString)
+function Base.setindex!(x::CircuitParsed, value:: Float64, key::AbstractString)
   k = findfirst(parameternames(x), key)
   if k == 0 
     throw(KeyError(key))
@@ -125,7 +125,7 @@ Base.done(x::CircuitParsed, state) = ~(state < length(parameters(x)))
 #
 # eachcard is an iterator that separates the lines around the backslash n
 immutable eachcard 
-    line :: ASCIIString
+    line :: AbstractString
 end
 Base.start(::eachcard) = 1
 function Base.next(ec::eachcard, state)
@@ -162,7 +162,7 @@ const cardlist = [ResetParsedFlag(), Parameter(), Measure(), Step(), Other()]
 parsecard!(cf::CircuitParsed, ::ResetParsedFlag, card) = clearparsed!(cf)
 
 const parameterregex = r"[.](?:parameter|param)[ ]+([a-z][a-z0-9_@#$.:\\]*)[= ]+([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)(k|meg|g|t|m|u|n|p|f){0,1}[ ]*(?:\\n|\r|$)"ix
-function parsecard!(cf::CircuitParsed, ::Parameter, card::ASCIIString)
+function parsecard!(cf::CircuitParsed, ::Parameter, card::AbstractString)
     if parsed(cf) # exit if card has already been processed
         return
     end
@@ -194,7 +194,7 @@ function parsecard!(cf::CircuitParsed, ::Parameter, card::ASCIIString)
 end
 
 const measureregex = r"[.](?:measure|meas)[ ]+(?:ac |dc |op |tran |tf |noise ){0,1}[ ]*([a-z][a-z0-9_@#$.:\\]*)[ ]+"ix
-function parsecard!(cf::CircuitParsed, ::Measure, card::ASCIIString)
+function parsecard!(cf::CircuitParsed, ::Measure, card::AbstractString)
     if parsed(cf) # exit if card has already been processed
         return
     end
@@ -212,7 +212,7 @@ end
 
 const step1regex = r"[.](?:step)[ ]+(?:oct |param ){0,1}[ ]*([a-z][a-z0-9_@#$.:\\]*)[ ]+(?:list ){0,1}[ ]*[0-9.e+-]+[a-z]*[ ]+"ix
 const step2regex = r"[.](?:step)[ ]+(?:\w+)[ ]+(\w+[(]\w+[)])[ ]+"ix
-function parsecard!(cf::CircuitParsed, ::Step, card::ASCIIString)
+function parsecard!(cf::CircuitParsed, ::Step, card::AbstractString)
     if parsed(cf) # exit if card has already been processed
         return
     end
@@ -231,7 +231,7 @@ function parsecard!(cf::CircuitParsed, ::Step, card::ASCIIString)
     setparsed!(cf)
 end
 
-function parsecard!(cf::CircuitParsed, ::Other, card::ASCIIString)
+function parsecard!(cf::CircuitParsed, ::Other, card::AbstractString)
     if parsed(cf) # exit if card has already been processed
         return
     end
@@ -240,15 +240,15 @@ function parsecard!(cf::CircuitParsed, ::Other, card::ASCIIString)
     setparsed!(cf)
 end
 
-function parsecard!(cf::CircuitParsed, card::ASCIIString)
+function parsecard!(cf::CircuitParsed, card::AbstractString)
     for cardtype in cardlist
         parsecard!(cf,cardtype,card)
     end
 end
 
 """
-    parsecard!(cf::CircuitParsed, ::Card, card::ASCIIString)
-    parsecard!(cf::CircuitParsed, card::ASCIIString)
+    parsecard!(cf::CircuitParsed, ::Card, card::AbstractString)
+    parsecard!(cf::CircuitParsed, card::AbstractString)
 
 Test to see if `card` is a type of `Card` and if so update `cp`.  The
 second form tries all subtypes of `Card` in global `cardlist`, which is
@@ -257,19 +257,19 @@ just a list of all `Card` subtypes.
 parsecard!
 
 """
-    iscomment(line::ASCIIString)
+    iscomment(line::AbstractString)
 
 `true` if line is comment
 """
-iscomment(line::ASCIIString) = ismatch(r"^TEXT .* ;",line)
+iscomment(line::AbstractString) = ismatch(r"^TEXT .* ;",line)
 
 
 """
-    parse(::Type{CircuitParsed}, circuitpath::ASCIIString)
+    parse(::Type{CircuitParsed}, circuitpath::AbstractString)
 
 Parse a LTspice circuit file and return `CircuitParsed` object.
 """
-function Base.parse(::Type{CircuitParsed}, circuitpath::ASCIIString)
+function Base.parse(::Type{CircuitParsed}, circuitpath::AbstractString)
   io = open(circuitpath,true,false,false,false,false)
   cf = CircuitParsed()
   circuitpath!(cf, circuitpath)
@@ -312,6 +312,7 @@ const units = Dict("K" => 1.0e3,
                    "m" => 1.0e-3,
                    "U" => 1.0e-6,
                    "u" => 1.0e-6,
+                   "μ" => 1.0e-6,
                    "N" => 1.0e-9,
                    "n" => 1.0e-9,
                    "P" => 1.0e-12,

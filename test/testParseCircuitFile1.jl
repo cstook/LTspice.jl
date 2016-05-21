@@ -22,7 +22,7 @@ islinux = @linux? true:false
 if ~islinux
     @test circuitpath(PCF_test1) == PCF_test1file
 end
-@test typeof(circuitpath(LTspice.logparsed(PCF_test1))) == Type(ASCIIString)
+@test issubtype(typeof(circuitpath(LTspice.logparsed(PCF_test1))),AbstractString)
 @test typeof(parametervalues(PCF_test1)) == Array{Float64,1}
 @test measurementvalues(PCF_test1)[1,1,1,1] == 111.0
 @test ltspiceexecutablepath(PCF_test1) == ""

@@ -6,9 +6,9 @@ in .inc, .include, and .lib directives to
 absolute paths.  This function is used for running simulations 
 from a temporary directory.
 """
-function makecircuitfileincludeabsolutepath(originalcircuitpath::ASCIIString,
-                                     workingcircuitpath::ASCIIString,
-                                     executablepath::ASCIIString)
+function makecircuitfileincludeabsolutepath(originalcircuitpath::AbstractString,
+                                     workingcircuitpath::AbstractString,
+                                     executablepath::AbstractString)
   executabledir = abspath(dirname(executablepath))
   originalcircuitdir = abspath(dirname(originalcircuitpath))
   ltspiceincludesearchpath = [joinpath(executabledir,"lib\\sub"),

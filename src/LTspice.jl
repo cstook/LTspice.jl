@@ -49,11 +49,11 @@ svalues = stepvalues(sim)
 type LTspiceSimulation
   circuitparsed         :: CircuitParsed
   logparsed             :: LogParsed
-  executablepath        :: ASCIIString
+  executablepath        :: AbstractString
   logneedsupdate        :: Bool
 
-  function LTspiceSimulation(circuitpath::ASCIIString,
-                              executablepath::ASCIIString)
+  function LTspiceSimulation(circuitpath::AbstractString,
+                              executablepath::AbstractString)
     if islinux
       (d,f) = splitdir(abspath(circuitpath))
       linkdir = "/home/$(ENV["USER"])/.wine/drive_c/Program Files (x86)/LTC/LTspice.jl_links"
@@ -65,7 +65,7 @@ type LTspiceSimulation
       cd(templinkdir) do
         symlink(d,"linktocircuit")
       end
-      circuitpath = convert(ASCIIString,joinpath(templinkdir,"linktocircuit",f))
+      circuitpath = convert(AbstractString,joinpath(templinkdir,"linktocircuit",f))
     end
     circuitparsed = parse(CircuitParsed,circuitpath)
     (everythingbeforedot,dontcare) = splitext(circuitpath)
@@ -75,23 +75,23 @@ type LTspiceSimulation
   end
 end
 
-function LTspiceSimulationTempDir(circuitpath::ASCIIString, executablepath::ASCIIString)
+function LTspiceSimulationTempDir(circuitpath::AbstractString, executablepath::AbstractString)
   td = mktempdir()
   push!(dirlist,td) # add temp directory to list to be removed on exit
   (d,f) = splitdir(circuitpath)
-  workingcircuitpath = convert(ASCIIString, joinpath(td,f))
+  workingcircuitpath = convert(AbstractString, joinpath(td,f))
   cp(circuitpath,workingcircuitpath)
   makecircuitfileincludeabsolutepath(circuitpath,workingcircuitpath,executablepath)
   LTspiceSimulation(workingcircuitpath,
                      executablepath)
 end
 
-function LTspiceSimulationTempDir(circuitpath::ASCIIString)
+function LTspiceSimulationTempDir(circuitpath::AbstractString)
   # look up default executable if not specified
   LTspiceSimulationTempDir(circuitpath, defaultltspiceexecutable())
 end
 
-function LTspiceSimulation(circuitpath::ASCIIString)
+function LTspiceSimulation(circuitpath::AbstractString)
   # look up default executable if not specified
   LTspiceSimulation(circuitpath, defaultltspiceexecutable())
 end
@@ -294,7 +294,7 @@ end
 # LTspiceSimulation is a Dict 
 #   of its parameters and measurements for non stepped simulations (measurements read only)
 #   of its parameters for stepped simulations
-Base.haskey(x::LTspiceSimulation, key::ASCIIString) = haskey(circuitparsed(x),key) | haskey(logparsed(x),key)
+Base.haskey(x::LTspiceSimulation, key::AbstractString) = haskey(circuitparsed(x),key) | haskey(logparsed(x),key)
 
 function Base.keys(x::LTspiceSimulation)
   # returns an array all keys (param and meas)
@@ -307,7 +307,7 @@ function Base.values(x::LTspiceSimulation)
   vcat(collect(values(circuitparsed(x))),collect(values(logparsed(x))))
 end
 
-function Base.getindex(x::LTspiceSimulation, key::ASCIIString)
+function Base.getindex(x::LTspiceSimulation, key::AbstractString)
   # returns value for key in either param or meas
   # value = x[key]
   # doesn't handle multiple keys, but neither does standard julia library for Dict
@@ -322,7 +322,7 @@ function Base.getindex(x::LTspiceSimulation, key::ASCIIString)
   return(v)
 end
 
-function Base.get(x::LTspiceSimulation, key::ASCIIString, default:: Float64)
+function Base.get(x::LTspiceSimulation, key::AbstractString, default:: Float64)
   # returns value for key in either param or meas
   # returns default if key not found
   if haskey(x,key)
@@ -332,7 +332,7 @@ function Base.get(x::LTspiceSimulation, key::ASCIIString, default:: Float64)
   end
 end
 
-function Base.setindex!(x::LTspiceSimulation, value:: Float64, key::ASCIIString)
+function Base.setindex!(x::LTspiceSimulation, value:: Float64, key::AbstractString)
   # sets the value of param specified by key
   # x[key] = value
   # meas Dict cannot be set.  It is the result of a simulation
@@ -434,12 +434,12 @@ function run!(x::LTspiceSimulation)
 end
 
 """
-    blanklog(circuit::CircuitParsed, logpath::ASCIIString)
+    blanklog(circuit::CircuitParsed, logpath::AbstractString)
 
 Creates a blank `LogParsed` of appropriate type, either 
 `NonSteppedLog` or `SteppedLog`, for circuit.
 """
-function blanklog(circuit::CircuitParsed, logpath::ASCIIString)
+function blanklog(circuit::CircuitParsed, logpath::AbstractString)
   if hassteps(circuit)
     logparsed = SteppedLog(logpath)  # a blank stepped log object
   else 

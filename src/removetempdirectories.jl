@@ -1,6 +1,6 @@
 
 
-const dirlist = Array(ASCIIString,0) # list of directories to remove on exit
+const dirlist = Array(AbstractString,0) # list of directories to remove on exit
 """
     removetempdirectories()
 

@@ -19,7 +19,7 @@ LTspice.parameters
 LTspice.CircuitParsed
 LTspice.Card
 LTspice.parsecard!
-parse(::Type{LTspice.CircuitParsed},x::ASCIIString)
+parse(::Type{LTspice.CircuitParsed},x::AbstractString)
 LTspice.iscomment
 ```
 

@@ -42,7 +42,7 @@ type HeaderCircuitPath <: Header end
 non stepped simulations.
 """
 type Measurement <: LogLine
-  measurementnames :: Array{ASCIIString,1}
+  measurementnames :: Array{AbstractString,1}
   measurements :: Array{Float64,1}
   Measurement() = new([],[])
 end
@@ -60,7 +60,7 @@ end
 `StepMeasurementName` holds the step measurement names in a 1d array.
 """
 type StepMeasurementName <: LogLine
-  name :: ASCIIString
+  name :: AbstractString
   StepMeasurementName() = new("")
 end
 
@@ -98,13 +98,13 @@ Stores data from a non stepped log file.
 - `measurements`      -- 4d array of measurement values
 """
 type NonSteppedLog <: LogParsed
-  logpath           :: ASCIIString  # path to log file
-  circuitpath       :: ASCIIString  # path to circuit file in the log file
+  logpath           :: AbstractString  # path to log file
+  circuitpath       :: AbstractString  # path to circuit file in the log file
   timestamp         :: DateTime
   duration          :: Float64  # simulation time in seconds
-  measurementnames  :: Array{ASCIIString,1}   
+  measurementnames  :: Array{AbstractString,1}   
   measurements      :: Array{Float64,4}
-  NonSteppedLog(logpath::ASCIIString) = new(logpath,"",DateTime(2015),0.0,[],Array(Float64,0,0,0,0))
+  NonSteppedLog(logpath::AbstractString) = new(logpath,"",DateTime(2015),0.0,[],Array(Float64,0,0,0,0))
 end
 NonSteppedLog() = NonSteppedLog("")
 logpath!(nslf::NonSteppedLog,path::AbstractString) = nslf.logpath = path
@@ -132,13 +132,13 @@ Stores data from a stepped log file.
 """
 type SteppedLog <: LogParsed
   nonsteppedlogfile :: NonSteppedLog
-  stepnames         :: Array{ASCIIString,1}
+  stepnames         :: Array{AbstractString,1}
   stepvalues             :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
   SteppedLog(nslf::NonSteppedLog) = new(nslf,[],([],[],[])) 
 end
 SteppedLog() = SteppedLog(NonSteppedLog())
-SteppedLog(logpath::ASCIIString) = SteppedLog(NonSteppedLog(logpath))
-stepnames!(slf::SteppedLog, s::Array{ASCIIString,1}) = slf.stepnames = s
+SteppedLog(logpath::AbstractString) = SteppedLog(NonSteppedLog(logpath))
+stepnames!(slf::SteppedLog, s::Array{AbstractString,1}) = slf.stepnames = s
 stepnames(slf::SteppedLog) = slf.stepnames
 stepvalues(slf::SteppedLog) = slf.stepvalues
 logpath(slf::SteppedLog) = logpath(slf.nonsteppedlogfile)
@@ -180,15 +180,15 @@ function Base.show(io::IO, x::SteppedLog)
 end
 
 # NonSteppedLog is a read only Dict of its measurements
-Base.haskey(x::NonSteppedLog,key::ASCIIString) = findfirst(measurementnames(x),key) > 0
-Base.haskey(x::SteppedLog,   key::ASCIIString) = false
+Base.haskey(x::NonSteppedLog,key::AbstractString) = findfirst(measurementnames(x),key) > 0
+Base.haskey(x::SteppedLog,   key::AbstractString) = false
 Base.keys(x::NonSteppedLog)   = measurementnames(x)
 Base.keys(x::SteppedLog)      = []
 Base.values(x::NonSteppedLog) = measurementvalues(x)[:,1,1,1]
 Base.values(x::SteppedLog)    = []
 Base.length(x::NonSteppedLog) = length(measurementnames(x))
 Base.eltype(x::NonSteppedLog) = Float64
-function Base.getindex(x::NonSteppedLog, key::ASCIIString)
+function Base.getindex(x::NonSteppedLog, key::AbstractString)
   i = findfirst(measurementnames(x),key)
   if i == 0
     throw(KeyError(key))
@@ -210,7 +210,7 @@ function Base.next(x::NonSteppedLog,state)
 end
 Base.done(x::NonSteppedLog, state) = state > length(measurementnames(x))
 
-function parseline!(lf::LogParsed, ::HeaderCircuitPath, line::ASCIIString)
+function parseline!(lf::LogParsed, ::HeaderCircuitPath, line::AbstractString)
   m = match(r"^Circuit: \*\s*([\w\:\\/. ~]+)"i,line)
   if m!=nothing
     circuitpath!(lf,m.captures[1])
@@ -220,7 +220,7 @@ function parseline!(lf::LogParsed, ::HeaderCircuitPath, line::ASCIIString)
   end
 end
 
-function parseline!(lf::LogParsed, measurement::Measurement, line::ASCIIString)
+function parseline!(lf::LogParsed, measurement::Measurement, line::AbstractString)
   #m = match(r"^([a-z][a-z0-9_@#$.:\\]*):.*=([0-9.eE+-]+)"i,line)
   m = match(r"^([a-z][a-z0-9_@#$.:\\]*):.*=([\S]+)"i,line)
   value = Float64(NaN)
@@ -240,11 +240,11 @@ function parseline!(lf::LogParsed, measurement::Measurement, line::ASCIIString)
 end
 
 const stepregex = r"(\.step)(?:\s+(.*?)=(.*?))(?:\s+(.*?)=(.*?)){0,1}(?:\s+(.*?)=(.*?)){0,1}\s*$"i
-function parseline!(::NonSteppedLog, ::IsStepParameters, line::ASCIIString)
+function parseline!(::NonSteppedLog, ::IsStepParameters, line::AbstractString)
   ismatch(stepregex, line)
 end
 
-function parseline!(slf::SteppedLog, sp::StepParameters, line::ASCIIString)
+function parseline!(slf::SteppedLog, sp::StepParameters, line::AbstractString)
   m = match(stepregex, line)
   s_names = stepnames(slf)
   s_values = stepvalues(slf)
@@ -271,7 +271,7 @@ function parseline!(slf::SteppedLog, sp::StepParameters, line::ASCIIString)
   end
 end
 
-function parseline!(slf::SteppedLog, smn::StepMeasurementName, line::ASCIIString)
+function parseline!(slf::SteppedLog, smn::StepMeasurementName, line::AbstractString)
   m_names = measurementnames(slf)
   m = match(r"^Measurement: ([a-z0-9_@#$.:\\]*)",line)
   if m!=nothing
@@ -284,7 +284,7 @@ function parseline!(slf::SteppedLog, smn::StepMeasurementName, line::ASCIIString
   end
 end
 
-function parseline!(::SteppedLog, smv::StepMeasurementValue, line::ASCIIString)
+function parseline!(::SteppedLog, smv::StepMeasurementValue, line::AbstractString)
   #m = match(r"^\s*[0-9]+\s+([0-9.eE+-]+)"i,line)
   m = match(r"^\s*[0-9]+\s+(\S+)"i,line)
   value = Float64(NaN)
@@ -301,7 +301,7 @@ function parseline!(::SteppedLog, smv::StepMeasurementValue, line::ASCIIString)
   end
 end
 
-function parseline!(lf::LogParsed, ::FooterDate, line::ASCIIString)
+function parseline!(lf::LogParsed, ::FooterDate, line::AbstractString)
   m = match(r"Date:\s*(.*?)\s*$",line)
   if m!=nothing
     timestamp = DateTime(m.captures[1],"e u d HH:MM:SS yyyy")
@@ -312,7 +312,7 @@ function parseline!(lf::LogParsed, ::FooterDate, line::ASCIIString)
   end
 end
 
-function parseline!(lf::LogParsed, ::FooterDuration, line::ASCIIString)
+function parseline!(lf::LogParsed, ::FooterDuration, line::AbstractString)
   m = match(r"Total[ ]elapsed[ ]time:\s*([\w.]+)\s+seconds.\s*$",line)
   if m!=nothing
     duration = parse(Float64,m.captures[1])
@@ -324,7 +324,7 @@ function parseline!(lf::LogParsed, ::FooterDuration, line::ASCIIString)
 end
 
 """
-    parseline!(log::LogParsed, logline::LogLine, line::ASCIIString)
+    parseline!(log::LogParsed, logline::LogLine, line::AbstractString)
 
 Test to see if `line` is type `logline`, if so, process line and return `true`,
 otherwise return `false`.  Data will be returned in either `log` or `logline`
@@ -358,7 +358,7 @@ function processlines!(io::IO, lf::LogParsed, findlines, untillines=[])
   return 0
 end
 
-function Base.parse(::Type{SteppedLog}, logpath::ASCIIString)
+function Base.parse(::Type{SteppedLog}, logpath::AbstractString)
   header = HeaderCircuitPath()
   measurement = Measurement()
   stepparameters = StepParameters()
@@ -411,7 +411,7 @@ function Base.parse(::Type{SteppedLog}, logpath::ASCIIString)
   end
 end
 
-function Base.parse(::Type{NonSteppedLog}, logpath::ASCIIString)
+function Base.parse(::Type{NonSteppedLog}, logpath::AbstractString)
   header = HeaderCircuitPath()
   measurement = Measurement()
   isstepparameters = IsStepParameters()
@@ -437,8 +437,8 @@ Base.parse{T<:LogParsed}(x::T) = parse(T, logpath(x))
 
 """
     parse{T<:LogParsed}(x::T)
-    parse(::Type{LogParsed}, logpath::ASCIIString)
+    parse(::Type{LogParsed}, logpath::AbstractString)
 
 Parse a LTspice log file and return the appropriate `LogParsed` object.
 """
-Base.parse(::LogParsed), Base.parse(::Type{LogParsed},::ASCIIString)
+Base.parse(::LogParsed), Base.parse(::Type{LogParsed},::AbstractString)

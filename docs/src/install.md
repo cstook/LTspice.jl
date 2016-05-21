@@ -6,7 +6,7 @@ Pkg.clone("https://github.com/cstook/LTspice.jl.git")
 ```
 The [julia documentation](http://docs.julialang.org) section on installing unregistered packages provides more information.
 
-LTspice.jl is only compatible with julia v0.4.
+LTspice.jl is compatible with julia v0.4 and v0.5dev.
 
 # Supported Platforms
 

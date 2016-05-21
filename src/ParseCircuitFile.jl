@@ -270,21 +270,21 @@ iscomment(line::ASCIIString) = ismatch(r"^TEXT .* ;",line)
 Parse a LTspice circuit file and return `CircuitParsed` object.
 """
 function Base.parse(::Type{CircuitParsed}, circuitpath::ASCIIString)
-    io = open(circuitpath,true,false,false,false,false)
-    cf = CircuitParsed()
-    circuitpath!(cf, circuitpath)
-    cfa = circuitfilearray(cf)
-    for line in eachline(io)
-        if iscomment(line)
-            push!(cfa, line)
-        else
-            for card in eachcard(line) # might be multi-line directive(s) created with Ctrl-M
-                parsecard!(cf, card)
-            end
-        end
+  io = open(circuitpath,true,false,false,false,false)
+  cf = CircuitParsed()
+  circuitpath!(cf, circuitpath)
+  cfa = circuitfilearray(cf)
+  for line in eachline(io)
+    if iscomment(line)
+      push!(cfa, line)
+    else
+      for card in eachcard(line) # might be multi-line directive(s) created with Ctrl-M
+        parsecard!(cf, card)
+      end
     end
-    close(io)
-    return cf
+  end
+  close(io)
+  return cf
 end
 
 function Base.flush(x::CircuitParsed)

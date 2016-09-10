@@ -1,5 +1,6 @@
 __precompile__()
 
+
 "Main module for `LTspice.jl` - a Julia interface to LTspice"
 module LTspice
 
@@ -361,7 +362,6 @@ end
 Base.eltype(x::LTspiceSimulation) = Float64
 Base.length(x::LTspiceSimulation) = length(logparsed(x)) + length(circuitparsed(x))
 
-# function Base.call(x::LTspiceSimulation, args...)
 (x::LTspiceSimulation)(args...) =
   begin
     if length(args) != length(circuitparsed(x))
@@ -451,16 +451,17 @@ end
 Returns the default LTspice executable path for the operating system.
 """
 function defaultltspiceexecutable()
-  os = @windows? 1 : (@osx? 2 : 3)
-  if os == 1 # windows
+  @static if is_windows()
     possibleltspiceexecutablelocations = [
     "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe",
     "C:\\Program Files\\LTC\\LTspiceIV\\scad3.exe"
     ]
-  elseif os == 2 # osx
+  end
+  @static if is_apple()
     possibleltspiceexecutablelocations = [
     "/Applications/LTspice.app/Contents/MacOS/LTspice"]
-  else # linux
+  end
+  @static if is_linux()
     possibleltspiceexecutablelocations = [
     "/home/$(ENV["USER"])/.wine/drive_c/Program Files (x86)/LTC/LTspiceIV/scad3.exe"]
   end

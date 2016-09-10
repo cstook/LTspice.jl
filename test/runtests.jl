@@ -15,5 +15,3 @@ include("test7.jl")
 include("test8.jl")
 include("test9.jl")
 include("test10.jl")
-
-@test 1 == 1

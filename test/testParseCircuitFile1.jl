@@ -18,8 +18,8 @@ clist = [100.0,200.0,300.0]
 @test stepnames(PCF_test1) == ["a","b","c"]
 @test stepnames(LTspice.logparsed(PCF_test1)) == stepnames(PCF_test1)
 @test logpath(PCF_test1) != ""
-islinux = @linux? true:false
-if ~islinux
+
+@static if is_windows()
     @test circuitpath(PCF_test1) == PCF_test1file
 end
 @test issubtype(typeof(circuitpath(LTspice.logparsed(PCF_test1))),AbstractString)
@@ -59,4 +59,3 @@ end
 show(PCF_test1)
 show(LTspice.circuitparsed(PCF_test1))
 show(LTspice.logparsed(PCF_test1))
-

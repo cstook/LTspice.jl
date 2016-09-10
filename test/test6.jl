@@ -13,8 +13,7 @@ show(LTspice.logparsed(test6))
 @test stepnames(test6) == []
 @test logpath(test6) != ""
 
-islinux = @linux? true:false
-if ~islinux
+@static if is_windows()
     @test circuitpath(test6) == test6file
 end
 
@@ -35,4 +34,3 @@ show(pli)
 show(test6)
 show(LTspice.circuitparsed(test6))
 show(LTspice.logparsed(test6))
-

@@ -17,7 +17,7 @@ immutable PerLineIterator
                            resultnames = vcat(parameternames(simulation),
                                               measurementnames(simulation)))
     for step in steporder
-      if findfirst(stepnames(simulation),step) == 0 
+      if findfirst(stepnames(simulation),step) == 0
         error("$step step not found")
       end
     end
@@ -31,7 +31,7 @@ immutable PerLineIterator
       push!(args,length(stepvalues(simulation)[index]))
       push!(stepindexes,index)
     end
-    resultindexes = Array(Tuple{Bool,Int},0) 
+    resultindexes = Array(Tuple{Bool,Int},0)
     for resultname in resultnames
       i = findfirst(parameternames(simulation),resultname)
       if i > 0
@@ -40,9 +40,9 @@ immutable PerLineIterator
         i = findfirst(measurementnames(simulation),resultname)
         if i > 0
           push!(resultindexes,(false,i))
-        else 
+        else
           error("$resultname not found in parameters or measurements")
-        end 
+        end
       end
     end
     header = vcat(steporder,resultnames)
@@ -59,7 +59,7 @@ PerLineIterator(sim :: LTspiceSimulation;
 
 Creates an iterator in the format required to pass to writecsv or writedlm.
 The step order defaults to the order the step values appear in the circuit file.
-Step order can be specified by passing an array of step names.  By default 
+Step order can be specified by passing an array of step names.  By default
 there is one column for each step, measurement, and parameter.  The desired
 measurements and parameters can be set by passing an array of names to
 resultnames.
@@ -83,12 +83,12 @@ end
 Base.start(x :: PerLineIterator) = start(x.mli)
 
 function Base.next(x :: PerLineIterator, state :: Array{Int,1})
-  # flip MultiLevelIterator indexes around to be order required 
+  # flip MultiLevelIterator indexes around to be order required
   # by the measurements array
   (q,nextstate) = next(x.mli,state)
   k = [1,1,1]
   for (i,si) in enumerate(x.stepindexes)
-    k[si] = q[i] 
+    k[si] = q[i]
   end
   # gather the data into a line of output
   line = Array(Float64, length(x.stepindexes)+length(x.resultindexes))
@@ -100,7 +100,7 @@ function Base.next(x :: PerLineIterator, state :: Array{Int,1})
   for (isparameter,j) in x.resultindexes
     if isparameter
       line[i] = parametervalues(x.simulation)[j]
-    else 
+    else
       line[i] = measurementvalues(x.simulation)[j,k...]
     end
     i +=1
@@ -120,11 +120,13 @@ headernames(x :: PerLineIterator) = x.header
 """
     header(Perlineiterator)
 
-Returns the header for `perlineterator` in the format needed for writecsv or 
-writedlm.  This is equivalent to 
+Returns the header for `perlineterator` in the format needed for writecsv or
+writedlm.  This is equivalent to
 ```julia
 transpose(headernames(perlineiterator))
 ```
 """
-header(x::PerLineIterator) = transpose(headernames(x)) 
-
+function header(x::PerLineIterator)
+   h = headernames(x)
+   reshape(h,(1,length(h)))
+end

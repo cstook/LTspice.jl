@@ -18,8 +18,7 @@ blist = [10.0,15.0,20.0,25.0]
 @test stepnames(LTspice.logparsed(test4)) == stepnames(test4)
 @test logpath(test4) != ""
 
-islinux = @linux? true:false
-if ~islinux
+@static if is_windows()
     @test circuitpath(test4) == test4file
 end
 
@@ -56,4 +55,3 @@ end
 show(test4)
 show(LTspice.circuitparsed(test4))
 show(LTspice.logparsed(test4))
-

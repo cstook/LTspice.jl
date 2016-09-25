@@ -9,7 +9,7 @@ Stores data from the circuit file.
 - `circuitfilearray`  -- Array of all the text of the circuit file, split
                          around values which need to be edited.
 - `parameternames`    -- Array of parameter names
-- `parameters`        -- Array of tuples (value, multiplier, index into `circuitfilearray`)       
+- `parameters`        -- Array of tuples (value, multiplier, index into `circuitfilearray`)
 - `measurementnames`  -- Array of measurement names
 - `stepnames`         -- Array of step names
 - `needsupdate`       -- `true` if parameter value has beed changed.
@@ -22,7 +22,7 @@ type CircuitParsed
   parameternames  :: Array{AbstractString,1}
   parameters      :: Array{Tuple{Float64,Float64,Int},1}  # array of parameters (value, multiplier, index)
   measurementnames:: Array{AbstractString,1}              # measurement names
-  stepnames       :: Array{AbstractString,1}  
+  stepnames       :: Array{AbstractString,1}
   needsupdate     :: Bool # true if any parameter has been changed
   parsed          :: Bool # true if last parsecard! call was a match
   CircuitParsed() = new("",[],[],[],[],[],false,false) # empty CircuitParsed
@@ -61,7 +61,7 @@ function Base.show(io::IO, x::CircuitParsed)
     	println(io,"  $(rpad(key,25,' ')) = $value")
   	end
   end
- 	if length(measurementnames(x))>0 
+ 	if length(measurementnames(x))>0
  		println(io,"")
  		println(io,"Measurements")
  	  for name in measurementnames(x)
@@ -83,7 +83,7 @@ Base.keys(x::CircuitParsed) = [key for key in parameternames(x)]
 Base.values(x::CircuitParsed) = [parameter[1] for parameter in parameters(x)]
 function Base.getindex(x::CircuitParsed, key::AbstractString)
   k = findfirst(parameternames(x), key)
-  if k == 0 
+  if k == 0
     throw(KeyError(key))
   else
     return parameters(x)[k][1]
@@ -92,7 +92,7 @@ end
 
 function Base.setindex!(x::CircuitParsed, value:: Float64, key::AbstractString)
   k = findfirst(parameternames(x), key)
-  if k == 0 
+  if k == 0
     throw(KeyError(key))
   else
     x[k] = value
@@ -124,7 +124,7 @@ Base.done(x::CircuitParsed, state) = ~(state < length(parameters(x)))
 # this puts a backslash n in the file, NOT a newline character.
 #
 # eachcard is an iterator that separates the lines around the backslash n
-immutable eachcard 
+immutable eachcard
     line :: AbstractString
 end
 Base.start(::eachcard) = 1
@@ -168,7 +168,7 @@ function parsecard!(cf::CircuitParsed, ::Parameter, card::AbstractString)
     end
     m = match(parameterregex, card)
     if m == nothing # exit if not a parameter card
-        return 
+        return
     end
     name = m.captures[1]
     value = m.captures[2]
@@ -200,7 +200,7 @@ function parsecard!(cf::CircuitParsed, ::Measure, card::AbstractString)
     end
     m = match(measureregex, card)
     if m == nothing # exit if not a measure card
-        return 
+        return
     end
     name = m.captures[1]
     m_names = measurementnames(cf)

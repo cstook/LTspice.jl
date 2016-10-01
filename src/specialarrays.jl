@@ -17,7 +17,7 @@ type ParameterValuesArray{T,n} <: SpecialArray{T,n}
 end
 function Base.setindex!(a::ParameterValuesArray, v, i::Int)
   if ~isfinite(v)
-    throw(DomainError("$v is not valid parameter value"))
+    throw(DomainError("$v is not valid LTspice parameter value"))
   end
   a.ismodified = true
   a.values[i] = v

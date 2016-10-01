@@ -3,6 +3,7 @@
 # used to pass to writedlm to create a delimited file
 
 export headernames, header
+include("MultiLevelIterator.jl")
 
 "Iterator used to dump result of simulations to csv"
 immutable PerLineIterator

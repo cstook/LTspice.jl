@@ -9,6 +9,11 @@ type Status
   ismeasurementsdirty :: Bool # true = need to run simulation
   timestamp :: DateTime; # timestamp from last simulation run
   duration :: Float64; # simulation time in seconds
+  Status() = new(true,DateTime(),NaN)
+end
+type StepValues
+  values ::Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
+  Steps() = new(([],[],[]))
 end
 
 """
@@ -65,7 +70,7 @@ immutable SteppedSimulation <: LTspiceSimulation
   @simulationcommonfields()
   measurmentvalues :: MeasurementValuesArray{Float64,4}
   stepnames :: Tuple
-  stepvalues :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
+  stepvalues :: StepValues
 end
 
 """
@@ -158,7 +163,7 @@ end
 stepnames(x::SteppedSimulation) = x.stepnames
 function stepvalues(x::SteppedSimulation)
   run!(x) # step values can be a function of parameters
-  x.stepvalues
+  x.stepvalues.values
 end
 
 function LTspiceSimulation(
@@ -193,7 +198,7 @@ function LTspiceSimulation(
       parameterdict,
       (circuitparsed.measurementnames...),
       measurementdict,
-      Status(true,DateTime(),NaN),
+      Status(),
       MeasurementValuesArray{Float64,1}(fill(NaN,length(circuitparsed.measurementnames))), # measurmentvalues
     )
   else
@@ -209,10 +214,10 @@ function LTspiceSimulation(
       parameterdict,
       (circuitparsed.measurementnames...),
       measurementdict,
-      Status(true,DateTime(),NaN),
+      Status(),
       MeasurementValuesArray{Float64,4}(fill(NaN,(length(circuitparsed.measurementnames),1,1,1))), # measurementvalues
       (circuitparsed.stepnames...),
-      ([],[],[]) # stepvalues
+      StepValues()
     )
   end
 end

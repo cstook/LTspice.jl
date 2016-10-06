@@ -11,10 +11,10 @@ type Status
   duration :: Float64; # simulation time in seconds
   Status() = new(true,DateTime(),NaN)
 end
-type StepValues
-  values ::Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
-  Steps() = new(([],[],[]))
+type StepValues{Nstep}
+  values ::NTuple{Nstep,Array{Float64,1}}
 end
+StepValues(Nstep::Int) = StepValues{Nstep}(ntuple(d->Array{Float64,1}(),Nstep))
 
 """
 Access parameters and measurements of an LTspice simulation.  Runs simulation
@@ -42,7 +42,7 @@ mvalues = measurementvalues(sim)
 svalues = stepvalues(sim)
 ```
 """
-abstract LTspiceSimulation
+abstract LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
 
 macro simulationcommonfields()
   return :(
@@ -50,27 +50,27 @@ macro simulationcommonfields()
   logpath :: String;
   executablepath :: String;
   circuitfilearray :: Array{String,1}; # text of circuit file
-  parameternames :: Tuple;
+  parameternames :: NTuple{Nparam,String};
   parametervalues :: ParameterValuesArray{Float64,1}; # values in units A,V,W
-  parametermultiplier :: Tuple; # units
-  parameterindex :: Tuple; # index into circuitfilearray
+  parametermultiplier :: NTuple{Nparam,Float64}; # units
+  parameterindex :: NTuple{Nparam,Int}; # index into circuitfilearray
   parameterdict  :: Dict{String,Int}; # index into name, value, multiplier, index arrays
-  measurementnames :: Tuple;
+  measurementnames :: NTuple{Nmeas,String};
   measurmentdict :: Dict{String,Int}; # index into measurmentnames
   status :: Status;
   )
 end
 
-immutable NonSteppedSimulation <: LTspiceSimulation
+immutable NonSteppedSimulation{Nparam,Nmeas,Nmdim,Nstep} <: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
   @simulationcommonfields()
   measurementvalues :: MeasurementValuesArray{Float64,1} # result of simulation
 end
 
-immutable SteppedSimulation <: LTspiceSimulation
+immutable SteppedSimulation{Nparam,Nmeas,Nmdim,Nstep} <: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
   @simulationcommonfields()
-  measurmentvalues :: MeasurementValuesArray{Float64,4}
-  stepnames :: Tuple
-  stepvalues :: StepValues
+  measurmentvalues :: MeasurementValuesArray{Float64,Nmdim}
+  stepnames :: NTuple{Nstep,String}
+  stepvalues :: StepValues{Nstep}
 end
 
 """
@@ -132,12 +132,12 @@ stepnames
 """
     measurementvalues(sim)
 
-Retruns measurements of `sim` as an a 4-d array of Float64
+Retruns measurements of `sim` as an a array of Float64
 values.
 
 ```julia
 value = measurementvalues(sim)[measurement_name, inner_step, middle_step,
-                        outer_step]
+                        outer_step] # 3 nested steps
 ```
 """
 measurementvalues
@@ -169,7 +169,8 @@ end
 function LTspiceSimulation(
     circuitpath::AbstractString,
     executablepath::AbstractString=defaultltspiceexecutable(),
-    istempdir::Bool = false)
+    istempdir::Bool = false
+  )
   if istempdir
     circuitpath = preparetempdir(circuitpath, executablepath)
   end
@@ -177,6 +178,10 @@ function LTspiceSimulation(
     circuitpath = linkintempdirectoryunderwine(circuitpath)
   end
   circuitparsed = parsecircuitfile(circuitpath)
+  Nparam = length(circuitparsed.parameternames)
+  Nmeas = length(circuitparsed.measurementnames)
+  Nstep = length(circuitparsed.stepnames)
+  Nmdim = Nstep + 1
   parameterdict = Dict{String,Int}()
   for i in eachindex(circuitparsed.parameternames)
     parameterdict[circuitparsed.parameternames[i]] = i
@@ -186,7 +191,7 @@ function LTspiceSimulation(
     measurementdict[circuitparsed.measurementnames[i]] = i
   end
   if length(circuitparsed.stepnames)==0
-    return NonSteppedSimulation(
+    return NonSteppedSimulation{Nparam,Nmeas,Nmdim,Nstep}(
       circuitpath,
       logpath(circuitpath),
       executablepath,
@@ -199,10 +204,10 @@ function LTspiceSimulation(
       (circuitparsed.measurementnames...),
       measurementdict,
       Status(),
-      MeasurementValuesArray{Float64,1}(fill(NaN,length(circuitparsed.measurementnames))), # measurmentvalues
+      MeasurementValuesArray{Float64,1}(fill(NaN,Nmeas)), # measurmentvalues
     )
   else
-    return SteppedSimulation(
+    return SteppedSimulation{Nparam,Nmeas,Nmdim,Nstep}(
       circuitpath,
       logpath(circuitpath),
       executablepath,
@@ -215,9 +220,9 @@ function LTspiceSimulation(
       (circuitparsed.measurementnames...),
       measurementdict,
       Status(),
-      MeasurementValuesArray{Float64,4}(fill(NaN,(length(circuitparsed.measurementnames),1,1,1))), # measurementvalues
+      MeasurementValuesArray{Float64,Nmdim}(fill(NaN,(Nmeas,ntuple(d->1,Nstep)...))), # measurementvalues
       (circuitparsed.stepnames...),
-      StepValues()
+      StepValues(Nstep)
     )
   end
 end
@@ -292,8 +297,7 @@ function showmeasurements(io::IO, x::SteppedSimulation)
   if length(x.measurementnames)>0
     println(io)
     println(io,"Measurements")
-    (m,s1,s2,s3) = size(x.measurmentvalues)
-    totalsteps = s1*s2*s3
+    totalsteps = length(x.measurementvalues[1,:,:,:])
     for i in eachindex(x.measurementnames)
       print(io,rpad(x.measurementnames[i],25,' '))
       if x.status.ismeasurementsdirty

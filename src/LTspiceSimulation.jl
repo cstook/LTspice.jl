@@ -60,7 +60,7 @@ immutable LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
   status :: Status
 end
 typealias NonSteppedSimulation{Nparam,Nmeas} LTspiceSimulation{Nparam,Nmeas,1,0}
-typealias SteppedSimulation{Nparam,Nmeas,Nmdim,Nstep} LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
+
 
 """
     parametervalues(sim)
@@ -149,8 +149,8 @@ function measurementvalues(x::LTspiceSimulation)
   run!(x)
   x.measurementvalues
 end
-stepnames(x::SteppedSimulation) = x.stepnames
-function stepvalues(x::SteppedSimulation)
+stepnames(x::LTspiceSimulation) = x.stepnames
+function stepvalues(x::LTspiceSimulation)
   run!(x) # step values can be a function of parameters
   x.stepvalues.values
 end
@@ -179,7 +179,7 @@ function LTspiceSimulation(
   for i in eachindex(circuitparsed.measurementnames)
     measurementdict[circuitparsed.measurementnames[i]] = i
   end
-  return SteppedSimulation{Nparam,Nmeas,Nmdim,Nstep}(
+  return LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}(
     circuitpath,
     logpath(circuitpath),
     executablepath,
@@ -213,15 +213,6 @@ LTspiceSimulation(circuitpath::AbstractString;
                   tempdir::Bool = false) =
   LTspiceSimulation(circuitpath, executablepath, tempdir)
 
-#=
-function Base.show(io::IO, x::NonSteppedSimulation)
-  println(io,"NonSteppedSimulation:")
-  showcircuitpath(io,x)
-  showparameters(io,x)
-  showmeasurements(io,x)
-  showtimeduration(io,x)
-end
-=#
 function Base.show(io::IO, x::LTspiceSimulation)
   println(io,"LTspiceSimulation:")
   showcircuitpath(io,x)
@@ -242,8 +233,8 @@ function showparameters(io::IO, x::LTspiceSimulation)
     println(io,rpad(x.parameternames[i],25,' ')," = ",x.parametervalues[i])
   end
 end
-showparameters(::IO, x::LTspiceSimulation{Int,0,Int,Int}) = nothing
-function showmeasurements(io::IO, x::LTspiceSimulation{Int,Int,1,Int})
+showmeasurments{Nparam,Nmdim,Nstep}(::IO, x::LTspiceSimulation{Nparam,0,Nmdim,Nstep}) = nothing
+function showmeasurements{Nparam,Nmeas}(io::IO, x::LTspiceSimulation{Nparam,Nmeas,1,0})
   println(io)
   println(io,"Measurements")
   for i in eachindex(x.measurementnames)
@@ -270,7 +261,7 @@ function showmeasurements(io::IO, x::LTspiceSimulation)
     end
   end
 end
-showparameters(::IO, x::LTspiceSimulation{Int,Int,Int,0}) = nothing
+showsteps{Nparam,Nmeas}(::IO, x::LTspiceSimulation{Nparam,Nmeas,1,0}) = nothing
 function showsteps(io::IO, x::LTspiceSimulation)
   if length(x.stepnames)>0
     println(io)
@@ -336,20 +327,14 @@ end
 Base.eltype(x::LTspiceSimulation) = Float64
 Base.length(x::LTspiceSimulation) = length(x.parametervalues) + length(x.measurementvalues)
 
-#=
-(x::SteppedSimulation)(args...) = callsimulation(x,args...)
-(x::NonSteppedSimulation)(args...) = callsimulation(x,args...)
-=#
-
-function callsimulation(x::LTspiceSimulation, args...)
-  if length(args) != length(x.parameternames)
-    throw(ArgumentError("number of arguments must match number of parameters"))
-  end
+(x::LTspiceSimulation)(args...) = throw(ArgumentError("number of arguments must match number of parameters"))
+function (x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}){Nparam,Nmeas,Nmdim,Nstep}(args::Vararg{Any,Nparam})
   for i in eachindex(args)
     x.parametervalues[i] = args[i]
   end
   measurementvalues(x)
 end
+
 
 """
 ```julia

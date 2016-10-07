@@ -1,4 +1,4 @@
-function parselog!(x::NonSteppedSimulation)
+function parselog!{Nparam,Nmeas}(x::NonSteppedSimulation{Nparam,Nmeas})
   open(x.logpath,true,false,false,false,false) do io
     measurment = Measurment(eachindex(x.measurmentvalues))
     exitcode = processlines!(io, x, [Header()], [measurement,IsStepParameters()])
@@ -11,7 +11,7 @@ function parselog!(x::NonSteppedSimulation)
   return nothing
 end
 
-function parselog!(x::SteppedSimulation)
+function parselog!{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep})
   open(x.logpath,true,false,false,false,false) do io
     updaterestepvalues(io,x)
     updatemeasurmentvaluessize(x)

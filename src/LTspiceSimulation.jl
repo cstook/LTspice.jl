@@ -42,36 +42,25 @@ mvalues = measurementvalues(sim)
 svalues = stepvalues(sim)
 ```
 """
-abstract LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
-
-macro simulationcommonfields()
-  return :(
-  circuitpath :: String;
-  logpath :: String;
-  executablepath :: String;
-  circuitfilearray :: Array{String,1}; # text of circuit file
-  parameternames :: NTuple{Nparam,String};
-  parametervalues :: ParameterValuesArray{Float64,1}; # values in units A,V,W
-  parametermultiplier :: NTuple{Nparam,Float64}; # units
-  parameterindex :: NTuple{Nparam,Int}; # index into circuitfilearray
-  parameterdict  :: Dict{String,Int}; # index into name, value, multiplier, index arrays
-  measurementnames :: NTuple{Nmeas,String};
-  measurmentdict :: Dict{String,Int}; # index into measurmentnames
-  status :: Status;
-  )
-end
-
-immutable NonSteppedSimulation{Nparam,Nmeas,Nmdim,Nstep} <: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
-  @simulationcommonfields()
-  measurementvalues :: MeasurementValuesArray{Float64,1} # result of simulation
-end
-
-immutable SteppedSimulation{Nparam,Nmeas,Nmdim,Nstep} <: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
-  @simulationcommonfields()
-  measurmentvalues :: MeasurementValuesArray{Float64,Nmdim}
+immutable LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
+  circuitpath :: String
+  logpath :: String
+  executablepath :: String
+  circuitfilearray :: Array{String,1} # text of circuit file
+  parameternames :: NTuple{Nparam,String}
+  parametervalues :: ParameterValuesArray{Float64,1} # values in units A,V,W
+  parametermultiplier :: NTuple{Nparam,Float64} # units
+  parameterindex :: NTuple{Nparam,Int} # index into circuitfilearray
+  parameterdict  :: Dict{String,Int} # index into name, value, multiplier, index arrays
+  measurementnames :: NTuple{Nmeas,String}
+  measurmentdict :: Dict{String,Int} # index into measurmentnames
+  measurementvalues :: MeasurementValuesArray{Float64,Nmdim}
   stepnames :: NTuple{Nstep,String}
   stepvalues :: StepValues{Nstep}
+  status :: Status
 end
+typealias NonSteppedSimulation{Nparam,Nmeas} LTspiceSimulation{Nparam,Nmeas,1,0}
+typealias SteppedSimulation{Nparam,Nmeas,Nmdim,Nstep} LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
 
 """
     parametervalues(sim)
@@ -190,41 +179,23 @@ function LTspiceSimulation(
   for i in eachindex(circuitparsed.measurementnames)
     measurementdict[circuitparsed.measurementnames[i]] = i
   end
-  if length(circuitparsed.stepnames)==0
-    return NonSteppedSimulation{Nparam,Nmeas,Nmdim,Nstep}(
-      circuitpath,
-      logpath(circuitpath),
-      executablepath,
-      circuitparsed.circuitfilearray,
-      (circuitparsed.parameternames...),
-      circuitparsed.parametervalues,
-      (circuitparsed.parametermultiplier...),
-      (circuitparsed.parameterindex...),
-      parameterdict,
-      (circuitparsed.measurementnames...),
-      measurementdict,
-      Status(),
-      MeasurementValuesArray{Float64,1}(fill(NaN,Nmeas)), # measurmentvalues
-    )
-  else
-    return SteppedSimulation{Nparam,Nmeas,Nmdim,Nstep}(
-      circuitpath,
-      logpath(circuitpath),
-      executablepath,
-      circuitparsed.circuitfilearray,
-      (circuitparsed.parameternames...),
-      circuitparsed.parametervalues,
-      (circuitparsed.parametermultiplier...),
-      (circuitparsed.parameterindex...),
-      parameterdict,
-      (circuitparsed.measurementnames...),
-      measurementdict,
-      Status(),
-      MeasurementValuesArray{Float64,Nmdim}(fill(NaN,(Nmeas,ntuple(d->1,Nstep)...))), # measurementvalues
-      (circuitparsed.stepnames...),
-      StepValues(Nstep)
-    )
-  end
+  return SteppedSimulation{Nparam,Nmeas,Nmdim,Nstep}(
+    circuitpath,
+    logpath(circuitpath),
+    executablepath,
+    circuitparsed.circuitfilearray,
+    (circuitparsed.parameternames...),
+    circuitparsed.parametervalues,
+    (circuitparsed.parametermultiplier...),
+    (circuitparsed.parameterindex...),
+    parameterdict,
+    (circuitparsed.measurementnames...),
+    measurementdict,
+    MeasurementValuesArray{Float64,Nmdim}(fill(NaN,(Nmeas,ntuple(d->1,Nstep)...))), # measurementvalues
+    (circuitparsed.stepnames...),
+    StepValues(Nstep),
+    Status()
+  )
 end
 
 function preparetempdir(circuitpath::AbstractString, executablepath::AbstractString)
@@ -242,6 +213,7 @@ LTspiceSimulation(circuitpath::AbstractString;
                   tempdir::Bool = false) =
   LTspiceSimulation(circuitpath, executablepath, tempdir)
 
+#=
 function Base.show(io::IO, x::NonSteppedSimulation)
   println(io,"NonSteppedSimulation:")
   showcircuitpath(io,x)
@@ -249,66 +221,57 @@ function Base.show(io::IO, x::NonSteppedSimulation)
   showmeasurements(io,x)
   showtimeduration(io,x)
 end
-function Base.show(io::IO, x::SteppedSimulation)
-  println(io,"SteppedSimulation:")
+=#
+function Base.show(io::IO, x::LTspiceSimulation)
+  println(io,"LTspiceSimulation:")
   showcircuitpath(io,x)
   showparameters(io,x)
   showmeasurements(io,x)
   showsteps(io,x)
+  showtimeduration(io,x)
 end
 
 function showcircuitpath(io::IO, x::LTspiceSimulation)
   println(io,"circuit path = ",x.circuitpath)
 end
+showparameters{Nmeas,Nmdim,Nstep}(::IO, x::LTspiceSimulation{0,Nmeas,Nmdim,Nstep}) = nothing
 function showparameters(io::IO, x::LTspiceSimulation)
-  if length(x.parameternames)>0
-    println(io)
-    println(io,"Parameters")
-    for i in eachindex(x.parameternames)
-      println(io,rpad(x.parameternames[i],25,' ')," = ",x.parametervalues[i])
+  println(io)
+  println(io,"Parameters")
+  for i in eachindex(x.parameternames)
+    println(io,rpad(x.parameternames[i],25,' ')," = ",x.parametervalues[i])
+  end
+end
+showparameters(::IO, x::LTspiceSimulation{Int,0,Int,Int}) = nothing
+function showmeasurements(io::IO, x::LTspiceSimulation{Int,Int,1,Int})
+  println(io)
+  println(io,"Measurements")
+  for i in eachindex(x.measurementnames)
+    print(io,rpad(x.measurementnames[i],25,' '))
+    if x.status.ismeasurementsdirty
+      println(io)
+    elseif isnan(x.measurementvalues[i])
+      println(io," = measurement failed")
+    else
+      println(io," = ",x.measurementvalues[i])
     end
   end
 end
-function showmeasurements(io::IO, x::NonSteppedSimulation)
-  if length(x.measurementnames)>0
-    println(io)
-    println(io,"Measurements")
-    for i in eachindex(x.measurementnames)
-      print(io,rpad(x.measurementnames[i],25,' '))
-      if x.status.ismeasurementsdirty
-        println(io)
-      elseif isnan(x.measurementvalues[i])
-        println(io," = measurement failed")
-      else
-        println(io," = ",x.measurementvalues[i])
-      end
+function showmeasurements(io::IO, x::LTspiceSimulation)
+  println(io)
+  println(io,"Measurements")
+  totalsteps = length(x.measurementvalues[1,:,:,:])
+  for i in eachindex(x.measurementnames)
+    print(io,rpad(x.measurementnames[i],25,' '))
+    if x.status.ismeasurementsdirty
+      println(io)
+    else
+      println(io," ",totalsteps," values")
     end
   end
 end
-function showtimeduration(io::IO, x::LTspiceSimulation)
-  if ~isnan(x.status.duration) # simulation was run at least once
-    println(io)
-    println(io,"Last Run")
-    println(io,"time = ",x.status.timestamp)
-    println(io,"duration = ",x.status.duration)
-  end
-end
-function showmeasurements(io::IO, x::SteppedSimulation)
-  if length(x.measurementnames)>0
-    println(io)
-    println(io,"Measurements")
-    totalsteps = length(x.measurementvalues[1,:,:,:])
-    for i in eachindex(x.measurementnames)
-      print(io,rpad(x.measurementnames[i],25,' '))
-      if x.status.ismeasurementsdirty
-        println(io)
-      else
-        println(io," ",totalsteps," values")
-      end
-    end
-  end
-end
-function showsteps(io::IO, x::SteppedSimulation)
+showparameters(::IO, x::LTspiceSimulation{Int,Int,Int,0}) = nothing
+function showsteps(io::IO, x::LTspiceSimulation)
   if length(x.stepnames)>0
     println(io)
     println(io,"Steps")
@@ -320,6 +283,14 @@ function showsteps(io::IO, x::SteppedSimulation)
         println(" ",length(x.stepvalues[i])," steps")
       end
     end
+  end
+end
+function showtimeduration(io::IO, x::LTspiceSimulation)
+  if ~isnan(x.status.duration) # simulation was run at least once
+    println(io)
+    println(io,"Last Run")
+    println(io,"time = ",x.status.timestamp)
+    println(io,"duration = ",x.status.duration)
   end
 end
 
@@ -365,8 +336,10 @@ end
 Base.eltype(x::LTspiceSimulation) = Float64
 Base.length(x::LTspiceSimulation) = length(x.parametervalues) + length(x.measurementvalues)
 
+#=
 (x::SteppedSimulation)(args...) = callsimulation(x,args...)
 (x::NonSteppedSimulation)(args...) = callsimulation(x,args...)
+=#
 
 function callsimulation(x::LTspiceSimulation, args...)
   if length(args) != length(x.parameternames)

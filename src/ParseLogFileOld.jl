@@ -4,8 +4,8 @@ include("MultiLevelIterator.jl")
 
 # BEGIN LogLine
 """
-Subtypes of `LogLine` are used to dispatch `parseline!` to process a 
-specific type of log file line.  Some of the subtypes also hold temporary 
+Subtypes of `LogLine` are used to dispatch `parseline!` to process a
+specific type of log file line.  Some of the subtypes also hold temporary
 data for the lines they process.
 
 **Subtypes**
@@ -31,14 +31,14 @@ abstract LogLine
 abstract Footer <: LogLine
 
 """
-`Header` is an abstract type for all header lines.  Currently, there is only 
+`Header` is an abstract type for all header lines.  Currently, there is only
 one subtype `HeaderCircuitPath`.
 """
-abstract Header <: LogLine 
+abstract Header <: LogLine
 type HeaderCircuitPath <: Header end
 
 """
-`Measurement` holds the measurement names and values in 1d arrays for 
+`Measurement` holds the measurement names and values in 1d arrays for
 non stepped simulations.
 """
 type Measurement <: LogLine
@@ -51,7 +51,7 @@ type IsStepParameters <: LogLine end
 """
 `StepParameters` holds the step values in a 1d array.
 """
-type StepParameters <: LogLine 
+type StepParameters <: LogLine
   stepvalues :: Int
   StepParameters() = new(0)
 end
@@ -70,8 +70,8 @@ end
 type StepMeasurementValue <: LogLine
   values :: Array{Float64,1}
   StepMeasurementValue() = new([])
-end 
-type FooterDate <: Footer end 
+end
+type FooterDate <: Footer end
 type FooterDuration <: Footer end
 # END LogLine
 
@@ -102,7 +102,7 @@ type NonSteppedLog <: LogParsed
   circuitpath       :: AbstractString  # path to circuit file in the log file
   timestamp         :: DateTime
   duration          :: Float64  # simulation time in seconds
-  measurementnames  :: Array{AbstractString,1}   
+  measurementnames  :: Array{AbstractString,1}
   measurements      :: Array{Float64,4}
   NonSteppedLog(logpath::AbstractString) = new(logpath,"",DateTime(2015),0.0,[],Array(Float64,0,0,0,0))
 end
@@ -111,9 +111,9 @@ logpath!(nslf::NonSteppedLog,path::AbstractString) = nslf.logpath = path
 logpath(nslf::NonSteppedLog) = nslf.logpath
 circuitpath!(nslf::NonSteppedLog,path::AbstractString) = nslf.circuitpath = path
 circuitpath(nslf::NonSteppedLog) = nslf.circuitpath
-timestamp!(nslf::NonSteppedLog,ts::DateTime) = nslf.timestamp = ts 
+timestamp!(nslf::NonSteppedLog,ts::DateTime) = nslf.timestamp = ts
 timestamp(nslf::NonSteppedLog) = nslf.timestamp
-duration!(nslf::NonSteppedLog,duration) = nslf.duration = duration 
+duration!(nslf::NonSteppedLog,duration) = nslf.duration = duration
 duration(nslf::NonSteppedLog) = nslf.duration
 measurementnames!(nslf::NonSteppedLog,measurementnames) = nslf.measurementnames = measurementnames
 measurementnames(nslf::NonSteppedLog) = nslf.measurementnames
@@ -134,7 +134,7 @@ type SteppedLog <: LogParsed
   nonsteppedlogfile :: NonSteppedLog
   stepnames         :: Array{AbstractString,1}
   stepvalues             :: Tuple{Array{Float64,1},Array{Float64,1},Array{Float64,1}}
-  SteppedLog(nslf::NonSteppedLog) = new(nslf,[],([],[],[])) 
+  SteppedLog(nslf::NonSteppedLog) = new(nslf,[],([],[],[]))
 end
 SteppedLog() = SteppedLog(NonSteppedLog())
 SteppedLog(logpath::AbstractString) = SteppedLog(NonSteppedLog(logpath))
@@ -155,7 +155,7 @@ measurementvalues(slf::SteppedLog) = measurementvalues(slf.nonsteppedlogfile)
 measurementvalues!(slf::SteppedLog,measurements) = measurementvalues!(slf.nonsteppedlogfile,measurements)
 
 function Base.show(io::IO, x::NonSteppedLog)
-  println(io,logpath(x))  
+  println(io,logpath(x))
   println(io,circuitpath(x))
   println(io,timestamp(x))
   println(io,duration(x)," seconds")
@@ -169,7 +169,7 @@ function Base.show(io::IO, x::NonSteppedLog)
 end
 
 function Base.show(io::IO, x::SteppedLog)
-   show(io,x.nonsteppedlogfile) 
+   show(io,x.nonsteppedlogfile)
    if length(stepnames(x))>0
     println(io,"")
     println(io,"Step")
@@ -198,7 +198,7 @@ end
 
 # LogParsed can access its measurements as a read only array
 Base.getindex(x::NonSteppedLog, index::Integer) = measurementvalues(x)[index,1,1,1]
-Base.getindex(x::LogParsed, i1::Integer, i2::Integer, i3::Integer, i4::Integer) = 
+Base.getindex(x::LogParsed, i1::Integer, i2::Integer, i3::Integer, i4::Integer) =
   measurementvalues(x)[i1,i2,i3,i4]
 
 Base.length(x::SteppedLog) = length(measurementvalues(x))
@@ -228,7 +228,7 @@ function parseline!(lf::LogParsed, measurement::Measurement, line::AbstractStrin
     name = m.captures[1]
     try
       value = parse(Float64,m.captures[2])
-    catch 
+    catch
       value = Float64(NaN)
     end
     push!(measurement.measurementnames,name)
@@ -255,14 +255,14 @@ function parseline!(slf::SteppedLog, sp::StepParameters, line::AbstractString)
         if m.captures[i] != nothing  # we have a step name
           push!(s_names,m.captures[i]) # save the name
         end
-      end 
+      end
     end
     for (i,k) in ((3,1),(5,2),(7,3))
       if m.captures[i] != nothing # we have a value
         value = parse(Float64,m.captures[i])
         if ~issubset(value,s_values[k]) # if we haven't seen this value yet
           push!(s_values[k],value) # add it to the list
-        end 
+        end
       end
     end
     return true
@@ -336,9 +336,9 @@ parseline!
     processlines!(io::IO, log::LogParsed, findlines, untillines=[])
 
 Process lines of `io` for `findlines` until a `untillines` is found.
-`findlines` and `untillines` are both arrays of `LogLine`.  Data is returned 
+`findlines` and `untillines` are both arrays of `LogLine`.  Data is returned
 in `log`, `findlines`, and `untillines` depending on what lines were found.
-`processlines!` returns the index into `untillines` of the `LogLine` which 
+`processlines!` returns the index into `untillines` of the `LogLine` which
 caused it to stop.
 """
 function processlines!(io::IO, lf::LogParsed, findlines, untillines=[])
@@ -433,7 +433,7 @@ function Base.parse(::Type{NonSteppedLog}, logpath::AbstractString)
   return lf
 end
 
-Base.parse{T<:LogParsed}(x::T) = parse(T, logpath(x))  
+Base.parse{T<:LogParsed}(x::T) = parse(T, logpath(x))
 
 """
     parse{T<:LogParsed}(x::T)

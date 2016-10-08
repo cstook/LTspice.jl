@@ -14,7 +14,6 @@ end
 type StepValues{Nstep}
   values ::NTuple{Nstep,Array{Float64,1}}
 end
-StepValues(Nstep::Int) = StepValues{Nstep}(ntuple(d->Array{Float64,1}(),Nstep))
 
 """
 Access parameters and measurements of an LTspice simulation.  Runs simulation

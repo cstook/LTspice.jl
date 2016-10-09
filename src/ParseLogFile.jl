@@ -2,8 +2,8 @@ abstract LogLine
 abstract Header <: LogLine
 type IsCircuitPath <: Header end
 abstract Footer <: LogLine
-type FooterDate <: Footer end
-type FooterDuration <: Footer end
+type Date <: Footer end
+type Duration <: Footer end
 type MeasurementName <: LogLine
   iter
   state
@@ -32,10 +32,10 @@ function parseline!(::LTspiceSimulation, ::IsCircuitPath, line::AbstractString)
   ismatch(circuitpathregex, line)
 end
 
-const nonsteppedmeasurment = r"^([a-z][a-z0-9_@#$.:\\]*):.*=([\S]+)"i
+const nonsteppedmeasurmentregex = r"^([a-z][a-z0-9_@#$.:\\]*):.*=([\S]+)"i
 function parseline!(x::NonSteppedSimulation, mv::MeasurementValue, line::AbstractString)
   done(mv.iter, mv.state) && throw(ParseError("unexpected measurment"))
-  m = match(nonsteppedmeasurment, line)
+  m = match(nonsteppedmeasurmentregex, line)
   m == nothing && return false
   (i,mv.state) = next(mv.iter, mv.state)
   try
@@ -46,10 +46,10 @@ function parseline!(x::NonSteppedSimulation, mv::MeasurementValue, line::Abstrac
   return true
 end
 
-const steppedmeasurment = r"^\s*[0-9]+\s+(\S+)"i
+const steppedmeasurmentregex = r"^\s*[0-9]+\s+(\S+)"i
 function parseline!(x::LTspiceSimulation, mv::MeasurementValue, line::AbstractString)
   done(mv.iter, mv.state) && throw(ParseError("unexpected measurment"))
-  m = match(steppedmeasurment, line)
+  m = match(steppedmeasurmentregex, line)
   m == nothing && return false
   (i,mv.state) = next(mv.iter, mv.state)
   try
@@ -60,11 +60,51 @@ function parseline!(x::LTspiceSimulation, mv::MeasurementValue, line::AbstractSt
   return true
 end
 
-const dotstep = r"(\.step)(?:\s+(.*?)=(.*?))(?:\s+(.*?)=(.*?)){0,1}(?:\s+(.*?)=(.*?)){0,1}\s*$"i
+const dotstepregex = r"(\.step)(?:\s+(.*?)=(.*?))(?:\s+(.*?)=(.*?)){0,1}(?:\s+(.*?)=(.*?)){0,1}\s*$"i
 function parseline!(::LTspiceSimulation, ::IsDotStep, line::AbstractString)
-  ismatch(dotstep, line)
+  ismatch(dotstepregex, line)
 end
 function parseline!(x::LTspiceSimulation, ds::DotStep, line::AbstractString)
+  # to do
+end
+
+const dateregex = r"Date:\s*(.*?)\s*$"
+function parseline!(x::LTspiceSimulation, ::Date, line::AbstractString)
+  m = match(dateregex,line)
+  if m!=nothing
+    x.status.timestamp = DateTime(m.captures[1],"e u d HH:MM:SS yyyy")
+    return true
+  else
+    return false
+  end
+end
+
+const durationregex = r"Total[ ]elapsed[ ]time:\s*([\w.]+)\s+seconds.\s*$"
+function parseline!(x::LTspiceSimulation, ::Duration, line::AbstractString)
+  m = match(durationregex, line)
+  if m!=nothing
+    x.status.duration = parse(Float64,m.captures[1])
+    return true
+  else
+    return false
+  end
+end
+
+function processlines!(io::IO, x::LTspiceSimulation, findlines=[], untillines=[])
+  while ~eof(io)
+    line = readline(io)
+    for f in findlines
+      if parseline!(x,f,line)
+        break
+      end
+    end
+    for i in eachindex(untillines)
+      if parseline!(x,untillines[i],line)
+        return i # let caller know why we returned
+      end
+    end
+  end
+  return 0
 end
 
 function parselog!{Nparam,Nmeas}(x::NonSteppedSimulation{Nparam,Nmeas})

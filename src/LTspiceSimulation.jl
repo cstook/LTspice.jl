@@ -52,7 +52,7 @@ immutable LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
   parameterindex :: NTuple{Nparam,Int} # index into circuitfilearray
   parameterdict  :: Dict{String,Int} # index into name, value, multiplier, index arrays
   measurementnames :: NTuple{Nmeas,String}
-  measurmentdict :: Dict{String,Int} # index into measurmentnames
+  measurementdict :: Dict{String,Int} # index into measurmentnames
   measurementvalues :: MeasurementValuesArray{Float64,Nmdim}
   stepnames :: NTuple{Nstep,String}
   stepvalues :: StepValues{Nstep}
@@ -192,7 +192,7 @@ function LTspiceSimulation(
     measurementdict,
     MeasurementValuesArray{Float64,Nmdim}(fill(NaN,(Nmeas,ntuple(d->1,Nstep)...))), # measurementvalues
     (circuitparsed.stepnames...),
-    StepValues(Nstep),
+    StepValues(ntuple(d->[],Nstep)),
     Status()
   )
 end
@@ -344,7 +344,7 @@ user does not usually need to call `flush`.  It will be called automatically
  when a measurement is requested and the log file needs to be updated.  It can be used
  to update a circuit file using julia for simulation with the LTspice GUI.
 """
-function Base.flush(x::LTspiceSimulation; force=false)
+function Base.flush(x::LTspiceSimulation, force=false)
 	if x.parametervalues.ismodified || force
     updatecircuitfilearray!(x)
     writecircuitfilearray(x)
@@ -375,7 +375,7 @@ run!(sim)
 Writes circuit changes, calls LTspice to run `sim`, and reloads the log file.  The user
 normally does not need to call this.
 """
-function run!(x::LTspiceSimulation; force=false)
+function run!(x::LTspiceSimulation, force=false)
   flush(x,force)
   if x.status.ismeasurementsdirty || force
     if x.executablepath != ""  # so travis dosen't need to load LTspice
@@ -388,5 +388,6 @@ function run!(x::LTspiceSimulation; force=false)
       end
     end
     parselog!(x)
+    x.status.ismeasurementsdirty = false
   end
 end

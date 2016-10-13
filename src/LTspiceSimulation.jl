@@ -14,6 +14,7 @@ end
 type StepValues{Nstep}
   values ::NTuple{Nstep,Array{Float64,1}}
 end
+blankstepvalues(Nstep::Int) = StepValues{Nstep}(ntuple(d->[],Nstep))
 
 """
 Access parameters and measurements of an LTspice simulation.  Runs simulation
@@ -192,7 +193,7 @@ function LTspiceSimulation(
     measurementdict,
     MeasurementValuesArray{Float64,Nmdim}(fill(NaN,(Nmeas,ntuple(d->1,Nstep)...))), # measurementvalues
     (circuitparsed.stepnames...),
-    StepValues(ntuple(d->[],Nstep)),
+    blankstepvalues(Nstep),
     Status()
   )
 end

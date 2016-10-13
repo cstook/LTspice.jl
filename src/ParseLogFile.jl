@@ -21,11 +21,17 @@ type MeasurementValue <: LogLine
   end
 end
 type IsDotStep <: LogLine end
-type DotStep <: LogLine
-  index :: Array{Int,1}
+type DotStep{Nstep} <: LogLine
+  stepvalues :: StepValues{Nstep}
+  stepvaluesline :: Array{Float64,Nstep}
 end
-DotStep{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep})=
-  DotStep{Nstep}(ones(Int,Nstep))
+function DotStep{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep})
+  bsv = blankstepvalues(Nstep)
+  for i in 1:Nstep
+    sizehint!(bsv.stepvalues.values[i],length(x.stepvalues.values[i]))
+  end
+  return DotStep(bsv,Array(Float64,3)
+end
 
 const circuitpathregex = r"^Circuit: \*\s*([\w\:\\/. ~]+)"i
 function parseline!(::LTspiceSimulation, ::IsCircuitPath, line::AbstractString)
@@ -64,7 +70,20 @@ const dotstepregex = r"(\.step)(?:\s+(.*?)=(.*?))(?:\s+(.*?)=(.*?)){0,1}(?:\s+(.
 function parseline!(::LTspiceSimulation, ::IsDotStep, line::AbstractString)
   ismatch(dotstepregex, line)
 end
-function parseline!(x::LTspiceSimulation, ds::DotStep, line::AbstractString)
+const dotstepregex3 = r"(\.step)(?:\s+(.*?)=(.*?))(?:\s+(.*?)=(.*?))(?:\s+(.*?)=(.*?))\s*$"i
+function parseline!{Nparam,Nmeas,Nmdim,Nstep}(
+                  x::LTspiceSimulation{Nparam,Nmeas,Nmdim,3},
+                  ds::DotStep{3},
+                  line::AbstractString)
+  m = match(dotstepregex3, line)
+  m == nothing && return false
+  # stepnames = [m.captures[i] for i in (2,4,6) if m.captures[i]!=nothing]
+  # stepvaluesline = [parse(Float64,m.captures[i]) for i in (3,5,7) if m.caputres[i]!=nothing]
+  for i in 1:Nstep
+    ds.stepvaluesline[i] = parse(Float64,m.captures[i])
+  end
+
+
   # to do
 end
 

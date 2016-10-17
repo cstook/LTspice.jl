@@ -21,10 +21,17 @@ type MeasurementValue <: LogLine
   end
 end
 type IsDotStep <: LogLine end
-type DotStep <: LogLine
-  values :: Array{Float64,1}
-  DotStep() = new([])
+type DotStep{Nstep} <: LogLine
+  stepvalues :: StepValues{Nstep}
+  lastline :: Array{Float64,1}
+  newline :: Array{Float64,1}
+  isdone :: Array{bool,1}
 end
+DotStep{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}) =
+  DotStep{Nstep}(blankstepvalues(Nstep),
+                 [NaN,NaN,NaN,NaN],
+                 [NaN,NaN,NaN,NaN],
+                 [false,false,false])
 
 const circuitpathregex = r"^Circuit: \*\s*([\w\:\\/. ~]+)"i
 function parseline!(::LTspiceSimulation, ::IsCircuitPath, line::AbstractString)
@@ -70,13 +77,22 @@ const dotstepregex123 = (
   )
 @generated function parseline!{Nparam,Nmeas,Nmdim,Nstep}(
                   x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
-                  ds::DotStep,
+                  ds::DotStep{Nstep},
                   line::AbstractString)
   return :(
     m = match(dotstepregex123[$Nstep], line)
     m == nothing && return false
+    (ds.newline,ds.lastline) = (ds.lastline,ds.newline)
     for i in 1:$Nstep
-      push!(ds.values,parse(Float64,m.captures[i]))
+      ds.isdone[i] || newline[i] = parse(Float64,m.captures[i]))
+    end
+    for i in 1:$Nstep
+      if ds.newline[i+1] != ds.lastline[i+1] && ~isnan(ds.lastline[i])
+        ds.isdone[i] = true
+      end
+      if ~ds.isdone[i] && ds.newline[i] != ds.lastline[i]
+        push!(ds.stepvalues.values[i],ds.newline[i])
+      end
     end
     return true
   )
@@ -136,15 +152,17 @@ end
 
 function parselog!{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep})
   open(x.logpath,true,false,false,false,false) do io
-    updaterestepvalues(io,x)
-    updatemeasurementvaluessize(x)
-    measurement = Measurement(eachindex(x.measurements))
-
-
-    exitcode = processlines!(io, slf, [header],[measurement,step])
-    if exitcode == 1 # a non-stepped log file
-      throw(ParseError(".log file is not expected type.  expected stepped, got non-stepped"))
+    dotstep = DotStep(x)
+    measurementname = MeasurementName(x)
+    processlines!(io, x, [dotstep],[measurementname])
+    measurementarraysize = (ntuple(i->length(dotstep.stepvalues.values[i]),Nstep)...,Nmeas)
+    # note need to move Nmeas to end in LTspiceSimulation
+    if measurementarraysize ~= size(x.measurementvalues)
+      x.measurementvalues = Array(Float64,measurementarraysize)
     end
+    measurement = Measurement(eachindex(x.measurements))
+    processlines!(io, x, [measurement], [Date()])
+    processlines!(io, x, [Duration()])
   end
   return nothing
 end

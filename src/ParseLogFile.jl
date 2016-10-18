@@ -59,10 +59,20 @@ function parseline!(x::LTspiceSimulation, mv::MeasurementValue, line::AbstractSt
   done(mv.iter, mv.state) && throw(ParseError("unexpected measurement"))
   (i,mv.state) = next(mv.iter, mv.state)
   try
-    x.measurementvalues[i] = parse(Float64,m.captures[1])
+    x.measurementvalues.values[i] = parse(Float64,m.captures[1])
   catch
-    x.measurementvalues[i] = Float64(NaN)
+    x.measurementvalues.values[i] = Float64(NaN)
   end
+  return true
+end
+
+const measurementnameregex = r"^Measurement: ([a-z0-9_@#$.:\\]*)"
+function parseline!(x::LTspiceSimulation, mn::MeasurementName, line::AbstractString)
+  m = match(measurementnameregex, line)
+  m == nothing && return false
+  done(mn.iter, mn.state) && throw(ParseError("unexpected measurement name"))
+  (i,mn.state) = next(mn.iter, mn.state)
+  m.captures[1] != x.measurementnames[i] && throw(ParseError("unexpected measurement name"))
   return true
 end
 
@@ -85,11 +95,11 @@ const dotstepregex123 = (
     (ds.newline,ds.lastline) = (ds.lastline,ds.newline)
     for i in 1:$Nstep
       if ~ds.isdone[i]
-        newline[i] = parse(Float64,m.captures[i])
+        ds.newline[i] = parse(Float64,m.captures[i])
       end
     end
     for i in 1:$Nstep
-      if ds.newline[i+1] != ds.lastline[i+1] && ~isnan(ds.lastline[i])
+      if ds.newline[i+1] != ds.lastline[i+1] && ~isnan(ds.lastline[i]) && ~isnan(ds.newline[i+1])
         ds.isdone[i] = true
       end
       if ~ds.isdone[i] && ds.newline[i] != ds.lastline[i]
@@ -157,14 +167,15 @@ function parselog!{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,N
     dotstep = DotStep(x)
     measurementname = MeasurementName(x)
     processlines!(io, x, [dotstep],[measurementname])
-    x.stepvalues = dotstep.stepvalues
+    x.stepvalues.values = dotstep.stepvalues.values
     measurementarraysize = (ntuple(i->length(dotstep.stepvalues.values[i]),Nstep)...,Nmeas)
     # note: need to move Nmeas to end in LTspiceSimulation
-    if measurementarraysize ~= size(x.measurementvalues)
-      x.measurementvalues = Array(Float64,measurementarraysize)
+    if measurementarraysize != size(x.measurementvalues)
+      x.measurementvalues.values = Array(Float64,measurementarraysize)
     end
-    measurement = Measurement(eachindex(x.measurements))
-    processlines!(io, x, [measurement,measurementname], [Date()])
+    measurementvalue = MeasurementValue(x)
+    processlines!(io, x, [measurementvalue,measurementname], [Date()])
+    done(measurementvalue.iter,measurementvalue.state) || throw(ParseError("missing measurements"))
     processlines!(io, x, [Duration()])
   end
   return nothing

@@ -25,7 +25,7 @@ type DotStep{Nstep} <: LogLine
   stepvalues :: StepValues{Nstep}
   lastline :: Array{Float64,1}
   newline :: Array{Float64,1}
-  isdone :: Array{bool,1}
+  isdone :: Array{Bool,1}
 end
 DotStep{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}) =
   DotStep{Nstep}(blankstepvalues(Nstep),
@@ -79,12 +79,14 @@ const dotstepregex123 = (
                   x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
                   ds::DotStep{Nstep},
                   line::AbstractString)
-  return :(
-    m = match(dotstepregex123[$Nstep], line)
+  return quote
+    m = match($(dotstepregex123[Nstep]), line)
     m == nothing && return false
     (ds.newline,ds.lastline) = (ds.lastline,ds.newline)
     for i in 1:$Nstep
-      ds.isdone[i] || newline[i] = parse(Float64,m.captures[i]))
+      if ~ds.isdone[i]
+        newline[i] = parse(Float64,m.captures[i])
+      end
     end
     for i in 1:$Nstep
       if ds.newline[i+1] != ds.lastline[i+1] && ~isnan(ds.lastline[i])
@@ -95,7 +97,7 @@ const dotstepregex123 = (
       end
     end
     return true
-  )
+  end
 end
 
 const dateregex = r"Date:\s*(.*?)\s*$"
@@ -155,13 +157,14 @@ function parselog!{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,N
     dotstep = DotStep(x)
     measurementname = MeasurementName(x)
     processlines!(io, x, [dotstep],[measurementname])
+    x.stepvalues = dotstep.stepvalues
     measurementarraysize = (ntuple(i->length(dotstep.stepvalues.values[i]),Nstep)...,Nmeas)
-    # note need to move Nmeas to end in LTspiceSimulation
+    # note: need to move Nmeas to end in LTspiceSimulation
     if measurementarraysize ~= size(x.measurementvalues)
       x.measurementvalues = Array(Float64,measurementarraysize)
     end
     measurement = Measurement(eachindex(x.measurements))
-    processlines!(io, x, [measurement], [Date()])
+    processlines!(io, x, [measurement,measurementname], [Date()])
     processlines!(io, x, [Duration()])
   end
   return nothing

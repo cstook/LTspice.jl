@@ -125,8 +125,8 @@ Retruns measurements of `sim` as an a array of Float64
 values.
 
 ```julia
-value = measurementvalues(sim)[measurement_name, inner_step, middle_step,
-                        outer_step] # 3 nested steps
+value = measurementvalues(sim)[inner_step, middle_step,
+                        outer_step,measurement_name] # 3 nested steps
 ```
 """
 measurementvalues
@@ -191,7 +191,7 @@ function LTspiceSimulation(
     parameterdict,
     (circuitparsed.measurementnames...),
     measurementdict,
-    MeasurementValuesArray{Float64,Nmdim}(fill(NaN,(Nmeas,ntuple(d->1,Nstep)...))), # measurementvalues
+    MeasurementValuesArray{Float64,Nmdim}(fill(NaN,(ntuple(d->1,Nstep)...,Nmeas))), # measurementvalues
     (circuitparsed.stepnames...),
     blankstepvalues(Nstep),
     Status()
@@ -251,7 +251,11 @@ end
 function showmeasurements(io::IO, x::LTspiceSimulation)
   println(io)
   println(io,"Measurements")
-  totalsteps = length(x.measurementvalues[1,:,:,:])
+  totalsteps = 1
+  s = size(x.measurementvalues)
+  for i in 1:length(s)-1
+    totalsteps *= s[i]
+  end
   for i in eachindex(x.measurementnames)
     print(io,rpad(x.measurementnames[i],25,' '))
     if x.status.ismeasurementsdirty
@@ -298,14 +302,24 @@ function Base.values(x::LTspiceSimulation)
   end
   return allvalues
 end
-function Base.getindex(x::LTspiceSimulation, key::AbstractString)
-  if haskey(x.parameterdict,key)
-    return x.parametervalues[x.parameterdict[key]]
-  elseif haskey(x.measurementdict,key)
-    run!(x)
-    return x.measurementvalues[x.measurementdict[key],:,:,:]
-  else
-    throw(KeyError(key))
+@generated function Base.getindex{Nparam,Nmeas,Nmdim,Nstep}(
+        x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
+        key::AbstractString)
+  r = (
+      :(x.measurementvalues[x.measurementdict[key]]),
+      :(x.measurementvalues[:,x.measurementdict[key]]),
+      :(x.measurementvalues[:,:,x.measurementdict[key]]),
+      :(x.measurementvalues[:,:,:,x.measurementdict[key]])
+      )
+  return quote
+    if haskey(x.parameterdict,key)
+      return x.parametervalues[x.parameterdict[key]]
+    elseif haskey(x.measurementdict,key)
+      run!(x)
+      return $(r[Nstep+1])
+    else
+      throw(KeyError(key))
+    end
   end
 end
 function Base.get(x::LTspiceSimulation, key::AbstractString, default)

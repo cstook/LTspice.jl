@@ -144,7 +144,7 @@ logpath(x::LTspiceSimulation) = x.logpath
 executablepath(x::LTspiceSimulation) = x.executablepath
 parmeternames(x::LTspiceSimulation) = x.parameternames
 parametervalues(x::LTspiceSimulation) = x.parametervalues
-measurmentnames(x::LTspiceSimulation) = x.measurmentnames
+measurementnames(x::LTspiceSimulation) = x.measurementnames
 function measurementvalues(x::LTspiceSimulation)
   run!(x)
   x.measurementvalues

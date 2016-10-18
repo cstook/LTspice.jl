@@ -7,10 +7,11 @@ sim1
 sim5 = LTspiceSimulation("test/test5.asc",tempdir=true)
 show(sim5)
 sim5["sum"]
+measurementvalues(sim5)
 
-
-sim6 = LTspiceSimulation("test/test6.asc",tempdir=true)
-show(sim6)
-
-a = Array(Float64,0)
-sizehint!(a,100)
+simPCF1 = LTspiceSimulation("test/PCF_test1.asc",tempdir=true)
+show(simPCF1)
+a = measurementvalues(simPCF1)
+simPCF1["sum"]
+simPCF1["sump1000"]
+measurementnames(simPCF1)

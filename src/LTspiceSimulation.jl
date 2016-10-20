@@ -155,11 +155,14 @@ function stepvalues(x::LTspiceSimulation)
   x.stepvalues.values
 end
 
+LTspiceSimulation(circuitpath::AbstractString;
+                  executablepath::AbstractString = defaultltspiceexecutable(),
+                  tempdir::Bool = false) =
+  LTspiceSimulation(circuitpath, executablepath, tempdir)
 function LTspiceSimulation(
     circuitpath::AbstractString,
-    executablepath::AbstractString=defaultltspiceexecutable(),
-    istempdir::Bool = false
-  )
+    executablepath::AbstractString,
+    istempdir::Bool)
   if istempdir
     circuitpath = preparetempdir(circuitpath, executablepath)
   end
@@ -207,11 +210,6 @@ function preparetempdir(circuitpath::AbstractString, executablepath::AbstractStr
   makecircuitfileincludeabsolutepath(circuitpath,workingcircuitpath,executablepath)
   return workingcircuitpath
 end
-
-LTspiceSimulation(circuitpath::AbstractString;
-                  executablepath::AbstractString = defaultltspiceexecutable(),
-                  tempdir::Bool = false) =
-  LTspiceSimulation(circuitpath, executablepath, tempdir)
 
 function Base.show(io::IO, x::LTspiceSimulation)
   println(io,"LTspiceSimulation:")

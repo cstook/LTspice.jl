@@ -1,133 +1,88 @@
-# PerLineIterator(LTspiceSimulation) --> iterable collection of 1d arrays
-#
-# used to pass to writedlm to create a delimited file
-
-export headernames, header
-include("MultiLevelIterator.jl")
-
-"Iterator used to dump result of simulations to csv"
-immutable PerLineIterator
-  simulation        :: LTspiceSimulation
-  header            :: Array{AbstractString,1}
-  stepindexes       :: Array{Int,1}
-  resultindexes     :: Array{Tuple{Bool,Int},1} # is parameter and index into array
-  mli               :: MultiLevelIterator
-
-  function PerLineIterator(simulation :: LTspiceSimulation;
-                           steporder = stepnames(simulation),
-                           resultnames = vcat(parameternames(simulation),
-                                              measurementnames(simulation)))
-    for step in steporder
-      if findfirst(stepnames(simulation),step) == 0
-        error("$step step not found")
-      end
-    end
-    if length(steporder) != length(stepnames(simulation))
-      error("length(steporder) must equal number of steped items in simulation")
-    end
-    args = Array(Int,0)
-    stepindexes = Array(Int,0)
-    for step in steporder
-      index = findfirst(stepnames(simulation),step)
-      push!(args,length(stepvalues(simulation)[index]))
-      push!(stepindexes,index)
-    end
-    resultindexes = Array(Tuple{Bool,Int},0)
-    for resultname in resultnames
-      i = findfirst(parameternames(simulation),resultname)
-      if i > 0
-        push!(resultindexes,(true,i))
-      else
-        i = findfirst(measurementnames(simulation),resultname)
-        if i > 0
-          push!(resultindexes,(false,i))
-        else
-          error("$resultname not found in parameters or measurements")
-        end
-      end
-    end
-    header = vcat(steporder,resultnames)
-    new(simulation, header, stepindexes, resultindexes, MultiLevelIterator(args))
+function eachstep{Nstep}(x::StepValues{Nstep}, order=ntuple(i->i,Nstep))
+  length(order) != Nstep && throw(ArgumentError())
+  if order==(1,2,3)
+    return ((i,j,k) for i=1:length(x.values[1]),
+                        j=2:length(x.values[2]),
+                        k=3:length(x.values[3]))
+  elseif order==(1,3,2)
+    return ((i,j,k) for i=1:length(x.values[1]),
+                        k=3:length(x.values[3]),
+                        j=2:length(x.values[2]))
+  elseif order==(2,1,3)
+    return ((i,j,k) for j=2:length(x.values[2]),
+                        i=1:length(x.values[1]),
+                        k=3:length(x.values[3]))
+  elseif order==(2,3,1)
+    return ((i,j,k) for j=2:length(x.values[2]),
+                        k=3:length(x.values[3]),
+                        i=1:length(x.values[1]))
+  elseif order==(3,1,2)
+    return ((i,j,k) for k=3:length(x.values[3]),
+                        i=1:length(x.values[1]),
+                        j=2:length(x.values[2]))
+  elseif order==(3,2,1)
+    return ((i,j,k) for k=3:length(x.values[3]),
+                        j=2:length(x.values[2]),
+                        i=1:length(x.values[1]))
+  elseif order==(1,2)
+    return ((i,j) for   i=1:length(x.values[1]),
+                        j=2:length(x.values[2]))
+  elseif order==(2,1)
+    return ((i,j) for   j=2:length(x.values[2]),
+                        i=1:length(x.values[1]))
+  elseif order==(1)
+    return ((i) for     i=1:length(x.values[1]))
+  else
+    throw(ArgumentError())
   end
 end
 
-"""
-```julia
-PerLineIterator(sim :: LTspiceSimulation;
-                steporder = stepnames(sim),
-                resultnames = vcat(parameternames(sim), measurementnames(sim)))
-```
-
-Creates an iterator in the format required to pass to writecsv or writedlm.
-The step order defaults to the order the step values appear in the circuit file.
-Step order can be specified by passing an array of step names.  By default
-there is one column for each step, measurement, and parameter.  The desired
-measurements and parameters can be set by passing an array of names to
-resultnames.
-
-```julia
-# write CSV with headers
-io = open("test.csv",false,true,true,false,false)
-pli = PerLineIterator(simulation)
-writecsv(io,header(pli))
-writecsv(io,pli)
-close(io)
-```
-"""
-PerLineIterator(x)
-
-function Base.show(io ::IO, x :: PerLineIterator)
-  numberoflines = length(x.mli)
-  println(io,"$(numberoflines)-line PerLineIterator")
+function eachstep{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
+                         order=ntuple(i->i,Nstep))
+  eachstep(x.stepvalues,order)
+end
+function eachstep{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
+                         order::NTuple{Nstep,AbstractString})
+  eachstep(x,ntuple(i->findfirst(x.stepnames,order[i]),Nstep))
 end
 
-Base.start(x :: PerLineIterator) = start(x.mli)
+immutable ResultNamesIndices
+  isparameter :: Array{Bool,1}
+  parametervalue :: Array{Float64,1}
+  measurementindex :: Array{Int,1}
+end
+ResultNamesIndices(n::Int) = ResultNamesIndices(Array(Bool,n),Array(Float64,n),Array(Int,n))
 
-function Base.next(x :: PerLineIterator, state :: Array{Int,1})
-  # flip MultiLevelIterator indexes around to be order required
-  # by the measurements array
-  (q,nextstate) = next(x.mli,state)
-  k = [1,1,1]
-  for (i,si) in enumerate(x.stepindexes)
-    k[si] = q[i]
-  end
-  # gather the data into a line of output
-  line = Array(Float64, length(x.stepindexes)+length(x.resultindexes))
-  i = 1
-  for si in x.stepindexes
-    line[i] = stepvalues(x.simulation)[si][k[si]]
-    i +=1
-  end
-  for (isparameter,j) in x.resultindexes
-    if isparameter
-      line[i] = parametervalues(x.simulation)[j]
+function perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
+                         x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep};
+                         steporder = ntuple(i->i,Nstep),
+                         resultnames = (x.parameternames...,
+                                        x.measurementnames...))
+  length(steporder) != Nstep && throw(ArgumentError())
+  resultnameslength = length(resultnames)
+  rni = ResultNamesIndices(resultnameslength)
+  for i in eachindex(resultnames)
+    if haskey(x.parameterdict,resultnames[i])
+      rni.isparameter[i] = true
+      rni.parametervalue[i] = x[resultnames[i]]
+    elseif haskey(x.measurementdict,resultnames[i])
+      rni.isparameter[i] = false
+      rni.measurementindex[i] = x.measurementdict[resultnames[i]]
     else
-      line[i] = measurementvalues(x.simulation)[j,k...]
+      throw(ArgumentError("result name not found"))
     end
-    i +=1
   end
-  return (line,nextstate)
+  n = Nstep + resultnameslength
+  return (ntuple(j->pliresultvalue(x,rni,i,j),n) for i in eachstep(x,steporder))
 end
-
-Base.done(x :: PerLineIterator, state) = done(x.mli, state)
-Base.length(x :: PerLineIterator) = length(x.mli)
-
-"""
-    headernames(perlineiterator)
-
-Returns an array of strings of parameter and measurement names of `perlineiterator`.
-"""
-headernames(x :: PerLineIterator) = x.header
-"""
-    header(Perlineiterator)
-
-Returns the header for `perlineterator` in the format needed for writecsv or
-writedlm.  This is equivalent to
-```julia
-transpose(headernames(perlineiterator))
-```
-"""
-function header(x::PerLineIterator)
-   h = headernames(x)
-   reshape(h,(1,length(h)))
+function pliresultvalue{Nparam,Nmeas,Nmdim,Nstep}(
+                        x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
+                        rni,i,j)
+  if j<=Nstep
+    return x.stepvalues.values[j][i[j]]
+  elseif rni.isparameter[j-Nstep]
+    return rni.parametervalue[j-Nstep]
+  else
+    return x.measurementvalues[i...,rni.measurementindex[j-Nstep]]
+  end
 end

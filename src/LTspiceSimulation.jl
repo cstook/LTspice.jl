@@ -142,7 +142,7 @@ stepvalues
 circuitpath(x::LTspiceSimulation) = x.circuitpath
 logpath(x::LTspiceSimulation) = x.logpath
 executablepath(x::LTspiceSimulation) = x.executablepath
-parmeternames(x::LTspiceSimulation) = x.parameternames
+parameternames(x::LTspiceSimulation) = x.parameternames
 parametervalues(x::LTspiceSimulation) = x.parametervalues
 measurementnames(x::LTspiceSimulation) = x.measurementnames
 function measurementvalues(x::LTspiceSimulation)

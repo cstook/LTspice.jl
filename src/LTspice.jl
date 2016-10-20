@@ -8,7 +8,7 @@ include("LTspiceSimulation.jl")
 include("mcfiap.jl")
 include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
-include("PerLineIterator.jl")
+include("perlineiterator.jl")
 include("utility.jl")
 
 end # module

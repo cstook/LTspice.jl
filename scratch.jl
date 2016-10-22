@@ -1,4 +1,4 @@
-
+using LTspice
 
 sim1 = LTspiceSimulation("test/test1.asc",tempdir=true)
 show(sim1)
@@ -22,6 +22,6 @@ for line in pli
   println(line)
 end
 
-for line in perlineiterator(simPCF1,steporder=("a","c","b"),header=true)
+for line in perlineiterator(simPCF1,steporder=["a","c","b"],resultnames=("sum",),header=true)
   println(line)
 end

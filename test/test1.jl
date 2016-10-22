@@ -1,5 +1,21 @@
-filename = "test1.asc"
-exc = ""  # null string will not run LTspice.exe.  Test parsing only.
+
+function test1()
+  filename = "C:/Users/Chris/.julia/v0.5/LTspice/test/test1.asc"
+  sim = LTspiceSimulation(filename,executablepath="")
+  show(IOBuffer(),sim)
+  @test parameternames(sim) == ("vin","load")
+  @test measurementnames(sim) == ("Current",)
+  @test stepnames(sim) == ()
+  @test parametervalues(sim) == [5.00, 2.00]
+  @test measurementvalues(sim) == [2.50]
+  @test stepvalues(sim) == ()
+  @test sim["vin"] == 5
+  @test sim["load"] == 2
+  @test sim["Current"] == 2.5
+  show(IOBuffer(),sim)
+end
+test1()
+#=
 test1 = LTspiceSimulation(filename,exc)
 show(test1)
 show(test1.circuitparsed)
@@ -33,7 +49,7 @@ catch
 end
 #@test t == 1   #uncomment for travis
 
-t = try 
+t = try
   test1["this key is not valid"]
 catch
   1
@@ -42,8 +58,8 @@ end
 
 keyss = ["vin","load","current","bad key"]
 valuess = [5.0,2.0,2.5,1.0]
-for (key,value) in zip(keyss,valuess) 
-  @test get(test1,key,1.0) == value 
+for (key,value) in zip(keyss,valuess)
+  @test get(test1,key,1.0) == value
 end
 
 @test test1[1] == 2.5
@@ -55,3 +71,4 @@ for (key,value) in LTspice.logparsed(test1)
   i = findfirst(keyss,key)
   @test value == valuess[i]
 end
+=#

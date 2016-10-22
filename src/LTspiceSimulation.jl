@@ -1,7 +1,7 @@
 export LTspiceSimulation
 export circuitpath, logpath, executablepath
-export parmeternames, parametervalues
-export measurmentnames, measurementvalues
+export parameternames, parametervalues
+export measurementnames, measurementvalues
 export stepnames, stepvalues
 export run!
 

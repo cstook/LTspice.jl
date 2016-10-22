@@ -1,24 +1,24 @@
-using LTspice
-using Base.Test
+function test8()
+  filename = "test8.asc"
+  # exectuablepath = null string will not run LTspice.exe.  Test parsing only.
+  sim = LTspiceSimulation(filename,executablepath="")
+  show(IOBuffer(),sim)
 
-test8file = "test8.asc"
-exc = ""
-test8 = LTspiceSimulation(test8file,exc)
-show(test8)
-show(LTspice.circuitparsed(test8))
-show(LTspice.logparsed(test8))
+  @test sim["a@"] == 1.0
+  @test sim["b#"] == 2.0
+  @test sim["c\$"] ==3.0
+  @test sim["d."] == 4.0
+  @test sim["e:"] == 5.0
+  @test sim["x_"] == 11.0
+  # @test sim["j\\\\"] == 10.0  # Giving up on support of \
+  @test sim["a@m"] == 1.0
+  @test sim["b#m"] == 2.0
+  @test sim["c\$m"] == 3.0
+  @test sim["e:m"] == 5.0
+  # @test sim["j\\\\m"] == 10.0 # giving up on support of \
+  @test sim["voltage"] == -4.0
+  @test sim["y_x"] == 11.0
 
-@test test8["a@"] == 1.0
-@test test8["b#"] == 2.0
-@test test8["c\$"] ==3.0
-@test test8["d."] == 4.0
-@test test8["e:"] == 5.0
-@test test8["x_"] == 11.0
-# @test test8["j\\\\"] == 10.0  # Giving up on support of \
-@test test8["a@m"] == 1.0
-@test test8["b#m"] == 2.0
-@test test8["c\$m"] == 3.0
-@test test8["e:m"] == 5.0
-# @test test8["j\\\\m"] == 10.0 # giving up on support of \
-@test test8["voltage"] == -4.0
-@test test8["y_x"] == 11.0
+  show(IOBuffer(),sim)
+end
+test8()

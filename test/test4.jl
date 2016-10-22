@@ -24,7 +24,9 @@ function test4()
   for i in eachindex(asteps)
       for j in eachindex(bsteps)
           @test measurementvalues(sim)[i,j,1] == asteps[i]+bsteps[j]
+          @test sim["sum"][i,j] == asteps[i]+bsteps[j]
           @test measurementvalues(sim)[i,j,2] == asteps[i]+bsteps[j]+1000
+          @test sim["sump1000"][i,j] == asteps[i]+bsteps[j]+1000
       end
   end
 

@@ -32,7 +32,7 @@ function eachstep{Nstep}(x::StepValues{Nstep}, order=ntuple(i->i,Nstep))
   elseif order==(2,1)
     return ((i,j) for   j=1:length(x.values[2]),
                         i=1:length(x.values[1]))
-  elseif order==(1)
+  elseif order==(1,)
     return ((i) for     i=1:length(x.values[1]))
   else
     throw(ArgumentError())
@@ -87,31 +87,34 @@ function perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
                          resultnames = (x.parameternames...,
                                         x.measurementnames...,),
                          header::Bool = false)
-  println(resultnames)
-  perlineiterator(x,steporder,resultnames,header)
+  _perlineiterator(x,steporder,resultnames,header)
 end
-function perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
+perlineiterator(::NonSteppedSimulation;
+                steporder=nothing,
+                resultnames=nothing,
+                header=nothing) = ()
+function _perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
                          x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
                          steporder,
                          resultnames,
                          header::Bool)
   if header
     return chain([headerline(x,steporder,resultnames)],
-          perlineiterator(x,steporder,resultnames))
+          _perlineiterator(x,steporder,resultnames))
   else
-    return perlineiterator(x,steporder,resultnames)
+    return _perlineiterator(x,steporder,resultnames)
   end
 end
-function perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
+function _perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
                          x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
                          steporder,
                          resultnames)
   length(steporder)!=Nstep && throw(ArgumentError("must include all steps"))
-  perlineiterator(x,
+  _perlineiterator(x,
                   ntuple(i->findfirst(x.stepnames,steporder[i]),Nstep),
                   resultnames)
 end
-function perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
+function _perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
                          x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
                          steporder::NTuple{Nstep,Int},
                          resultnames)

@@ -1,38 +1,38 @@
-using LTspice
-using Base.Test
+function test7()
+  filename = "test7.asc"
+  exc = ""
+  # exectuablepath = null string will not run LTspice.exe.  Test parsing only.
+  sim = LTspiceSimulation(filename,executablepath="")
+  show(IOBuffer(),sim)
 
-test7file = "test7.asc"
-exc = ""
-test7 = LTspiceSimulation(test7file,exc)
-show(test7)
-show(LTspice.circuitparsed(test7))
-show(LTspice.logparsed(test7))
-
-@test test7["a"] == 10e-12
-@test ~haskey(test7,"b")
-@test ~haskey(test7,"c")
-@test ~haskey(test7,"d")
-@test ~haskey(test7,"A")
-@test ~haskey(test7,"B")
-@test ~haskey(test7,"C")
-@test ~haskey(test7,"D")
+  @test sim["a"] == 10e-12
+  @test ~haskey(sim,"b")
+  @test ~haskey(sim,"c")
+  @test ~haskey(sim,"d")
+  @test ~haskey(sim,"A")
+  @test ~haskey(sim,"B")
+  @test ~haskey(sim,"C")
+  @test ~haskey(sim,"D")
 
 
-@test test7["ee"] == 1e3
-@test test7["ff"] == 1e3 
-@test test7["gg"] == 1e6
-@test test7["h"] == 1.123e6
-@test test7["i"] == 1e9
-@test test7["j"] == 1e9 
-@test test7["k"] == 1e12 
-@test test7["l"] == 1e12 
-@test test7["m"] == 1e-3 
-@test test7["n"] == 1e-3 
-@test test7["o"] == 1e-6 
-@test test7["p"] == 1e-6
-@test test7["q"] == 1e-9 
-@test test7["r"] == 1e-9 
-@test test7["s"] == 1e-12 
-@test test7["t"] == 1e-12
-@test test7["u"] == 1e-15 
-@test test7["v"] == 1e-15
+  @test sim["ee"] == 1e3
+  @test sim["ff"] == 1e3
+  @test sim["gg"] == 1e6
+  @test sim["h"] == 1.123e6
+  @test sim["i"] == 1e9
+  @test sim["j"] == 1e9
+  @test sim["k"] == 1e12
+  @test sim["l"] == 1e12
+  @test sim["m"] == 1e-3
+  @test sim["n"] == 1e-3
+  @test sim["o"] == 1e-6
+  @test sim["p"] == 1e-6
+  @test sim["q"] == 1e-9
+  @test sim["r"] == 1e-9
+  @test sim["s"] == 1e-12
+  @test sim["t"] == 1e-12
+  @test sim["u"] == 1e-15
+  @test sim["v"] == 1e-15
+  show(IOBuffer(),sim)
+end
+test7()

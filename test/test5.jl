@@ -1,50 +1,38 @@
-using LTspice
-using Base.Test
+function test5()
+  filename = "test5.asc"
+  # exectuablepath = null string will not run LTspice.exe.  Test parsing only.
+  sim = LTspiceSimulation(filename,executablepath="")
+  show(IOBuffer(),sim)
 
-test5file = "test5.asc"
-exc = ""
-test5 = LTspiceSimulation(test5file,exc)
-show(test5)
-show(LTspice.circuitparsed(test5))
-show(LTspice.logparsed(test5))
+  asteps = [1.0,2.0]
 
-alist = [1.0,2.0]
+  @test stepvalues(sim) == (asteps,)
+  @test measurementnames(sim) == ("sum","sump1000")
+  @test stepnames(sim) == ("a",)
+  @test logpath(sim) != ""
 
-@test stepvalues(test5) == (alist,[],[])
-@test measurementnames(test5) == ["sum","sump1000"]
-@test measurementnames(LTspice.logparsed(test5)) == measurementnames(test5)
-@test stepnames(test5) == ["a"]
-@test stepnames(LTspice.logparsed(test5)) == stepnames(test5)
-@test logpath(test5) != ""
+  @static if is_windows()
+      @test circuitpath(sim) == filename
+  end
 
-@static if is_windows()
-    @test circuitpath(test5) == test5file
+  @test parametervalues(sim) == []
+  @test measurementvalues(sim)[1,1] == 1.0
+  @test executablepath(sim) == ""
+  @test haskey(sim,"sum") == true
+  @test length(sim) == 4
+
+  for i in eachindex(asteps)
+      @test measurementvalues(sim)[i,1] == asteps[i]
+      @test sim["sum"][i] == asteps[i]
+      @test measurementvalues(sim)[i,2] == asteps[i] + 1000
+      @test sim["sump1000"][i] == asteps[i] + 1000
+  end
+
+  for line in perlineiterator(sim)
+      @test (line[1] == line[2])
+      @test (line[2] + 1000 == line[3])
+  end
+
+  show(IOBuffer(),sim)
 end
-
-@test issubtype(typeof(circuitpath(LTspice.logparsed(test5))),AbstractString)
-@test typeof(parametervalues(test5)) == Array{Float64,1}
-@test measurementvalues(test5)[1,1,1,1] == 1.0
-@test ltspiceexecutablepath(test5) == ""
-@test haskey(test5,"sum") == false  # measurments in stepped files are not a Dict
-@test length(LTspice.logparsed(test5)) == 4
-
-verify = zeros(Float64,2,2,1,1)
-for (i,a) in enumerate(alist)
-    verify[1,i,1,1] = a
-    @test test5[1,i,1,1] == verify[1,i,1,1]
-    verify[2,i,1,1] = a+1000
-    @test test5[2,i,1,1] == verify[2,i,1,1]
-end
-
-pli = PerLineIterator(test5)
-show(pli)
-for line in pli
-    @test (line[1] == line[2])
-    @test (line[2] + 1000 == line[3])
-end
-
-
-@test measurementvalues(test5) == verify
-show(test5)
-show(LTspice.circuitparsed(test5))
-show(LTspice.logparsed(test5))
+test5()

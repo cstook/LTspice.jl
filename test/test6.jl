@@ -1,36 +1,28 @@
-using LTspice
-using Base.Test
+function test6()
+  filename = "test6.asc"
+  exc = ""
+  # exectuablepath = null string will not run LTspice.exe.  Test parsing only.
+  sim = LTspiceSimulation(filename,executablepath="")
+  show(IOBuffer(),sim)
 
-test6file = "test6.asc"
-exc = ""
-test6 = LTspiceSimulation(test6file,exc)
-show(test6)
-show(LTspice.circuitparsed(test6))
-show(LTspice.logparsed(test6))
+  @test measurementnames(sim) == ()
+  @test stepnames(sim) == ()
+  @test logpath(sim) != ""
 
-@test measurementnames(test6) == []
-@test measurementnames(LTspice.logparsed(test6)) == measurementnames(test6)
-@test stepnames(test6) == []
-@test logpath(test6) != ""
+  @static if is_windows()
+      @test circuitpath(sim) == filename
+  end
 
-@static if is_windows()
-    @test circuitpath(test6) == test6file
+  @test parametervalues(sim) == []
+  @test measurementvalues(sim) == []
+  @test executablepath(sim) == ""
+  @test length(sim) == 0
+
+  pli = perlineiterator(sim,header=true)
+  for line in pli
+    nothing
+  end
+
+  show(IOBuffer(),sim)
 end
-
-@test issubtype(typeof(circuitpath(LTspice.logparsed(test6))),AbstractString)
-@test typeof(parametervalues(test6)) == Array{Float64,1}
-#@test measurementvalues(test6)[1,1,1,1] == 1.0
-@test ltspiceexecutablepath(test6) == ""
-@test haskey(test6,"sum") == false  # measurments in stepped files are not a Dict
-@test length(LTspice.logparsed(test6)) == 0
-
-
-pli = PerLineIterator(test6)
-show(pli)
-@test length(pli) == 0
-@test headernames(pli) == []
-
-
-show(test6)
-show(LTspice.circuitparsed(test6))
-show(LTspice.logparsed(test6))
+test6()

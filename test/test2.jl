@@ -1,21 +1,22 @@
-filename = "test2.asc"
-exc = ""  # null string will not run LTspice.exe.  Test parsing only.
-test2 = LTspiceSimulation(filename, exc)
+function test2()
+  filename = "test2.asc"
+  # exectuablepath = null string will not run LTspice.exe.  Test parsing only.
+  sim = LTspiceSimulation(filename,executablepath="")
+  show(IOBuffer(),sim)
+  @test_approx_eq(sim["c"],2.0)
+  @test_approx_eq(sim["b"],8.0)
+  @test_approx_eq(sim["a"],10.0)
+  @test_approx_eq(sim["d"],100.0)
+  @test_approx_eq(sim["x"],1.00394)
+  @test_approx_eq(sim["z"],0.019685)
+  @test_approx_eq(sim["y"],0.984252)
 
-@test_approx_eq(test2["c"],2.0)
-@test_approx_eq(test2["b"],8.0)
-@test_approx_eq(test2["a"],10.0)
-@test_approx_eq(test2["d"],100.0)
-@test_approx_eq(test2["x"],1.00394)
-@test_approx_eq(test2["z"],0.019685)
-@test_approx_eq(test2["y"],0.984252)
+  @test(length(measurementvalues(sim))==3)
+  @test(length(parametervalues(sim))==4)
 
-@test(length(measurementvalues(test2))==3)
-@test(length(parametervalues(test2))==4)
-
-@test(length(keys(test2))==7)
-@test(length(values(test2))==7)
-@test(length(test2)==7)
-
-@test keys(LTspice.logparsed(test2)) == measurementnames(test2)
-@test eltype(LTspice.logparsed(test2)) == Type(Float64)
+  @test(length(keys(sim))==7)
+  @test(length(values(sim))==7)
+  @test(length(sim)==7)
+  show(IOBuffer(),sim)
+end
+test2()

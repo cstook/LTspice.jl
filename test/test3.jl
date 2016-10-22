@@ -1,44 +1,55 @@
-# copy test3 files to temp so we can test writing to them
-cp("test3.asc","temp\\test3.asc",remove_destination = true)
-cp("test3.log","temp\\test3.log",remove_destination = true)
+function test3()
+  # copy test3 files to temp so we can test writing to them
+  cp("test3.asc","temp\\test3.asc",remove_destination = true)
+  cp("test3.log","temp\\test3.log",remove_destination = true)
 
-filename = "temp\\test3.asc"
-exc = ""  # null string will not run LTspice.exe.  Test parsing only.
-test3 = LTspiceSimulation(filename, exc)
+  filename = "temp\\test3.asc"
+  # exectuablepath = null string will not run LTspice.exe.  Test parsing only.
+  sim = LTspiceSimulation(filename,executablepath="")
+  show(IOBuffer(),sim)
 
-parameternamesverify = ["a","b","c","d","e","f","g","h","i","j","k","l"]
-for (verify,parameter,value) in zip(parameternamesverify,parameternames(test3),parametervalues(test3))
-  @test parameter == verify
-  @test value == test3[parameter]
+  parameternamesverify = ["a","b","c","d","e","f","g","h","i","j","k","l"]
+  for (verify,parameter,value) in zip(parameternamesverify,parameternames(sim),parametervalues(sim))
+    @test parameter == verify
+    @test value == sim[parameter]
+  end
+
+  # parameters
+  @test_approx_eq(sim["a"],10.0)
+  @test_approx_eq(sim["b"],8.0)
+  @test_approx_eq(sim["c"],2.0)
+  @test_approx_eq(sim["d"],100.0)
+  @test_approx_eq(sim["e"],2.6e-12)
+  @test_approx_eq(sim["f"],1.0e7)
+  @test_approx_eq(sim["g"],1.0e-9)
+  @test_approx_eq(sim["h"],1.0e-15)
+  @test_approx_eq(sim["i"],0.005)
+  @test_approx_eq(sim["j"],1.276e6)
+  @test_approx_eq(sim["k"],-3.45e6)
+  @test_approx_eq(sim["l"],454.5)
+
+  # measurements
+  @test_approx_eq(sim["x"],1.00394)
+  @test_approx_eq(sim["z"],0.019685)
+  @test_approx_eq(sim["y"],0.984252)
+
+  for key in parameternames(sim)
+    sim[key] = 1.0
+  end
+  dummyread = sim["x"]
+  sim_b = LTspiceSimulation(filename, executablepath="")
+  for key in parameternames(sim_b)
+    @test_approx_eq(sim_b[key],1.0)
+  end
+
+  for key in parameternames(sim)
+    sim[key] = 2.0
+  end
+  dummyread = measurementvalues(sim)
+  sim_b = LTspiceSimulation(filename, executablepath="")
+  for key in parameternames(sim_b)
+    @test_approx_eq(sim_b[key],2.0)
+  end
+  show(IOBuffer(),sim_b)
 end
-
-@test_approx_eq(test3["a"],10.0)
-@test_approx_eq(test3["b"],8.0)
-@test_approx_eq(test3["c"],2.0)
-@test_approx_eq(test3["d"],100.0)
-@test_approx_eq(test3["e"],2.6e-12)
-@test_approx_eq(test3["f"],1.0e7)
-@test_approx_eq(test3["g"],1.0e-9)
-@test_approx_eq(test3["h"],1.0e-15)
-@test_approx_eq(test3["i"],0.005)
-@test_approx_eq(test3["j"],1.276e6)
-@test_approx_eq(test3["k"],-3.45e6)
-@test_approx_eq(test3["l"],454.5)
-
-@test_approx_eq(test3["x"],1.00394)
-@test_approx_eq(test3["z"],0.019685)
-@test_approx_eq(test3["y"],0.984252)
-
-for (key,value) in test3.circuitparsed
-  test3[key] = 1.0
-end
-
-dummyread = test3["x"]  # will force parameters to write to file
-                        # sim will not run since exc = ""
-
-test3b = LTspiceSimulationTempDir(filename, exc)
-for (key,value) in LTspice.circuitparsed(test3b)
-  @test_approx_eq(test3b[key],1.0)
-end
-
-
+test3()

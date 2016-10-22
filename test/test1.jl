@@ -1,14 +1,15 @@
-
 function test1()
   filename = "test1.asc"
-  #filename = "C:/Users/Chris/.julia/v0.5/LTspice/test/test1.asc"
+  # exectuablepath = null string will not run LTspice.exe.  Test parsing only.
   sim = LTspiceSimulation(filename,executablepath="")
   show(IOBuffer(),sim)
-  (circuitdir,file) = splitdir(circuitpath(sim))
-  @test file == "test1.asc"
-  (logdir,file) = splitdir(logpath(sim))
-  @test logdir == circuitdir
-  @test executablepath(sim) == ""
+  @static if is_windows()
+    (circuitdir,_filename) = splitdir(circuitpath(sim))
+    @test _filename == filename
+    (logdir,logfilename) = splitdir(logpath(sim))
+    @test logdir == circuitdir
+    @test executablepath(sim) == ""
+  end
   @test parameternames(sim) == ("vin","load")
   @test measurementnames(sim) == ("Current",)
   @test stepnames(sim) == ()
@@ -30,9 +31,10 @@ function test1()
   @test isnan(get(sim,"not a valid key",NaN))
   @test eltype(sim) == Float64
   @test length(sim) == 3
-  sim["vin"] = 1.0
-  @test sim["vin"] == 1.0
-  sim["vin"] = 5.0
-
+  simintempdir = LTspiceSimulation(filename,tempdir=true)
+  simintempdir["vin"] = 1.0
+  @test simintempdir["vin"] == 1.0
+  simintempdir["vin"] = 5.0
+  @test circuitpath(sim)!=circuitpath(simintempdir)
 end
 test1()

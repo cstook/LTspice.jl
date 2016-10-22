@@ -328,9 +328,9 @@ function Base.get(x::LTspiceSimulation, key::AbstractString, default)
   end
 end
 function Base.setindex!(x::LTspiceSimulation, value::Float64, key::AbstractString)
-  if haskey(x.parameterdict)
+  if haskey(x.parameterdict,key)
     x.parametervalues[x.parameterdict[key]] = value
-  elseif haskey(x.measurementdict)
+  elseif haskey(x.measurementdict,key)
     error("measurements cannot be set.")
   else
     throw(KeyError(key))

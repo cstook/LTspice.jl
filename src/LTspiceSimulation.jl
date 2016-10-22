@@ -273,7 +273,7 @@ function showsteps(io::IO, x::LTspiceSimulation)
       if x.status.ismeasurementsdirty
         println(io)
       else
-        println(" ",length(x.stepvalues.values[i])," steps")
+        println(io," ",length(x.stepvalues.values[i])," steps")
       end
     end
   end

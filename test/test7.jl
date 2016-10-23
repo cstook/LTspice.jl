@@ -1,6 +1,5 @@
 function test7()
   filename = "test7.asc"
-  exc = ""
   # exectuablepath = null string will not run LTspice.exe.  Test parsing only.
   sim = LTspiceSimulation(filename,executablepath="")
   show(IOBuffer(),sim)

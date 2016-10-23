@@ -1,8 +1,9 @@
 using LTspice
 
-sim1 = LTspiceSimulation("test/test1.asc",tempdir=true)
+sim1 = LTspiceSimulation("test/test1.asc",tempdir=true,executablepath="")
 show(sim1)
 sim1["Current"]
+sim1["vin"] = 3.0
 sim1
 
 sim5 = LTspiceSimulation("test/test5.asc",tempdir=true)

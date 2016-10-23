@@ -31,10 +31,8 @@ function test1()
   @test isnan(get(sim,"not a valid key",NaN))
   @test eltype(sim) == Float64
   @test length(sim) == 3
-  simintempdir = LTspiceSimulation(filename,tempdir=true)
-  simintempdir["vin"] = 1.0
-  @test simintempdir["vin"] == 1.0
-  simintempdir["vin"] = 5.0
-  @test circuitpath(sim)!=circuitpath(simintempdir)
+  sim["vin"] = 1.0
+  @test sim["vin"] == 1.0
+  sim["vin"] = 5.0
 end
 test1()

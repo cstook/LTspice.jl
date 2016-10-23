@@ -2,18 +2,19 @@
 using LTspice
 using Base.Test
 
-filename = "test1.asc"
-test1 = LTspiceSimulationTempDir(filename)
-println(ltspiceexecutablepath(test1))
-println(circuitpath(test1))
-v = 20.0
-r = 2.0
-i = test1(v,r)[1]
-@test i == 10.0
-test2 = LTspiceSimulationTempDir("testInc1.asc")
-@test test2["inca"] == 1.0
-@test test2["incb"] == 2.0
-@test test2["incc"] == 3.0
-@test test2["incd"] == 4.0
-@test test2["ince"] == 5.0
-@test test2["incf"] == 6.0
+function localtests()
+  localdir = "C:/Users/Chris/.julia/v0.5/LTspice/test"
+  test1 = LTspiceSimulation(joinpath(localdir,"test1.asc"),tempdir=true)
+  v = 20.0
+  r = 2.0
+  i = test1(v,r)[1]
+  @test i == 10.0
+  testinc1 = LTspiceSimulation(joinpath(localdir,"testInc1.asc"),tempdir=true)
+  @test testinc1["incA"] == 1.0
+  @test testinc1["incB"] == 2.0
+  @test testinc1["incC"] == 3.0
+  @test testinc1["incD"] == 4.0
+  @test testinc1["incE"] == 5.0
+  @test testinc1["incF"] == 6.0
+end
+localtests()

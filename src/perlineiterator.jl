@@ -63,9 +63,9 @@ Retruns iterator in the format required to pass to writecsv or writedlm.
 
 **Keyword Arguments**
 
-- `steporder`     --
-- `resultnames`   --
-- `header`        --
+- `steporder`     -- specify order of steps
+- `resultnames`   -- specify parameters and measurements for output
+- `header`        -- `true` to make first line header
 
 The step order defaults to the order the step values appear in the circuit file.
 Step order can be specified by passing an array of step names.  By default
@@ -75,10 +75,9 @@ resultnames.
 
 ```julia
 # write CSV with headers
-io = open("test.csv",false,true,true,false,false)
-pli = perlineiterator(simulation,header=true)
-writecsv(io,pli)
-close(io)
+open("test.csv",false,true,true,false,false) do io
+    writecsv(io,perlineiterator(circuit2,header=true))
+end
 ```
 """
 function perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(

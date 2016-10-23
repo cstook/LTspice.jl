@@ -14,7 +14,7 @@ pyplot()
 
 Create an instance of `LTspiceSimulation`.
 ```@example 2
-example2 = LTspiceSimulationTempDir("example2.asc")
+example2 = LTspiceSimulation("example2.asc",tempdir=true)
 ```
 
 Define the values of vin and iout to test.

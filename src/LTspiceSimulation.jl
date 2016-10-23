@@ -32,7 +32,7 @@ Access as a function:
 (m1,m2,m3) = sim(p1,p2,p3)  # simulation with three measurements and three parameters
 ```
 
-Access as arrays:
+Access as arrays or tuples:
 ```julia
 pnames = parameternames(sim)
 mnames = measurementnames(sim)
@@ -73,7 +73,7 @@ parametervalues
 """
     parameternames(sim)
 
-Returns an array of the parameters names of `sim` in the order they appear in the
+Returns an tuple of the parameters names of `sim` in the order they appear in the
 circuit file.
 """
 parameternames
@@ -84,7 +84,7 @@ parameternames
 
 Returns path to the circuit file.
 
-This is the path to the working circuit file.  If `LTspiceSimulationTempDir` was used
+This is the path to the working circuit file.  If `tempdir=ture` was used
 or if running under wine, this will not be the path given to the constructor.
 """
 circuitpath
@@ -97,16 +97,16 @@ Returns path to the log file.
 logpath
 
 """
-    ltspiceexecutablepath(sim)
+    executablepath(sim)
 
 Returns path to the LTspice executable
 """
-ltspiceexecutablepath
+executablepath
 
 """
     measurementnames(sim)
 
-Returns an array of the measurement names of `sim` in the order they appear in the
+Returns an tuple of the measurement names of `sim` in the order they appear in the
 circuit file.
 """
 measurementnames
@@ -114,7 +114,7 @@ measurementnames
 """
     stepnames(sim)
 
-Returns an array of step names of `sim`.
+Returns an tuple of step names of `sim`.
 """
 stepnames
 
@@ -125,8 +125,10 @@ Retruns measurements of `sim` as an a array of Float64
 values.
 
 ```julia
-value = measurementvalues(sim)[inner_step, middle_step,
-                        outer_step,measurement_name] # 3 nested steps
+value = measurementvalues(sim)[inner_step,
+                               middle_step,
+                               outer_step,
+                               measurement_name] # 3 nested steps
 ```
 """
 measurementvalues

@@ -9,6 +9,8 @@ Base.promote_rule{T,n}(::Type{AbstractArray{T,n}},::SpecialArray{T,n}) =
   Type{Array{T,n}}
 
 """
+    ParameterValuesArray{T,n}
+
 Same as Array, but tracks if user has modified values.
 """
 type ParameterValuesArray{T,n} <: SpecialArray{T,n}
@@ -26,6 +28,8 @@ Base.convert{T,n,S}(::Type{ParameterValuesArray{T,n}}, x::AbstractArray{S,n}) =
   ParameterValuesArray{T,n}(Array{T,n}(x),true)
 
 """
+    MeasurementValuesArray{T,n}
+
 Same as Array, but setindex! returns error.
 """
 # User cannot modify, only

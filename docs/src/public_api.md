@@ -14,8 +14,6 @@ Pages = ["public_api.md"]
 ```@docs
 LTspice
 LTspiceSimulation
-LTspiceSimulation(x)
-LTspiceSimulationTempDir
 parametervalues
 parameternames
 measurementvalues
@@ -23,17 +21,15 @@ measurementnames
 stepvalues
 stepnames
 circuitpath
-ltspiceexecutablepath
+executablepath
 logpath
-loadlog!
-flush(::LTspiceSimulation)
+parselog!
+flush
+run!
 ```
 
 ## Exporting Data
-	
+
 ```@docs
-PerLineIterator
-PerLineIterator(x)
-headernames
-header
+perlineiterator
 ```

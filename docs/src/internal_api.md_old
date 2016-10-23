@@ -48,6 +48,4 @@ LTspice.processlines!
 LTspice.makecircuitfileincludeabsolutepath
 LTspice.blanklog
 LTspice.defaultltspiceexecutable
-LTspice.MultiLevelIterator
-LTspice.removetempdirectories
 ```

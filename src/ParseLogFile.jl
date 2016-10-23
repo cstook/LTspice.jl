@@ -1,3 +1,5 @@
+export parselog!
+
 abstract LogLine
 abstract Header <: LogLine
 type IsCircuitPath <: Header end
@@ -72,7 +74,7 @@ function parseline!(x::LTspiceSimulation, mn::MeasurementName, line::AbstractStr
   m == nothing && return false
   done(mn.iter, mn.state) && throw(ParseError("unexpected measurement name"))
   (i,mn.state) = next(mn.iter, mn.state)
-  m.captures[1] != x.measurementnames[i] && throw(ParseError("unexpected measurement name"))
+  m.captures[1] != lowercase(x.measurementnames[i]) && throw(ParseError("unexpected measurement name"))
   return true
 end
 
@@ -180,3 +182,10 @@ function parselog!{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,N
   end
   return nothing
 end
+
+"""
+    parselog!(sim)
+
+Loads log file of sim without running simulation. The user does not normally need to call parselog!.
+"""
+parselog!

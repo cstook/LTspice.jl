@@ -11,8 +11,7 @@ using LTspice;
 
 Create an instance of `LTspiceSimulation`.
 ```@example quickstart
-circuitpath = "example1.asc"
-example1 = LTspiceSimulationTempDir(circuitpath)
+example1 = LTspiceSimulation("example1.asc",tempdir=true)
 ```
 
 Access parameters and measurements using their name as the key.
@@ -24,7 +23,7 @@ example1["rload"] = 20.0;  # set parameter Rload to 20.0
 
 Read the resulting measurement.
 ```@example quickstart
-loadpower = example1["pload"] # run simulation, return Pload
+loadpower = example1["Pload"] # run simulation, return Pload
 ```
 
 Circuit can be called like a function

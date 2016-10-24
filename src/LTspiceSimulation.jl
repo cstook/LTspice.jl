@@ -292,7 +292,7 @@ end
 Base.haskey(x::LTspiceSimulation, key::AbstractString) =
   haskey(x.parameterdict,key) || haskey(x.measurementdict,key)
 Base.keys(x::LTspiceSimulation) =
-  vcat(collect(keys(x.parameterdict)),collect(keys(x.measurementdict)))
+  vcat(x.parameternames...,x.measurementnames...)
 function Base.values(x::LTspiceSimulation)
   run!(x)
   allkeys = keys(x)

@@ -20,8 +20,8 @@ function test1()
   @test sim["Vin"] == 5
   @test sim["load"] == 2
   @test sim["Current"] == 2.5
-  @test keys(sim) == ["load","Vin","Current"]
-  @test values(sim) == [2.0,5.0,2.5]
+  @test keys(sim) == ["Vin","load","Current"]
+  @test values(sim) == [5.0,2.0,2.5]
   for key in keys(sim)
     @test haskey(sim,key)
     @test sim[key] == get(sim,key,NaN)

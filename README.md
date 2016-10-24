@@ -38,7 +38,7 @@ Access parameters and measurements using their name as the key.
 
 Set a parameter to a new value.
 ```julia
-example1["rload"] = 20.0  # set parameter Rload to 20.0
+example1["Rload"] = 20.0  # set parameter Rload to 20.0
 ```
 
 Read the resulting measurement.
@@ -56,7 +56,7 @@ Use [Optim.jl](https://github.com/JuliaOpt/Optim.jl) to perform an optimization 
 ```julia
 using Optim
 result = optimize(rload -> -example1(rload)[1],10.0,100.0)
-rload_for_maximum_power = example1["rload"]
+rload_for_maximum_power = example1["Rload"]
 ```
 ## Supported Platforms
 

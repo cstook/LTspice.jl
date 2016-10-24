@@ -4,19 +4,18 @@ function test7()
   sim = LTspiceSimulation(filename,executablepath="")
   show(IOBuffer(),sim)
 
-  @test sim["a"] == 10e-12
-  @test ~haskey(sim,"b")
-  @test ~haskey(sim,"c")
-  @test ~haskey(sim,"d")
-  @test ~haskey(sim,"A")
-  @test ~haskey(sim,"B")
-  @test ~haskey(sim,"C")
-  @test ~haskey(sim,"D")
+  @test sim["A"] == 10e-12
+  @test ~haskey(sim,"b") # keys only for numbers
+  @test ~haskey(sim,"C") # keys only for numbers
+  @test ~haskey(sim,"d") # keys only for numbers
+  @test ~haskey(sim,"a") # keys are case sensitive
+  @test ~haskey(sim,"B") # both
+  @test ~haskey(sim,"D") # both
 
 
-  @test sim["ee"] == 1e3
-  @test sim["ff"] == 1e3
-  @test sim["gg"] == 1e6
+  @test sim["Ee"] == 1e3
+  @test sim["fF"] == 1e3
+  @test sim["GG"] == 1e6
   @test sim["h"] == 1.123e6
   @test sim["i"] == 1e9
   @test sim["j"] == 1e9

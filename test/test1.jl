@@ -10,17 +10,17 @@ function test1()
     @test logdir == circuitdir
     @test executablepath(sim) == ""
   end
-  @test parameternames(sim) == ("vin","load")
+  @test parameternames(sim) == ("Vin","load")
   @test measurementnames(sim) == ("Current",)
   @test stepnames(sim) == ()
   @test parametervalues(sim) == [5.00, 2.00]
   @test measurementvalues(sim) == [2.50]
   show(IOBuffer(),sim)
   @test stepvalues(sim) == ()
-  @test sim["vin"] == 5
+  @test sim["Vin"] == 5
   @test sim["load"] == 2
   @test sim["Current"] == 2.5
-  @test keys(sim) == ["load","vin","Current"]
+  @test keys(sim) == ["load","Vin","Current"]
   @test values(sim) == [2.0,5.0,2.5]
   for key in keys(sim)
     @test haskey(sim,key)
@@ -31,8 +31,8 @@ function test1()
   @test isnan(get(sim,"not a valid key",NaN))
   @test eltype(sim) == Float64
   @test length(sim) == 3
-  sim["vin"] = 1.0
-  @test sim["vin"] == 1.0
-  sim["vin"] = 5.0
+  sim["Vin"] = 1.0
+  @test sim["Vin"] == 1.0
+  sim["Vin"] = 5.0
 end
 test1()

@@ -7,7 +7,7 @@ function test13()
   npnsteps = [50.0, 75.0, 100.0]
   v2steps = [10.0, 15.0, 20.0, 25.0, 30.0]
   v1steps = [1.0, 2.0]
-  teststepnames = ("2n2222(vaf)","v2","v1")
+  teststepnames = ("2N2222(VAF)","V2","V1")
   testmeasurementnames = ("aaaaaa", "b43")
 
   @test stepvalues(sim) == (npnsteps,v2steps,v1steps)

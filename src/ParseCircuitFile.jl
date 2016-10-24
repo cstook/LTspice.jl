@@ -44,7 +44,7 @@ function parsecard!(cp::CircuitParsed, ::Parameter, card::AbstractString)
     if m == nothing # exit if not a parameter card
         return false
     end
-    name = lowercase(m.captures[1])
+    name = m.captures[1] #lowercase(m.captures[1])
     value = m.captures[2]
     valueoffset = m.offsets[2] # position of start of value in card
     valuelength = length(value)
@@ -88,7 +88,7 @@ function parsecard!(cp::CircuitParsed, ::Step, card::AbstractString)
             return false # exit if not a step card
         end
     end
-    name = lowercase(m.captures[1])
+    name = m.captures[1] #lowercase(m.captures[1])
     push!(cp.stepnames, name)
     push!(cp.circuitfilearray, card)
     return true

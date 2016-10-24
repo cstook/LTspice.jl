@@ -14,7 +14,7 @@ function test12()
 
   @test stepvalues(sim) == (v1steps, bsteps, csteps)
   @test measurementnames(sim) == ()
-  @test stepnames(sim) == ("v1","b","c")
+  @test stepnames(sim) == ("V1","b","c")
   @test measurementvalues(sim) == Array(Float64,(23,6,3,0))
 
   @test length(collect(perlineiterator(sim))) == length(v1steps)*length(bsteps)*length(csteps)
@@ -22,7 +22,7 @@ function test12()
   pli = perlineiterator(sim,header=true)
   state = start(pli)
   (header,state) = next(pli,state)
-  @test header == ("v1","b","c","a")
+  @test header == ("V1","b","c","a")
   show(IOBuffer(),sim)
 end
 test12()

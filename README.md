@@ -18,7 +18,7 @@ Pkg.clone("https://github.com/cstook/LTspice.jl.git")
 ```
 The [julia documentation](http://docs.julialang.org) section on installing unregistered packages provides more information.
 
-LTspice.jl is only compatible with julia v0.4 and v0.5dev
+LTspice.jl is only compatible with julia v0.5
 
 ## [Example 1](https://github.com/cstook/LTspice.jl/blob/master/examples/example%201/example1.ipynb)
 
@@ -31,8 +31,7 @@ using LTspice
 
 Create an instance of LTspiceSimulation.
 ```julia
-circuitpath = "example1.asc"
-example1 = LTspiceSimulationTempDir(circuitpath)
+example1 = LTspiceSimulation("example1.asc",tempdir=true)
 ```
 
 Access parameters and measurements using their name as the key.
@@ -44,7 +43,7 @@ example1["rload"] = 20.0  # set parameter Rload to 20.0
 
 Read the resulting measurement.
 ```julia
-loadpower = example1["pload"] # run simulation, return Pload
+loadpower = example1["Pload"] # run simulation, return Pload
 ```
 
 Circuit can be called like a function
@@ -74,6 +73,3 @@ The [Linear Technology<sup>TM</sup>](http://www.linear.com) website
 The [LTspice Yahoo Group](https://groups.yahoo.com/neo/groups/LTspice/info)
 
 [LTwiki](http://www.ltwiki.org)
-
-
-

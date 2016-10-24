@@ -26,3 +26,8 @@ end
 for line in perlineiterator(simPCF1,steporder=["a","c","b"],resultnames=("sum",),header=true)
   println(line)
 end
+
+using LTspice
+cd("C:/Users/Chris/.julia/v0.5/LTspice/test")
+testinc1 = LTspiceSimulation("testInc1.asc")
+show(testinc1)

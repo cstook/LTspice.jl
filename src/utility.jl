@@ -25,6 +25,7 @@ Returns the default LTspice executable path for the operating system.
 function defaultltspiceexecutable()
   @static if is_windows()
     possibleltspiceexecutablelocations = [
+    "C:\\Program Files\\LTC\\LTspiceXVII\\XVIIx64.exe",
     "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe",
     "C:\\Program Files\\LTC\\LTspiceIV\\scad3.exe"
     ]
@@ -35,6 +36,7 @@ function defaultltspiceexecutable()
   end
   @static if is_linux()
     possibleltspiceexecutablelocations = [
+    "/home/$(ENV["USER"])/.wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe",
     "/home/$(ENV["USER"])/.wine/drive_c/Program Files (x86)/LTC/LTspiceIV/scad3.exe"]
   end
   for canidatepath in possibleltspiceexecutablelocations
@@ -43,4 +45,15 @@ function defaultltspiceexecutable()
     end
   end
   error("Could not find LTspice executable")
+end
+
+function generatealltestlogfiles(;executablepath=defaultltspiceexecutable(),dir=pwd())
+  for file in readdir(dir)
+    (f,e) = splitext(file)
+    if e==".asc"
+      sim=LTspiceSimulation(file,executablepath=executablepath)
+      run!(sim,true)
+      show(sim)
+    end
+  end
 end

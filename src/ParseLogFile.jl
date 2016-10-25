@@ -40,14 +40,17 @@ function parseline!(::LTspiceSimulation, ::IsCircuitPath, line::AbstractString)
   ismatch(circuitpathregex, line)
 end
 
-const nonsteppedmeasurementregex = r"^([a-z][a-z0-9_@#$.:\\]*):.*=([\S]+)"i
+const nonsteppedmeasurementregex = r"^.*:.*=([\S]+)"i
 function parseline!(x::NonSteppedSimulation, mv::MeasurementValue, line::AbstractString)
   m = match(nonsteppedmeasurementregex, line)
+  println(m)
   m == nothing && return false
   done(mv.iter, mv.state) && throw(ParseError("unexpected measurement"))
   (i,mv.state) = next(mv.iter, mv.state)
+  println(m.captures[1],"   ",typeof(m.captures[1]))
+  println(parse(Float64,transcode(String,String(m.captures[1]))))
   try
-    x.measurementvalues.values[i] = parse(Float64,m.captures[2])
+    x.measurementvalues.values[i] = parse(Float64,m.captures[1])
   catch
     x.measurementvalues.values[i] = Float64(NaN)
   end

@@ -43,12 +43,9 @@ end
 const nonsteppedmeasurementregex = r"^.*:.*=([\S]+)"i
 function parseline!(x::NonSteppedSimulation, mv::MeasurementValue, line::AbstractString)
   m = match(nonsteppedmeasurementregex, line)
-  println(m)
   m == nothing && return false
   done(mv.iter, mv.state) && throw(ParseError("unexpected measurement"))
   (i,mv.state) = next(mv.iter, mv.state)
-  println(m.captures[1],"   ",typeof(m.captures[1]))
-  println(parse(Float64,transcode(String,String(m.captures[1]))))
   try
     x.measurementvalues.values[i] = parse(Float64,m.captures[1])
   catch
@@ -155,7 +152,7 @@ function processlines!(io::IO, x::LTspiceSimulation, findlines=[], untillines=[]
 end
 
 function parselog!{Nparam,Nmeas}(x::NonSteppedSimulation{Nparam,Nmeas})
-  open(x.logpath,true,false,false,false,false) do io
+  open(x.logpath,enc"UTF-16LE") do io
     measurement = MeasurementValue(x)
     exitcode = processlines!(io, x, [], [measurement,IsDotStep()])
     if exitcode == 2 # this was supposed to be a NonSteppedFile
@@ -168,7 +165,7 @@ function parselog!{Nparam,Nmeas}(x::NonSteppedSimulation{Nparam,Nmeas})
 end
 
 function parselog!{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep})
-  open(x.logpath,true,false,false,false,false) do io
+  open(x.logpath,enc"UTF-16LE") do io
     dotstep = DotStep(x)
     measurementname = MeasurementName(x)
     processlines!(io, x, [dotstep],[measurementname])

@@ -1,8 +1,8 @@
-__precompile__()
+#__precompile__()
 
 "Main module for `LTspice.jl` - a Julia interface to LTspice"
 module LTspice
-using Iterators
+using Iterators, StringEncodings
 
 include("specialarrays.jl")
 include("LTspiceSimulation.jl")

@@ -51,6 +51,7 @@ function logfileencoding(path::AbstractString)
   ismatch(r"XVIIx64.exe",path) && return enc"UTF-16LE"
   ismatch(r"XVIIx32.exe",path) && return enc"UTF-16LE"
   ismatch(r"scad3.exe",path) && return enc"UTF-8"
+  return enc"UTF-16LE" # for path = ""
 end
 
 function generatealltestlogfiles(;executablepath=defaultltspiceexecutable(),dir=pwd())

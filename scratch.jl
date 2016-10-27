@@ -59,30 +59,5 @@ end
 
 using LTspice
 cd("C:/Users/Chris/.julia/v0.5/LTspice/test")
-LTspice.generatealltestlogfiles()
-
-using StringEncodings
-a = "\x002\0.\x005\0"
-f = parse(Float64,decode(a.data,"UTF-16BE"))
-
-print("\x002\0.\x005\0")
-parse(Float64,a)
-parse(Float64,"\x002\0.\x005\0")
-print("\x002.\x005")
-transcode(String,a)
-LegacyStrings.ascii(a)
-utf16(2.5)
-buf = IOBuffer()
-print(buf,a)
-b = takebuf_string(buf)
-
-2.5 -> "\x002\0.\x005\0"
-1.00394 -> "\x001\0.\x000\x000\x003\09\x004\0"
-
-
-s = "abcdefghij"
-m = match(r"(bcd)",s)
-typeof(String(m.captures[1]))
-String(m.captures[1])
-
-Pkg.test("LTspice")
+cd("C:/Users/Chris/Documents/LTspiceXVII/myfiles")
+encoding = LTspice.circuitfileencoding("Draft1.asc")

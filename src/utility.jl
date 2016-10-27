@@ -47,6 +47,12 @@ function defaultltspiceexecutable()
   error("Could not find LTspice executable")
 end
 
+function logfileencoding(path::AbstractString)
+  ismatch(r"XVIIx64.exe",path) && return enc"UTF-16LE"
+  ismatch(r"XVIIx32.exe",path) && return enc"UTF-16LE"
+  ismatch(r"scad3.exe",path) && return enc"UTF-8"
+end
+
 function generatealltestlogfiles(;executablepath=defaultltspiceexecutable(),dir=pwd())
   for file in readdir(dir)
     (f,e) = splitext(file)

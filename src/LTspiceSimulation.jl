@@ -43,21 +43,23 @@ svalues = stepvalues(sim)
 ```
 """
 immutable LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
-  circuitpath :: String
-  logpath :: String
-  executablepath :: String
-  circuitfilearray :: Array{String,1} # text of circuit file
-  parameternames :: NTuple{Nparam,String}
+  circuitpath :: AbstractString
+  logpath :: AbstractString
+  executablepath :: AbstractString
+  circuitfilearray :: Array{AbstractString,1} # text of circuit file
+  parameternames :: NTuple{Nparam,AbstractString}
   parametervalues :: ParameterValuesArray{Float64,1} # values in units A,V,W
   parametermultiplier :: NTuple{Nparam,Float64} # units
   parameterindex :: NTuple{Nparam,Int} # index into circuitfilearray
-  parameterdict  :: Dict{String,Int} # index into name, value, multiplier, index arrays
-  measurementnames :: NTuple{Nmeas,String}
-  measurementdict :: Dict{String,Int} # index into measurmentnames
+  parameterdict  :: Dict{AbstractString,Int} # index into name, value, multiplier, index arrays
+  measurementnames :: NTuple{Nmeas,AbstractString}
+  measurementdict :: Dict{AbstractString,Int} # index into measurmentnames
   measurementvalues :: MeasurementValuesArray{Float64,Nmdim}
-  stepnames :: NTuple{Nstep,String}
+  stepnames :: NTuple{Nstep,AbstractString}
   stepvalues :: StepValues{Nstep}
   status :: Status
+  circuitfileencoding
+  logfileencoding
 end
 typealias NonSteppedSimulation{Nparam,Nmeas} LTspiceSimulation{Nparam,Nmeas,1,0}
 
@@ -176,11 +178,11 @@ function LTspiceSimulation(
   Nmeas = length(circuitparsed.measurementnames)
   Nstep = length(circuitparsed.stepnames)
   Nmdim = Nstep + 1
-  parameterdict = Dict{String,Int}()
+  parameterdict = Dict{AbstractString,Int}()
   for i in eachindex(circuitparsed.parameternames)
     parameterdict[circuitparsed.parameternames[i]] = i
   end
-  measurementdict = Dict{String,Int}()
+  measurementdict = Dict{AbstractString,Int}()
   for i in eachindex(circuitparsed.measurementnames)
     measurementdict[circuitparsed.measurementnames[i]] = i
   end
@@ -199,7 +201,9 @@ function LTspiceSimulation(
     MeasurementValuesArray{Float64,Nmdim}(fill(NaN,(ntuple(d->1,Nstep)...,Nmeas))), # measurementvalues
     (circuitparsed.stepnames...),
     blankstepvalues(Nstep),
-    Status()
+    Status(),
+    circuitparsed.circuitfileencoding,
+    logfileencoding(executablepath)
   )
 end
 
@@ -233,18 +237,22 @@ function showparameters(io::IO, x::LTspiceSimulation)
     println(io,rpad(x.parameternames[i],25,' ')," = ",x.parametervalues[i])
   end
 end
+showmeasurments(::IO, x::LTspiceSimulation{0,0,1,0}) = nothing
+showmeasurments{Nparam}(::IO, x::LTspiceSimulation{Nparam,0,1,0}) = nothing
 showmeasurments{Nparam,Nmdim,Nstep}(::IO, x::LTspiceSimulation{Nparam,0,Nmdim,Nstep}) = nothing
 function showmeasurements{Nparam,Nmeas}(io::IO, x::LTspiceSimulation{Nparam,Nmeas,1,0})
-  println(io)
-  println(io,"Measurements")
-  for i in eachindex(x.measurementnames)
-    print(io,rpad(x.measurementnames[i],25,' '))
-    if x.status.ismeasurementsdirty
-      println(io)
-    elseif isnan(x.measurementvalues[i])
-      println(io," = measurement failed")
-    else
-      println(io," = ",x.measurementvalues[i])
+  if Nmeas!=0
+    println(io)
+    println(io,"Measurements")
+    for i in eachindex(x.measurementnames)
+      print(io,rpad(x.measurementnames[i],25,' '))
+      if x.status.ismeasurementsdirty
+        println(io)
+      elseif isnan(x.measurementvalues[i])
+        println(io," = measurement failed")
+      else
+        println(io," = ",x.measurementvalues[i])
+      end
     end
   end
 end

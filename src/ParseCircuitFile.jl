@@ -1,12 +1,13 @@
 type CircuitParsed
-  circuitfilearray :: Array{String,1}
-  parameternames :: Array{String,1}
+  circuitfilearray :: Array{AbstractString,1}
+  parameternames :: Array{AbstractString,1}
   parametervalues :: ParameterValuesArray{Float64,1}
   parametermultiplier :: Array{Float64,1}
   parameterindex :: Array{Int,1}
-  measurementnames :: Array{String,1}
-  stepnames :: Array{String,1}
-  CircuitParsed() = new([],[],[],[],[],[],[])
+  measurementnames :: Array{AbstractString,1}
+  stepnames :: Array{AbstractString,1}
+  circuitfileencoding
+  CircuitParsed() = new([],[],[],[],[],[],[],nothing)
 end
 
 # LTspice allows multiple directives (cards) in a single block
@@ -107,20 +108,37 @@ end
 
 iscomment(line::AbstractString) = ismatch(r"^TEXT .* ;",line)
 function parsecircuitfile(circuitpath::AbstractString)
-  io = open(circuitpath,true,false,false,false,false)
   cp = CircuitParsed()
-  for line in eachline(io)
-    if iscomment(line)
-      push!(cp.circuitfilearray, line)
-    else
-      for card in eachcard(line) # might be multi-line directive(s) created with Ctrl-M
-        parsecard!(cp, card)
+  cp.circuitfileencoding = circuitfileencoding(circuitpath)
+  open(circuitpath,cp.circuitfileencoding) do io
+    for line in eachline(io)
+      if iscomment(line)
+        push!(cp.circuitfilearray, line)
+      else
+        for card in eachcard(line) # might be multi-line directive(s) created with Ctrl-M
+          parsecard!(cp, card)
+        end
       end
     end
   end
-  close(io)
   cp.parametervalues.ismodified = false
   return cp
+end
+
+function circuitfileencoding(path::AbstractString)
+  firstwordshouldbe = "Version"
+  encodings = [enc"UTF-8",enc"UTF-16LE"]
+  correct_i = 0
+  for i in eachindex(encodings)
+    open(path,encodings[i]) do io
+      if ismatch(r"^Version",readline(io))
+        correct_i = i
+      end
+    end
+    correct_i !=0 && break
+  end
+  correct_i == 0 && error("invalid LTspice circuit file")
+  return encodings[correct_i]
 end
 
 # units as defined in LTspice

@@ -383,7 +383,7 @@ function updatecircuitfilearray!(x::LTspiceSimulation)
   end
 end
 function writecircuitfilearray(x::LTspiceSimulation)
-  io = open(x.circuitpath,false,true,false,true,false)
+  io = open(x.circuitpath, x.circuitfileencoding, "w")
   for text in x.circuitfilearray
     print(io,text)
   end

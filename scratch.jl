@@ -1,5 +1,6 @@
 using LTspice
 cd("C:/Users/Chris/.julia/v0.5/LTspice/test")
+cd("C:/Users/Chris/Documents/LTspiceXVII/myfiles")
 
 sim1 = LTspiceSimulation("test5.asc",tempdir=true)
 show(sim1)
@@ -7,33 +8,6 @@ run!(sim1)
 sim1["Current"]
 sim1["vin"] = 3.0
 sim1
-
-
-using LTspice
-using StringEncodings
-cd("C:/Users/Chris/.julia/v0.5/LTspice/test")
-open("test4.log",enc"UTF-16LE") do io
-  c = ""
-  while ~eof(io)
-    line = readline(io)
-  #for line in eachline(io)
-    m = match(r"\.step\s+(?:.*?)=(.*?)\s+(?:.*?)=(.*?)\s*$"i,line)
-    if m != nothing
-      println(line)
-      println(line.data)
-      c = m.captures[1]
-      break
-    end
-  end
-end
-println(c)
-c
-f = parse(Float64,c)
-f = parse(Float64,decode(c,"UTF-16BE"))
-s = String(c)
-f = parse(Float64,decode(s.data,"UTF-16BE"))
-
-
 
 
 sim5 = LTspiceSimulation("test/test5.asc",tempdir=true)
@@ -57,7 +31,7 @@ for line in perlineiterator(simPCF1,steporder=["a","c","b"],resultnames=("sum",)
   println(line)
 end
 
-using LTspice
-cd("C:/Users/Chris/.julia/v0.5/LTspice/test")
-cd("C:/Users/Chris/Documents/LTspiceXVII/myfiles")
-encoding = LTspice.circuitfileencoding("Draft1.asc")
+sim = LTspiceSimulation("Draft2.asc")
+print(sim)
+sim["x"] = 20.0
+flush(sim,true)

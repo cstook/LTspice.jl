@@ -2,36 +2,44 @@ using LTspice
 cd("C:/Users/Chris/.julia/v0.5/LTspice/test")
 cd("C:/Users/Chris/Documents/LTspiceXVII/myfiles")
 
-sim1 = LTspiceSimulation("test5.asc",tempdir=true)
+sim1 = LTspiceSimulation("test3.asc",tempdir=true)
 show(sim1)
 run!(sim1)
 sim1["Current"]
 sim1["vin"] = 3.0
 sim1
 
-
-sim5 = LTspiceSimulation("test/test5.asc",tempdir=true)
-show(sim5)
-sim5["sum"]
-measurementvalues(sim5)
-
-simPCF1 = LTspiceSimulation("test/PCF_test1.asc",tempdir=true)
-show(simPCF1)
-a = measurementvalues(simPCF1)
-simPCF1
-simPCF1["sump1000"]
-measurementnames(simPCF1)
-parameternames(simPCF1)
-pli = perlineiterator(simPCF1,header=true)
-for line in pli
-  println(line)
-end
-
-for line in perlineiterator(simPCF1,steporder=["a","c","b"],resultnames=("sum",),header=true)
-  println(line)
-end
-
 sim = LTspiceSimulation("Draft2.asc")
 print(sim)
-sim["x"] = 20.0
+sim["d"] = 10.0
 flush(sim,true)
+
+line = "TEXT -48 -24 Left 2 !.param a=7897 b=8.9 k=9 + x pppp=76"
+line = "TEXT -48 -24 Left 2 !.param a=7"
+line = "TEXT -48 -24 Left 2 !.param k  = 9 / x pppp=76"
+line = "TEXT -424 -152 Left 2 !.param a = 10.0\n.param b 7.999999999999999e9n\n.param c = 2.0"
+parameterregex =
+r"""
+[.](?:parameter|param)[ ]+
+([a-z][a-z0-9_@#$.:\\]*)
+[= ]+
+([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)(k|meg|g|t|m|u|μ|n|p|f){0,1}[ ]*
+"""ix
+parameterregex =
+r"""
+[.](?:parameter|param)[ ]+
+"""ix
+m = match(parameterregex, line)
+regex =
+r"""
+([a-z][a-z0-9_@#$.:\\]*)
+[ ]*={0,1}[ ]*
+([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)(k|meg|g|t|m|u|μ|n|p|f){0,1}
+(?:\s|\n|\r|$)
+(?![/+-/*//])
+"""ix
+m = match(regex, line, 29)
+
+regex = r"\n"
+
+const parameterregex = r"[.](?:parameter|param)[ ]+([a-z][a-z0-9_@#$.:\\]*)[= ]+([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)(k|meg|g|t|m|u|n|p|f){0,1}[ ]*(?:\\n|\r|$)"ix

@@ -20,3 +20,9 @@ include("test11.jl")
 include("test12.jl")
 include("test13.jl")
 include("testinc.jl")
+
+de = try LTspice.defaultltspiceexecutable() end
+
+if de!=nothing
+  include("localtests.jl")
+end

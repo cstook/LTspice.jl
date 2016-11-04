@@ -14,3 +14,7 @@ print(sim)
 m1 = sim["m1"]
 sim["d"] = 10.0
 flush(sim,true)
+for a in 1:10
+  sim["a"] = Float64(a)
+  print(sim["m1"]," ")
+end

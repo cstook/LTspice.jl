@@ -159,6 +159,7 @@ function parselog!{Nparam,Nmeas}(x::NonSteppedSimulation{Nparam,Nmeas})
       throw(ParseError(".log file is not expected type.  expected non-stepped, got stepped"))
     end
     processlines!(io, x, [measurement], [Date()])
+    done(measurement.iter, measurement.state) || throw(ParseError("missing measurement(s)"))
     processlines!(io, x, [Duration()])
   end
   return nothing

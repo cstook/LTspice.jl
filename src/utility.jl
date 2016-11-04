@@ -56,8 +56,9 @@ end
 
 function generatealltestlogfiles(;executablepath=defaultltspiceexecutable(),dir=pwd())
   for file in readdir(dir)
-    (f,e) = splitext(file)
-    if e==".asc"
+    (directory,filename_with_stuff_after_dot) = splitdir(file)
+    (f,e) = splitext(filename_with_stuff_after_dot)
+    if e==".asc" && ~in(f,("testIncA","testIncB","testIncC","testIncD","testIncE","testIncF",))
       sim=LTspiceSimulation(file,executablepath=executablepath)
       run!(sim,true)
       show(sim)

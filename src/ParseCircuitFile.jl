@@ -7,7 +7,14 @@ type CircuitParsed
   measurementnames :: Array{AbstractString,1}
   stepnames :: Array{AbstractString,1}
   circuitfileencoding
-  CircuitParsed() = new([],[],[],[],[],[],[],nothing)
+  cardlist
+  circuitpath::AbstractString
+  workingcircuitpath::AbstractString
+  executablepath::AbstractString
+  includesearchpath::Array{AbstractString,1}
+  librarysearchpath::Array{AbstractString,1}
+  CircuitParsed() =
+    new([],[],[],[],[],[],[],nothing,standardcardlist,"","","",[],[])
 end
 
 # LTspice allows multiple directives (cards) in a single block
@@ -37,7 +44,11 @@ type Parameter<:Card end
 type Measure<:Card end
 type Step<:Card end
 type Other<:Card end
-const cardlist = [Parameter(), Measure(), Step(), Other()]
+type Include<:Card end
+type Library<:Card end
+const standardcardlist = [Parameter(), Measure(), Step(), Other()]
+const tempdircardlist = [Parameter(), Measure(), Step(),
+                         Include(), Library(), Other()]
 
 const parameterregex = r"[.](?:parameter|param)[ ]+"ix
 function parsecard!(cp::CircuitParsed, ::Parameter, card::AbstractString)
@@ -117,21 +128,63 @@ function parsecard!(cp::CircuitParsed, ::Step, card::AbstractString)
     push!(cp.circuitfilearray, card)
     return true
 end
+const includeregex = r"""(?:.include|.inc)[ ]+
+                          [\"]{0,1}(.*?)[\"]{0,1}(?:\\n|\r|$)"""ix
+function parsecard!(cp::CircuitParsed, ::Include, card::AbstractString)
+  m = match(includeregex, card)
+  m == nothing && return false
+  incabspath = absolutepath(cp.includesearchpath,m.captures[1])
+  push!(cp.circuitfilearray,replace(card,m.captures[1],incabspath))
+  return true
+end
+const libraryregex = r"""(?:.lib)[ ]+
+                          [\"]{0,1}(.*?)[\"]{0,1}(?:\\n|\r|$)"""ix
+function parsecard!(cp::CircuitParsed, ::Library, card::AbstractString)
+  m = match(libraryregex, card)
+  m == nothing && return false
+  libabspath = absolutepath(cp.librarysearchpath,m.captures[1])
+  push!(cp.circuitfilearray,replace(card,m.captures[1],libabspath))
+  return true
+end
+function absolutepath(patharray::Array{AbstractString,1},file::AbstractString)
+  for path in patharray
+    testfile = joinpath(path,file)
+    isfile(testfile) && return testfile
+  end
+end
 function parsecard!(cp::CircuitParsed, ::Other, card::AbstractString)
     push!(cp.circuitfilearray, card)
     return true
 end
-function parsecard!(cf::CircuitParsed, card::AbstractString)
-    for cardtype in cardlist
-        if parsecard!(cf,cardtype,card)
+function parsecard!(cp::CircuitParsed, card::AbstractString)
+    for cardtype in cp.cardlist
+        if parsecard!(cp,cardtype,card)
           break
         end
     end
 end
 
 iscomment(line::AbstractString) = ismatch(r"^TEXT .* ;",line)
-function parsecircuitfile(circuitpath::AbstractString)
+function parsecircuitfile(circuitpath::AbstractString,
+                          workingcircuitpath::AbstractString,
+                          executablepath::AbstractString)
   cp = CircuitParsed()
+  cp.circuitpath = abspath(circuitpath)
+  cp.workingcircuitpath = abspath(workingcircuitpath)
+  cp.executablepath = abspath(executablepath)
+  if abspath(circuitpath) != abspath(workingcircuitpath)
+    cp.cardlist = tempdircardlist
+    executabledir = abspath(dirname(executablepath))
+    originalcircuitdir = abspath(dirname(circuitpath))
+    cp.includesearchpath = [joinpath(executabledir,"lib\\sub"),
+                            originalcircuitdir]
+    cp.librarysearchpath = [joinpath(executabledir,"lib\\cmp"),
+                        joinpath(executabledir,"lib\\sub"),
+                        originalcircuitdir]
+    cp.parametervalues.ismodified = true
+  else
+    cp.parametervalues.ismodified = false
+  end
   cp.circuitfileencoding = circuitfileencoding(circuitpath)
   open(circuitpath,cp.circuitfileencoding) do io
     for line in eachline(io)
@@ -144,7 +197,6 @@ function parsecircuitfile(circuitpath::AbstractString)
       end
     end
   end
-  cp.parametervalues.ismodified = false
   return cp
 end
 

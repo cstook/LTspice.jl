@@ -163,17 +163,17 @@ LTspiceSimulation(circuitpath::AbstractString;
                   executablepath::AbstractString = defaultltspiceexecutable(),
                   tempdir::Bool = false) =
   LTspiceSimulation(circuitpath, executablepath, tempdir)
-function LTspiceSimulation(
-    circuitpath::AbstractString,
-    executablepath::AbstractString,
-    istempdir::Bool)
+function LTspiceSimulation(circuitpath::AbstractString,
+                           executablepath::AbstractString,
+                           istempdir::Bool)
+  originalcircuitpath = circuitpath
   if istempdir
     circuitpath = preparetempdir(circuitpath, executablepath)
   end
   @static if is_linux()
     circuitpath = linkintempdirectoryunderwine(circuitpath)
   end
-  circuitparsed = parsecircuitfile(circuitpath)
+  circuitparsed = parsecircuitfile(originalcircuitpath,circuitpath,executablepath)
   Nparam = length(circuitparsed.parameternames)
   Nmeas = length(circuitparsed.measurementnames)
   Nstep = length(circuitparsed.stepnames)
@@ -213,7 +213,7 @@ function preparetempdir(circuitpath::AbstractString, executablepath::AbstractStr
   (d,f) = splitdir(circuitpath)
   workingcircuitpath = convert(AbstractString, joinpath(td,f))
   cp(circuitpath,workingcircuitpath)
-  makecircuitfileincludeabsolutepath(circuitpath,workingcircuitpath,executablepath)
+  #makecircuitfileincludeabsolutepath(circuitpath,workingcircuitpath,executablepath)
   return workingcircuitpath
 end
 

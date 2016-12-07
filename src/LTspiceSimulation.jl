@@ -213,7 +213,6 @@ function preparetempdir(circuitpath::AbstractString, executablepath::AbstractStr
   (d,f) = splitdir(circuitpath)
   workingcircuitpath = convert(AbstractString, joinpath(td,f))
   cp(circuitpath,workingcircuitpath)
-  #makecircuitfileincludeabsolutepath(circuitpath,workingcircuitpath,executablepath)
   return workingcircuitpath
 end
 

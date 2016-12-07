@@ -6,7 +6,6 @@ using Iterators, StringEncodings
 
 include("specialarrays.jl")
 include("LTspiceSimulation.jl")
-include("mcfiap.jl")
 include("ParseCircuitFile.jl")
 include("ParseLogFile.jl")
 include("perlineiterator.jl")

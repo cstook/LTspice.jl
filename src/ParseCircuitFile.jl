@@ -167,7 +167,8 @@ end
 iscomment(line::AbstractString) = ismatch(r"^TEXT .* ;",line)
 function parsecircuitfile(circuitpath::AbstractString,
                           workingcircuitpath::AbstractString,
-                          executablepath::AbstractString)
+                          executablepath::AbstractString,
+                          librarysearhpaths)
   cp = CircuitParsed()
   cp.circuitpath = abspath(circuitpath)
   cp.workingcircuitpath = abspath(workingcircuitpath)
@@ -181,6 +182,7 @@ function parsecircuitfile(circuitpath::AbstractString,
     cp.librarysearchpath = [joinpath(executabledir,"lib\\cmp"),
                         joinpath(executabledir,"lib\\sub"),
                         originalcircuitdir]
+    append!(cp.librarysearchpath,librarysearhpaths)
     cp.parametervalues.ismodified = true
   else
     cp.parametervalues.ismodified = false

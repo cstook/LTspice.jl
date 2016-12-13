@@ -1,7 +1,7 @@
 # LTspice.jl
 
 [![Build Status](https://travis-ci.org/cstook/LTspice.jl.svg?branch=master)](https://travis-ci.org/cstook/LTspice.jl)
-[![Coverage Status](https://coveralls.io/repos/cstook/LTspice.jl/badge.svg?branch=v0r4_working&service=github)](https://coveralls.io/github/cstook/LTspice.jl?branch=v0r4_working)
+[![Coverage Status](https://coveralls.io/repos/github/cstook/LTspice.jl/badge.svg?branch=master)](https://coveralls.io/github/cstook/LTspice.jl?branch=master)
 [![Build status](https://ci.appveyor.com/api/projects/status/uf5kr5bb7xvd8wrp/branch/master?svg=true)](https://ci.appveyor.com/project/cstook/ltspice-jl/branch/master)
 
 LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice).  Several interfaces are provided.

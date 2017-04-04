@@ -10,7 +10,7 @@ LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linea
 2. An array interface, which is primarily for measurements of stepped simulations.
 3. Simulations can be called like functions.
 
-##Installation
+## Installation
 
 LTspice.jl is currently unregistered.  It can be installed using ```Pkg.clone```.
 ```julia

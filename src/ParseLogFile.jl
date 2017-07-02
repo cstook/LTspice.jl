@@ -1,9 +1,9 @@
 export parselog!
 
-abstract LogLine
-abstract Header <: LogLine
+abstract type LogLine end
+abstract type Header <: LogLine end
 type IsCircuitPath <: Header end
-abstract Footer <: LogLine
+abstract type Footer <: LogLine end
 type Date <: Footer end
 type Duration <: Footer end
 type MeasurementName <: LogLine
@@ -136,7 +136,7 @@ end
 
 function processlines!(io::IO, x::LTspiceSimulation, findlines=[], untillines=[])
   while ~eof(io)
-    line = readline(io)
+    line = readline(io, chomp=false)
     for f in findlines
       if parseline!(x,f,line)
         break

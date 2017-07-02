@@ -39,7 +39,7 @@ function Base.next(ec::eachcard, state)
 end
 Base.done(ec::eachcard, state) = state>=length(ec.line)
 
-abstract Card
+abstract type Card end
 type Parameter<:Card end
 type Measure<:Card end
 type Step<:Card end
@@ -189,7 +189,7 @@ function parsecircuitfile(circuitpath::AbstractString,
   end
   cp.circuitfileencoding = circuitfileencoding(circuitpath)
   open(circuitpath,cp.circuitfileencoding) do io
-    for line in eachline(io)
+    for line in eachline(io, chomp=false)
       if iscomment(line)
         push!(cp.circuitfilearray, line)
       else
@@ -208,7 +208,7 @@ function circuitfileencoding(path::AbstractString)
   correct_i = 0
   for i in eachindex(encodings)
     open(path,encodings[i]) do io
-      if ismatch(r"^Version",readline(io))
+      if ismatch(r"^Version",readline(io, chomp=false))
         correct_i = i
       end
     end

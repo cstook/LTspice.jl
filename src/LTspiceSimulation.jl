@@ -61,7 +61,7 @@ immutable LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
   circuitfileencoding
   logfileencoding
 end
-typealias NonSteppedSimulation{Nparam,Nmeas} LTspiceSimulation{Nparam,Nmeas,1,0}
+NonSteppedSimulation{Nparam,Nmeas} = LTspiceSimulation{Nparam,Nmeas,1,0}
 
 
 """

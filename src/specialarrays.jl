@@ -1,8 +1,9 @@
 
-abstract SpecialArray{T,n} <: AbstractArray{T,n}
+abstract type SpecialArray{T,n} <: AbstractArray{T,n} end
 
 Base.size(a::SpecialArray) = size(a.values)
-Base.linearindexing{T<:SpecialArray}(::Type{T}) = Base.LinearFast()
+Base.IndexStyle(::Type{<:SpecialArray}) = IndexLinear()
+#Base.linearindexing{T<:SpecialArray}(::Type{T}) = Base.LinearFast()
 Base.getindex(a::SpecialArray, i::Int) = a.values[i]
 Base.convert(::Type{Array}, x::SpecialArray) = x.values
 Base.promote_rule{T,n}(::Type{AbstractArray{T,n}},::SpecialArray{T,n}) =

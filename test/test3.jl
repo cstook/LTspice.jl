@@ -15,18 +15,18 @@ function test3()
   end
 
   # parameters
-  @test_approx_eq(sim["a"],10.0)
-  @test_approx_eq(sim["b"],8.0)
-  @test_approx_eq(sim["c"],2.0)
-  @test_approx_eq(sim["d"],100.0)
-  @test_approx_eq(sim["e"],2.6e-12)
-  @test_approx_eq(sim["f"],1.0e7)
-  @test_approx_eq(sim["g"],1.0e-9)
-  @test_approx_eq(sim["h"],1.0e-15)
-  @test_approx_eq(sim["i"],0.005)
-  @test_approx_eq(sim["j"],1.276e6)
-  @test_approx_eq(sim["k"],-3.45e6)
-  @test_approx_eq(sim["l"],454.5)
+  @test sim["a"]≈10.0
+  @test sim["b"]≈8.0
+  @test sim["c"]≈2.0
+  @test sim["d"]≈100.0
+  @test sim["e"]≈2.6e-12
+  @test sim["f"]≈1.0e7
+  @test sim["g"]≈1.0e-9
+  @test sim["h"]≈1.0e-15
+  @test sim["i"]≈0.005
+  @test sim["j"]≈1.276e6
+  @test sim["k"]≈-3.45e6
+  @test sim["l"]≈454.5
 
   # measurements
   @test_approx_eq(sim["x"],1.00394)

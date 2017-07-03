@@ -12,11 +12,6 @@ function compare_arrays(x,y)
 end
 
 
-# make work with atom on my pc
-#if isdir("C:/Users/Chris/.julia/v0.5/LTspice/test")
-#  cd("C:/Users/Chris/.julia/v0.5/LTspice/test")
-#end
-
 @testset "tests not calling LTspice.exe" begin
   include("test1.jl")
   include("test2.jl")
@@ -34,6 +29,7 @@ end
   include("test14.jl")
   include("testinc.jl")
 end
+
 
 is_ltspice_installed = (try LTspice.defaultltspiceexecutable() end)!=nothing
 

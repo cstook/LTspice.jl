@@ -188,7 +188,7 @@ function parsecircuitfile(circuitpath::AbstractString,
     cp.parametervalues.ismodified = false
   end
   cp.circuitfileencoding = circuitfileencoding(circuitpath)
-  println(circuitpath,"  ",cp.circuitfileencoding)
+#  println(circuitpath,"  ",cp.circuitfileencoding)
   open(circuitpath,cp.circuitfileencoding) do io
     for line in eachline(io, chomp=false)
 #      print("line: ",line)

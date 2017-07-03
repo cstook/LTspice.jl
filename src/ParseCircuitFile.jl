@@ -206,18 +206,22 @@ function parsecircuitfile(circuitpath::AbstractString,
 end
 
 function circuitfileencoding(path::AbstractString)
-  firstwordshouldbe = "Version"
-  encodings = [enc"UTF-8",enc"UTF-16LE"]
-  correct_i = 0
-  for i in eachindex(encodings)
+  function checkencoding(i)
     open(path,encodings[i]) do io
       if ismatch(r"^Version",readline(io, chomp=false))
         correct_i = i
       end
     end
+  end
+  firstwordshouldbe = "Version"
+  encodings = [enc"windows-1252",enc"UTF-16LE",enc"UTF-8"]
+  correct_i = 0
+  for i in eachindex(encodings)
+    try checkencoding(i) end
     correct_i !=0 && break
   end
   correct_i == 0 && error("invalid LTspice circuit file")
+#  println(path," ",encodings[correct_i])
   return encodings[correct_i]
 end
 

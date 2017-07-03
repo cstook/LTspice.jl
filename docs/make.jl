@@ -6,11 +6,11 @@ using Documenter, LTspice
 
 const PAGES = [
   "Home" => "index.md",
-#  "Installation" => "install.md",
-#  "Quickstart" => "quickstart.md",
-#  "Examples" => "examples.md",
-#  "Public API" => "public_api.md",
-#  "Contents" => "contents.md",
+  "Installation" => "install.md",
+  "Quickstart" => "quickstart.md",
+  "Examples" => "examples.md",
+  "Public API" => "public_api.md",
+  "Contents" => "contents.md",
 ]
 
 makedocs(

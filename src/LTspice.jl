@@ -2,7 +2,8 @@
 
 "Main module for `LTspice.jl` - a Julia interface to LTspice"
 module LTspice
-using Iterators, StringEncodings
+using StringEncodings
+import IterTools.chain
 
 include("specialarrays.jl")
 include("LTspiceSimulation.jl")

@@ -28,7 +28,7 @@ end
 Base.start(::eachcard) = 1
 function Base.next(ec::eachcard, state)
     p = searchindex(ec.line,"\\n",state)
-    if p!=0
+    if p!=0 && p!=length(ec.line)
         card = ec.line[state:p+1]
         state = p+2
     else
@@ -62,7 +62,7 @@ function parsecard!(cp::CircuitParsed, ::Parameter, card::AbstractString)
               ([a-z][a-z0-9_@#$.:\\]*)
               [ ]*={0,1}[ ]*
               ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)(k|meg|g|t|m|u|μ|n|p|f){0,1}
-              (?:\s|\\n|\r|$)
+              (?:\n|\\n|\r|\s)+
               (?![-+*/])
               """ix
               ,card,currentposition)
@@ -188,12 +188,15 @@ function parsecircuitfile(circuitpath::AbstractString,
     cp.parametervalues.ismodified = false
   end
   cp.circuitfileencoding = circuitfileencoding(circuitpath)
+  println(circuitpath,"  ",cp.circuitfileencoding)
   open(circuitpath,cp.circuitfileencoding) do io
     for line in eachline(io, chomp=false)
+#      print("line: ",line)
       if iscomment(line)
         push!(cp.circuitfilearray, line)
       else
         for card in eachcard(line) # might be multi-line directive(s) created with Ctrl-M
+#          print("  card: ",card)
           parsecard!(cp, card)
         end
       end

@@ -29,9 +29,9 @@ function test3()
   @test sim["l"]≈454.5
 
   # measurements
-  @test_approx_eq(sim["x"],1.00394)
-  @test_approx_eq(sim["z"],0.019685)
-  @test_approx_eq(sim["y"],0.984252)
+  @test sim["x"]≈1.00394
+  @test sim["z"]≈0.019685
+  @test sim["y"]≈0.984252
 
   for key in parameternames(sim)
     sim[key] = 1.0
@@ -39,7 +39,7 @@ function test3()
   dummyread = sim["x"]
   sim_b = LTspiceSimulation(filename, executablepath="")
   for key in parameternames(sim_b)
-    @test_approx_eq(sim_b[key],1.0)
+    @test sim_b[key]≈1.0
   end
 
   for key in parameternames(sim)
@@ -48,7 +48,7 @@ function test3()
   dummyread = measurementvalues(sim)
   sim_b = LTspiceSimulation(filename, executablepath="")
   for key in parameternames(sim_b)
-    @test_approx_eq(sim_b[key],2.0)
+    @test sim_b[key]≈2.0
   end
   show(IOBuffer(),sim_b)
 end

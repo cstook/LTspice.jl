@@ -1,4 +1,14 @@
 using LTspice
+using StringEncodings
+
+open("test/test1.asc",enc"UTF-8") do io
+  for line in eachline(io, chomp=false)
+    print("line2: ",line)
+  end
+end
+
+
+enc"UTF-8"
 
 cd("C:/Users/Chris/.julia/v0.5/LTspice/test")
 sim1 = LTspiceSimulation("test1.asc",tempdir=true)

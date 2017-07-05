@@ -5,6 +5,7 @@ module LTspice
 using StringEncodings
 import IterTools.chain
 
+include("open_with_unknown_encoding.jl")
 include("specialarrays.jl")
 include("LTspiceSimulation.jl")
 include("ParseCircuitFile.jl")

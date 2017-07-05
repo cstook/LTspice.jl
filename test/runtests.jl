@@ -27,6 +27,7 @@ end
   include("test12.jl")
   include("test13.jl")
   include("test14.jl")
+  include("test15.jl")
   include("testinc.jl")
 end
 

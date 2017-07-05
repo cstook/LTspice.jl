@@ -4,6 +4,6 @@ function test14()
   sim = LTspiceSimulation(filename,executablepath="")
   show(IOBuffer(),sim)
   @test measurementnames(sim) == ("m1",)
-  @test parameternames(sim) == ("a","b","d","e","this_is_a_long_name")
+  @test parameternames(sim) == ("a","b","d", "e", "φ", "Ω", "this_is_a_long_name")
 end
 test14()

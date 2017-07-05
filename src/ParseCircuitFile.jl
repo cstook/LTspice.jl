@@ -51,6 +51,15 @@ const tempdircardlist = [Parameter(), Measure(), Step(),
                          Include(), Library(), Other()]
 
 const parameterregex = r"[.](?:parameter|param)[ ]+"ix
+const parametercaptureregex =
+          r"""
+          ([^\d ][^ =]*)
+          [ ]*={0,1}[ ]*
+          ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)(k|meg|g|t|m|u|μ|n|p|f){0,1}
+          [^-+*/ ]*
+          (?:\s|\\n|\r|$)
+          (?![-+*/])
+          """ix
 function parsecard!(cp::CircuitParsed, ::Parameter, card::AbstractString)
   m = match(parameterregex, card)
   m == nothing && return false
@@ -58,14 +67,7 @@ function parsecard!(cp::CircuitParsed, ::Parameter, card::AbstractString)
   push!(cp.circuitfilearray,card[1:currentposition-1])
   cardlength = length(card)
   while currentposition<cardlength && m!=nothing
-    m = match(r"""
-              ([a-z][a-z0-9_@#$.:\\]*)
-              [ ]*={0,1}[ ]*
-              ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)(k|meg|g|t|m|u|μ|n|p|f){0,1}
-              (?:\n|\\n|\r|\s)+
-              (?![-+*/])
-              """ix
-              ,card,currentposition)
+    m = match(parametercaptureregex,card,currentposition)
     if m!=nothing
       pushnamevalue!(cp,m,currentposition,card)
       currentposition = m.offset + length(m.match)
@@ -102,7 +104,7 @@ function pushnamevalue!(cp::CircuitParsed,
   push!(cp.circuitfilearray,card[valueend+1:m.offset + length(m.match)-1])
 end
 
-const measureregex = r"[.](?:measure|meas)[ ]+(?:ac |dc |op |tran |tf |noise ){0,1}[ ]*([a-z][a-z0-9_@#$.:\\]*)[ ]+"ix
+const measureregex = r"[.](?:measure|meas)[ ]+(?:ac |dc |op |tran |tf |noise ){0,1}[ ]*([^\d ][^ =]*)[ ]+"ix
 function parsecard!(cp::CircuitParsed, ::Measure, card::AbstractString)
     m = match(measureregex, card)
     if m == nothing # exit if not a measure card
@@ -113,7 +115,7 @@ function parsecard!(cp::CircuitParsed, ::Measure, card::AbstractString)
     push!(cp.circuitfilearray, card)
     return true
 end
-const step1regex = r"[.](?:step)[ ]+(?:oct |param ){0,1}[ ]*([a-z][a-z0-9_@#$.:\\]*)[ ]+(?:list ){0,1}[ ]*[0-9.e+-]+[a-z]*[ ]+"ix
+const step1regex = r"[.](?:step)[ ]+(?:oct |param ){0,1}[ ]*([^\d ][^ =]*)[ ]+(?:list ){0,1}[ ]*[0-9.e+-]+[a-z]*[ ]+"ix
 const step2regex = r"[.](?:step)[ ]+(?:\w+)[ ]+(\w+[(]\w+[)])[ ]+"ix
 function parsecard!(cp::CircuitParsed, ::Step, card::AbstractString)
     m = match(step1regex, card)
@@ -214,7 +216,7 @@ function circuitfileencoding(path::AbstractString)
     end
   end
   firstwordshouldbe = "Version"
-  encodings = [enc"windows-1252",enc"UTF-16LE",enc"UTF-8"]
+  encodings = [enc"UTF-16LE",enc"UTF-8"] #enc"windows-1252",
   correct_i = 0
   for i in eachindex(encodings)
     try checkencoding(i) end
@@ -244,4 +246,5 @@ const units = Dict("K" => 1.0e3,
                    "P" => 1.0e-12,
                    "p" => 1.0e-12,
                    "F" => 1.0e-15,
-                   "f" => 1.0e-15)
+                   "f" => 1.0e-15,
+                   )

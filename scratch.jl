@@ -80,25 +80,44 @@ regex = r"""
           (?:\s|\\n|\r|\n|$)
           (?![-+*/])
           """ix
-line = "m = 2\\n.param μ = 3\\n.param MEG = 4\\n.param Ω = 5\\n.param θ = 6\\n.param Δ = 7\\n.param Φ = 8μ\\n.param ψ = 9μF\n"
-line = "Vin = 5.0\n"
-line = "a = 3.0\n"
-line = "a=10 b=20 c=50 + a + b d=30\\n"
-line2 = "c=50 + a + b d=30\\n"
-line2 = "ψ = 9μF\n"
-match(regex,line)
-match(regex,line2)
+regex = r"""
+        ([^\d ][^ =]*)()
+        [ ]*={0,1}[ ]*
+        ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)()(k|meg|g|t|m|u|μ|n|p|f){0,1}()
+        [^-+*/ ]*
+        (?:\s|\\n|\r|$)
+        (?![-+*/])()
+        """ix
 
+card1 = ".param m = 2\\n"
+card2 = ".param μ = 3\\n"
+card3 = ".param MEG = 4\\n"
+card4 = ".param Ω = 5\\n"
+card5 = ".param θ = 6\\n"
+card6 = ".param Δ = 7\\n"
+card7 = ".param Φ = 8μ\\n"
+card8 = ".param ψ = 9μF\n"
+m1=match(regex,card1)
+m1.offsets
+card1[8:9-1]
+
+
+m2=match(regex,card2)
+m2.offsets
+card2[8:10-1]
+
+
+m3=match(regex,card3)
+match(regex,card4)
+match(regex,card5)
+match(regex,card6)
+match(regex,card7)
+match(regex,card8)
 
 
 match(r"([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)",line)
 
 regex = r"[.](measure|meas)[ ]+(ac |dc |op |tran |tf |noise ){0,1}[ ]*([^\d ][^ =]*)[ ]+"ix
-
-
-
-
-
 
 
 const parametercaptureregex =
@@ -109,3 +128,18 @@ const parametercaptureregex =
           (?:\n|\\n|\r|\s)+
           (?![-+*/])
           """ix
+
+Regular expressions seems to be returning offsets in bytes not characters.  Is this the intended behavior?  Is there a way to get the offsets in characters?
+regex = r"(3).*(5)"
+s1 = "123a56789"
+m1 = match(regex,s1)
+println(m1.offsets)
+s2 = "123α56789"
+m2 = match(regex,s2)
+println(m2.offsets)
+s1[5:5]
+s2[6:6]
+
+m3 = match(r"(α)()",s2)
+m3.offsets
+length("α")

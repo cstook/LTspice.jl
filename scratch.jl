@@ -8,6 +8,8 @@ open("test/test14.asc",enc"utf-16le") do io
 end
 
 
+endof("asdf")
+
 methods(open)
 
 enc"UTF-8"
@@ -112,12 +114,22 @@ regex = r"""
         (?:\s|\\n|\r|$)
         (?![-+*/])()
         """ix
-
-
+regex = r"""
+        ([^\d ][^ =]*)
+        ([ ]*={0,1}[ ]*)
+        ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)(k|meg|g|t|m|u|μ|n|p|f){0,1}
+        (
+        [^-+*/ ]*
+        (?:\s|\\n|\r|$)
+        (?![-+*/])
+        )
+        """ix
+regex = r"[.](?:parameter|param)[ ]+()"ix
 
 card = "a=10.0 b=20.0 c=50 + a + b d=30.0\\n"
+card = "c=50 + a + b d=30.0\\n"
 m=match(regex,card)
-m.offsets[7]
+m.offsets
 
 card1 = ".param m = 2\\n"
 card2 = ".param μ = 3\\n"

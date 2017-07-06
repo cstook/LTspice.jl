@@ -50,8 +50,8 @@ const standardcardlist = [Parameter(), Measure(), Step(), Other()]
 const tempdircardlist = [Parameter(), Measure(), Step(),
                          Include(), Library(), Other()]
 
-const parameterregex = r"[.](?:parameter|param)[ ]+"ix
-const parametercaptureregex =
+const parameterregex = r"[.](?:parameter|param)[ ]+()"ix
+const parametercaptureregex_old =
           r"""
           ([^\d ][^ =]*)()
           [ ]*={0,1}[ ]*
@@ -71,20 +71,40 @@ parametercaptureregex offsets
 7 - index after match
 =#
 
+
+const parametercaptureregex =
+          r"""
+          ([^\d ][^ =]*)
+          ([ ]*={0,1}[ ]*)
+          ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)(k|meg|g|t|m|u|μ|n|p|f){0,1}
+          (
+          [^-+*/ ]*
+          (?:\s|\\n|\r|$)
+          (?![-+*/])
+          )()
+          """ix
+#=
+parametercaptureregex offsets
+1 - name
+2 - after name
+3 - value
+4 - unit
+5 - everything to the end
+6 - index after match
+=#
 function parsecard!(cp::CircuitParsed, ::Parameter, card::AbstractString)
   m = match(parameterregex, card)
   m == nothing && return false
-  currentposition = m.offset + length(m.match)
+  currentposition = m.offsets[1]
   push!(cp.circuitfilearray,card[1:currentposition-1])
-  cardlength = length(card)
-  while currentposition<cardlength && m!=nothing
+  while currentposition<endof(card) && m!=nothing
 #    println("      parameter: ",card[currentposition:end])
     m = match(parametercaptureregex,card,currentposition)
     if m!=nothing
       pushnamevalue!(cp,m,currentposition,card)
-      currentposition = m.offsets[7] #-1
+      currentposition = m.offsets[6]
     else
-      push!(cp.circuitfilearray,card[currentposition:end]) #currentposition-1
+      push!(cp.circuitfilearray,card[currentposition:end])
     end
   end
   return true
@@ -94,12 +114,14 @@ function pushnamevalue!(cp::CircuitParsed,
                         currentposition::Int,
                         card::AbstractString)
   name = m.captures[1]
+  after_name = m.captures[2]
   value = m.captures[3]
-  valueoffset = m.offsets[3] # position of start of value in card
-  valueend = m.offsets[4]-1 # position of end of value in card
-  unit = m.captures[5]
-  push!(cp.circuitfilearray,card[currentposition:valueoffset-1]) # before the value
-  push!(cp.circuitfilearray,card[valueoffset:valueend]) # the value
+  unit = m.captures[4]
+  to_end = m.captures[5]
+  push!(cp.circuitfilearray,card[currentposition:m.offsets[1]-1])
+  push!(cp.circuitfilearray,name)
+  push!(cp.circuitfilearray,after_name)
+  push!(cp.circuitfilearray,value)
   if haskey(units,unit)
       multiplier = units[unit]
   else
@@ -112,7 +134,8 @@ function pushnamevalue!(cp::CircuitParsed,
   push!(cp.parametermultiplier, multiplier)
   index_circuitfilearray = length(cp.circuitfilearray)
   push!(cp.parameterindex, index_circuitfilearray)
-  push!(cp.circuitfilearray,card[m.offsets[4]:m.offsets[7]-1])
+  unit != nothing && push!(cp.circuitfilearray,unit)
+  push!(cp.circuitfilearray,to_end)
 end
 
 const measureregex = r"[.](?:measure|meas)[ ]+(?:ac |dc |op |tran |tf |noise ){0,1}[ ]*([^\d ][^ =]*)[ ]+"ix

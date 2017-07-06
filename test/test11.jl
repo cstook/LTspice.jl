@@ -2,6 +2,7 @@ function test11()
   filename = "test11.asc"
   # exectuablepath = null string will not run LTspice.exe.  Test parsing only.
   sim = LTspiceSimulation(filename,executablepath="")
+  @test LTspice.does_circuitfilearray_file_match(sim)
   show(IOBuffer(),sim)
 
   asteps = [1.0,2.0]

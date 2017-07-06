@@ -66,6 +66,29 @@ sim["a"]
 
 run!(sim)
 
+LTspice.does_circuitfilearray_file_match(sim)
+
+
+
+buf = IOBuffer()
+for element in sim.circuitfilearray
+  write(buf,element)
+end
+x = open(sim.circuitpath,sim.circuitfileencoding) do io
+  read(io)
+end
+s1 = String(x)
+y = take!(buf)
+s2 = String(y)
+for (a,b) in zip(s1,s2)
+  if a!=b
+    print(a," ",b)
+  end
+end
+print(s1)
+print(s2)
+x
+y
 for line in sim.circuitfilearray
   print(line)
 end
@@ -88,6 +111,12 @@ regex = r"""
         (?:\s|\\n|\r|$)
         (?![-+*/])()
         """ix
+
+
+
+card = "a=10.0 b=20.0 c=50 + a + b d=30.0\\n"
+m=match(regex,card)
+m.offsets[7]
 
 card1 = ".param m = 2\\n"
 card2 = ".param μ = 3\\n"

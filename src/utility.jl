@@ -65,3 +65,17 @@ function generatealltestlogfiles(;executablepath=defaultltspiceexecutable(),dir=
     end
   end
 end
+
+function does_circuitfilearray_file_match(sim::LTspiceSimulation)
+  buf = IOBuffer()
+  for element in sim.circuitfilearray
+    write(buf,element)
+  end
+  y = take!(buf)
+  s1 = String(y)
+  x = open(sim.circuitpath,sim.circuitfileencoding) do io
+    read(io)
+  end
+  s2 = String(x)
+  s1 == s2
+end

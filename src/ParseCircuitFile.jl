@@ -78,13 +78,13 @@ function parsecard!(cp::CircuitParsed, ::Parameter, card::AbstractString)
   push!(cp.circuitfilearray,card[1:currentposition-1])
   cardlength = length(card)
   while currentposition<cardlength && m!=nothing
-    println("      parameter: ",card[currentposition:end])
+#    println("      parameter: ",card[currentposition:end])
     m = match(parametercaptureregex,card,currentposition)
     if m!=nothing
       pushnamevalue!(cp,m,currentposition,card)
-      currentposition = m.offset + m.offsets[7]-1
+      currentposition = m.offsets[7] #-1
     else
-      push!(cp.circuitfilearray,card[currentposition-1:end])
+      push!(cp.circuitfilearray,card[currentposition:end]) #currentposition-1
     end
   end
   return true
@@ -93,7 +93,7 @@ function pushnamevalue!(cp::CircuitParsed,
                         m::RegexMatch,
                         currentposition::Int,
                         card::AbstractString)
-  name = m.captures[1] #lowercase(m.captures[1])
+  name = m.captures[1]
   value = m.captures[3]
   valueoffset = m.offsets[3] # position of start of value in card
   valueend = m.offsets[4]-1 # position of end of value in card
@@ -204,12 +204,12 @@ function parsecircuitfile(circuitpath::AbstractString,
 #  println(circuitpath,"  ",cp.circuitfileencoding)
   open(circuitpath,cp.circuitfileencoding) do io
     for line in eachline(io, chomp=false)
-      print("line: ",line)
+#      print("line: ",line)
       if iscomment(line)
         push!(cp.circuitfilearray, line)
       else
         for card in eachcard(line) # might be multi-line directive(s) created with Ctrl-M
-          println("  card: ",card)
+#          println("  card: ",card)
           parsecard!(cp, card)
         end
       end

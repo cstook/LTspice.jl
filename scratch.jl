@@ -55,6 +55,7 @@ file = "test/test12.asc"
 file = "test/test13.asc"
 file = "test/test14.asc"
 file = "test/test15.asc"
+file = "test/testInc1.asc"
 sim = LTspiceSimulation(file,tempdir=true)
 parameternames(sim)
 measurementnames(sim)

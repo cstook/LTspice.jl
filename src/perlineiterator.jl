@@ -48,7 +48,7 @@ function eachstep{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nm
   eachstep(x,ntuple(i->findfirst(x.stepnames,order[i]),Nstep))
 end
 
-immutable ResultNamesIndices
+struct ResultNamesIndices
   isparameter :: Array{Bool,1}
   parametervalue :: Array{Float64,1}
   measurementindex :: Array{Int,1}

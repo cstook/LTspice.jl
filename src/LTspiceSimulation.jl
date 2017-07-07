@@ -5,13 +5,13 @@ export measurementnames, measurementvalues
 export stepnames, stepvalues
 export run!
 
-type Status
+mutable struct Status
   ismeasurementsdirty :: Bool # true = need to run simulation
   timestamp :: DateTime; # timestamp from last simulation run
   duration :: Float64; # simulation time in seconds
   Status() = new(true,DateTime(),NaN)
 end
-type StepValues{Nstep}
+mutable struct StepValues{Nstep}
   values ::NTuple{Nstep,Array{Float64,1}}
 end
 blankstepvalues(Nstep::Int) = StepValues{Nstep}(ntuple(d->[],Nstep))
@@ -42,7 +42,7 @@ mvalues = measurementvalues(sim)
 svalues = stepvalues(sim)
 ```
 """
-immutable LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
+struct LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
   circuitpath :: AbstractString
   logpath :: AbstractString
   executablepath :: AbstractString

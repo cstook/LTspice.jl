@@ -14,7 +14,7 @@ Base.promote_rule{T,n}(::Type{AbstractArray{T,n}},::SpecialArray{T,n}) =
 
 Same as Array, but tracks if user has modified values.
 """
-type ParameterValuesArray{T,n} <: SpecialArray{T,n}
+mutable struct ParameterValuesArray{T,n} <: SpecialArray{T,n}
   values :: Array{T,n}
   ismodified :: Bool
 end
@@ -35,7 +35,7 @@ Same as Array, but setindex! returns error.
 """
 # User cannot modify, only
 # updated by running simulation
-type MeasurementValuesArray{T,n} <: SpecialArray{T,n}
+mutable struct MeasurementValuesArray{T,n} <: SpecialArray{T,n}
   values :: Array{T,n}
 end
 function Base.setindex!(a::MeasurementValuesArray, ::Any, ::Any)

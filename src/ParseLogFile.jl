@@ -14,7 +14,7 @@ type MeasurementName <: LogLine
     new(iter,start(iter))
   end
 end
-type MeasurementValue <: LogLine
+mutable struct MeasurementValue <: LogLine
   iter
   state
   function MeasurementValue(x::LTspiceSimulation)
@@ -22,8 +22,8 @@ type MeasurementValue <: LogLine
     new(iter,start(iter))
   end
 end
-type IsDotStep <: LogLine end
-type DotStep{Nstep} <: LogLine
+mutable struct IsDotStep <: LogLine end
+mutable struct DotStep{Nstep} <: LogLine
   stepvalues :: StepValues{Nstep}
   lastline :: Array{Float64,1}
   newline :: Array{Float64,1}
@@ -156,7 +156,7 @@ function parselog!{Nparam,Nmeas}(x::NonSteppedSimulation{Nparam,Nmeas})
     measurement = MeasurementValue(x)
     exitcode = processlines!(io, x, [], [measurement,IsDotStep()])
     if exitcode == 2 # this was supposed to be a NonSteppedFile
-      throw(ParseError(".log file is not expected type.  expected non-stepped, got stepped"))
+      throw(ParseError(".log file is not expected mutable struct.  expected non-stepped, got stepped"))
     end
     processlines!(io, x, [measurement], [Date()])
     done(measurement.iter, measurement.state) || throw(ParseError("missing measurement(s)"))

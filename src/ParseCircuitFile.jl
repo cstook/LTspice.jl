@@ -1,4 +1,4 @@
-type CircuitParsed
+mutable struct CircuitParsed
   circuitfilearray :: Array{AbstractString,1}
   parameternames :: Array{AbstractString,1}
   parametervalues :: ParameterValuesArray{Float64,1}
@@ -22,22 +22,22 @@ end
 # this puts a backslash n in the file, NOT a newline character.
 #
 # eachcard is an iterator that separates the lines around the backslash n
-immutable eachcard
+struct eachcard
     line :: AbstractString
 end
 Base.start(::eachcard) = 1
 function Base.next(ec::eachcard, state)
     p = searchindex(ec.line,"\\n",state)
-    if p!=0 && p!=length(ec.line)
+    if p!=0 && p!=endof(ec.line)
         card = ec.line[state:p+1]
         state = p+2
     else
         card = ec.line[state:end]
-        state = length(ec.line)
+        state = endof(ec.line)
     end
     return (card, state)
 end
-Base.done(ec::eachcard, state) = state>=length(ec.line)
+Base.done(ec::eachcard, state) = state>=endof(ec.line)
 
 abstract type Card end
 type Parameter<:Card end
@@ -51,27 +51,6 @@ const tempdircardlist = [Parameter(), Measure(), Step(),
                          Include(), Library(), Other()]
 
 const parameterregex = r"[.](?:parameter|param)[ ]+()"ix
-const parametercaptureregex_old =
-          r"""
-          ([^\d ][^ =]*)()
-          [ ]*={0,1}[ ]*
-          ([-+]{0,1}[0-9.]+e{0,1}[-+0-9]*)()(k|meg|g|t|m|u|μ|n|p|f){0,1}()
-          [^-+*/ ]*
-          (?:\s|\\n|\r|$)
-          (?![-+*/])()
-          """ix
-#=
-parametercaptureregex offsets
-1 - name
-2 - index after name
-3 - value
-4 - index after value
-5 - unit
-6 - index after unit
-7 - index after match
-=#
-
-
 const parametercaptureregex =
           r"""
           ([^\d ][^ =]*)

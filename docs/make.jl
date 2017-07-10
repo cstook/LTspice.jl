@@ -27,7 +27,7 @@ makedocs(
 )
 
 if "deploy" in ARGS
-  fake_travis = "c:Users/Chris/fake_travis_LTspice.jl"
+  fake_travis = "C:/Users/Chris/fake_travis_LTspice.jl"
   if isfile(fake_travis)
     include(fake_travis)
   end

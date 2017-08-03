@@ -53,7 +53,7 @@ struct ResultNamesIndices
   parametervalue :: Array{Float64,1}
   measurementindex :: Array{Int,1}
 end
-ResultNamesIndices(n::Int) = ResultNamesIndices(Array(Bool,n),Array(Float64,n),Array(Int,n))
+ResultNamesIndices(n::Int) = ResultNamesIndices(Array{Bool}(n),Array{Float64}(n),Array{Int}(n))
 
 """
 ```julia

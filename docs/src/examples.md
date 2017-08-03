@@ -27,7 +27,7 @@ Loop over vin and iout measuring efficiency.  Vout is fixed at 3.3V.
 ```@example 2
 rfb(vout)= 0.6*60.4e3/(vout-0.6)
 function compute_efficiency_array(vin_list, iout_list, vout)
-    efficiency = Array(Float64,(length(vin_list),length(iout_list)))
+    efficiency = Array{Float64}((length(vin_list),length(iout_list)))
     for vin_index in eachindex(vin_list)
         for iout_index in eachindex(iout_list)
             (pin,pout) = example2(vin_list[vin_index],iout_list[iout_index],rfb(vout))

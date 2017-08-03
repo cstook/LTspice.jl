@@ -173,7 +173,7 @@ function parselog!{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,N
     x.stepvalues.values = dotstep.stepvalues.values
     measurementarraysize = (ntuple(i->length(dotstep.stepvalues.values[i]),Nstep)...,Nmeas)
     if measurementarraysize != size(x.measurementvalues)
-      x.measurementvalues.values = Array(Float64,measurementarraysize)
+      x.measurementvalues.values = Array{Float64}(measurementarraysize)
     end
     measurementvalue = MeasurementValue(x)
     processlines!(io, x, [measurementvalue,measurementname], [Date()])

@@ -229,7 +229,7 @@ function circuitfileencoding(path::AbstractString)
     end
   end
   firstwordshouldbe = "Version"
-  encodings = [enc"UTF-16LE",enc"UTF-8"] #enc"windows-1252",
+  encodings = [enc"windows-1252",enc"UTF-16LE",enc"UTF-8"] #enc"windows-1252",
   correct_i = 0
   for i in eachindex(encodings)
     try checkencoding(i) end

@@ -66,7 +66,7 @@ LTspice.jl works on windows and linux with LTspice under wine.  Osx is not suppo
 
 ## Additional Information
 
-Documentation is [here](http://cstook.github.io/LTspice.jl).
+Latest documentation is [here](https://cstook.github.io/LTspice.jl/latest).
 
 [Introduction to LTspice.jl](https://github.com/cstook/LTspice.jl/blob/master/docs/src/introduction.ipynb)
 

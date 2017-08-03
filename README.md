@@ -4,16 +4,16 @@
 [![Coverage Status](https://coveralls.io/repos/github/cstook/LTspice.jl/badge.svg?branch=master)](https://coveralls.io/github/cstook/LTspice.jl?branch=master)
 [![Build status](https://ci.appveyor.com/api/projects/status/uf5kr5bb7xvd8wrp/branch/master?svg=true)](https://ci.appveyor.com/project/cstook/ltspice-jl/branch/master)
 
-## Documentation
-
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://cstook.github.io/LTspice.jl/stable)
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://cstook.github.io/LTspice.jl/latest)
-
 LTspice.jl provides a julia interface to [LTspice<sup>TM</sup>](http://www.linear.com/designtools/software/#LTspice).  Several interfaces are provided.
 
 1. A dictionary like interface to access parameters and measurements by name.
 2. An array interface, which is primarily for measurements of stepped simulations.
 3. Simulations can be called like functions.
+
+## Documentation
+
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://cstook.github.io/LTspice.jl/stable)
+[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://cstook.github.io/LTspice.jl/latest)
 
 ## Installation
 

@@ -5,8 +5,8 @@ Base.size(a::SpecialArray) = size(a.values)
 Base.IndexStyle(::Type{<:SpecialArray}) = IndexLinear()
 #Base.linearindexing{T<:SpecialArray}(::Type{T}) = Base.LinearFast()
 Base.getindex(a::SpecialArray, i::Int) = a.values[i]
-Base.convert(::Type{Array}, x::SpecialArray) = x.values
-Base.promote_rule{T,n}(::Type{AbstractArray{T,n}},::SpecialArray{T,n}) =
+Base.convert(::Type{Array{T,n}}, x::SpecialArray) where {T,n} = x.values
+Base.promote_rule(::Type{AbstractArray{T,n}},::SpecialArray{T,n}) where {T,n} =
   Type{Array{T,n}}
 
 """
@@ -25,9 +25,10 @@ function Base.setindex!(a::ParameterValuesArray, v, i::Int)
   a.ismodified = true
   a.values[i] = v
 end
-Base.convert{T,n,S}(::Type{ParameterValuesArray{T,n}}, x::AbstractArray{S,n}) =
+Base.convert(::Type{ParameterValuesArray{T,n}}, x::AbstractArray{S,n}) where {T,n,S} =
   ParameterValuesArray{T,n}(Array{T,n}(x),true)
-
+Base.convert(::Type{LTspice.ParameterValuesArray{T,n}}, x::LTspice.ParameterValuesArray{T,n}) where {T,n} =
+  ParameterValuesArray{T,n}(Array{T,n}(x),true)
 """
     MeasurementValuesArray{T,n}
 

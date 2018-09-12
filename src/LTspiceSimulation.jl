@@ -208,7 +208,7 @@ function LTspiceSimulation(circuitpath::AbstractString,
     blankstepvalues(Nstep),
     Status(),
     circuitparsed.circuitfileencoding,
-    PossibleEncodings([enc"utf-16le",enc"utf-8"],iscorrectencoding_logfile) # logfileencoding(executablepath) # LTspice changed?
+    PossibleEncodings([enc"UTF-16LE",enc"UTF-8",enc"windows-1252"],iscorrectencoding_logfile) # logfileencoding(executablepath) # LTspice changed?
   )
 end
 

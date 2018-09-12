@@ -10,7 +10,7 @@
 """
 mutable struct PossibleEncodings
   encodings :: Array{StringEncodings.Encodings.Encoding,1}
-  iscorrectencoding
+  iscorrectencoding :: Function
   lastcorrectencoding :: Int
   io :: IO
   PossibleEncodings(enc,ice) = new(enc,ice,0,IOStream(""))
@@ -18,7 +18,7 @@ end
 
 function iscorrectencoding_logfile(io)
   firstline = readline(io)
-  if firstline[1:8] == "Circuit:"
+  if firstline[1:nextind(firstline, 1, 7)] == "Circuit:"
     seekstart(io.stream) # good idea?
     return true
   else
@@ -27,7 +27,7 @@ function iscorrectencoding_logfile(io)
 end
 
 function tryopen!(fname::AbstractString, enc::PossibleEncodings, i)
-  try_io = try open(fname,enc.encodings[i]) end
+  try_io = open(fname,enc.encodings[i])
   if try_io!=nothing
     if enc.iscorrectencoding(try_io)
       enc.io = try_io

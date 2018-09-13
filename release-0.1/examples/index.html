@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · LTspice</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>LTspice</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Home</a></li><li><a class="toctext" href="../install/">Installation</a></li><li><a class="toctext" href="../quickstart/">Quickstart</a></li><li class="current"><a class="toctext" href>Examples</a><ul class="internal"></ul></li><li><a class="toctext" href="../public_api/">Public API</a></li><li><a class="toctext" href="../contents/">Contents</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Examples</a></li></ul><a class="edit-page" href="https://github.com/cstook/LTspice.jl/blob/master/docs/src/examples.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Examples</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Example-2-1" href="#Example-2-1">Example 2</a></h1><p><a href="https://github.com/cstook/LTspice.jl/blob/master/docs/src/example2.ipynb">jupyter version</a></p><p>In this example, the efficiency of a LTM6423 will be measured vs Vin and Iout.</p><p><img src="../img/example2.jpg" alt="example2"/></p><p>Import modules.  For the plot <code>Plots</code> and <code>PyPlot</code> modules are used.</p><div><pre><code class="language-julia">using LTspice, Plots
 pyplot()</code></pre><pre><code class="language-none">Plots.PyPlotBackend()</code></pre></div><p>Create an instance of <code>LTspiceSimulation</code>.</p><div><pre><code class="language-julia">example2 = LTspiceSimulation(&quot;example2.asc&quot;,tempdir=true)</code></pre><pre><code class="language-none">LTspiceSimulation:
-circuit path = C:\Users\Chris\AppData\Local\Temp\jl_59EC.tmp\example2.asc
+circuit path = C:\Users\Chris\AppData\Local\Temp\jl_3900.tmp\example2.asc
 
 Parameters
 vin                       = 4.0
@@ -22,18 +22,18 @@ function compute_efficiency_array(vin_list, iout_list, vout)
     end
     return efficiency
 end
-@time efficiency = compute_efficiency_array(vin_list, iout_list, 3.3)</code></pre><pre><code class="language-none">356.505100 seconds (88.05 k allocations: 3.378 MiB)
+@time efficiency = compute_efficiency_array(vin_list, iout_list, 3.3)</code></pre><pre><code class="language-none">356.725597 seconds (97.06 k allocations: 4.108 MiB)
 10×4 Array{Float64,2}:
- 0.935658  0.939217  0.925933  0.906464
- 0.931411  0.932642  0.919781  0.902515
- 0.911103  0.919501  0.91329   1.00463
- 0.903188  0.913605  0.909351  1.01221
- 0.886399  0.905993  0.90987   1.00303
- 0.871102  0.893739  0.904563  0.996509
- 0.850196  0.886888  0.895092  0.982557
- 0.835841  0.880497  0.892695  0.979385
- 0.808264  0.865018  0.879556  0.955272
- 0.794224  0.854867  0.869803  0.94697</code></pre></div><p>Plot the results.</p><div><pre><code class="language-julia">plt = plot()
+ 0.937647  0.943385  0.924461  0.903047
+ 0.929859  0.932052  0.921557  1.0073
+ 0.909035  0.922517  0.914195  1.00447
+ 0.903302  0.919769  0.912239  0.999323
+ 0.883208  0.902376  0.909746  0.995796
+ 0.863134  0.895895  0.897344  0.984023
+ 0.851519  0.888771  0.893599  0.982141
+ 0.828287  0.875257  0.892245  0.970469
+ 0.821067  0.863291  0.877869  0.964392
+ 0.794595  0.854425  0.866145  0.946286</code></pre></div><p>Plot the results.</p><div><pre><code class="language-julia">plt = plot()
 for iout_index in eachindex(iout_list)
     plot!(plt,vin_list,efficiency[:,iout_index],label = &quot;Iout=&quot;*@sprintf(&quot;%2.2f&quot;,iout_list[iout_index]))
 end

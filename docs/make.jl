@@ -1,5 +1,6 @@
-push!(LOAD_PATH,"..")
-using Pkg; Pkg.instantiate()
+# make sure docs is working directory before calling
+
+using Pkg; Pkg.activate("."); Pkg.instantiate()
 using Documenter, LTspice
 
 # Build docs.

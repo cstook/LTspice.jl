@@ -13,5 +13,8 @@ notifications:
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 #  - julia --check-bounds=yes --code-coverage=user --inline=no -e 'Pkg.clone(pwd()); Pkg.build("LTspice"); Pkg.test("LTspice"; coverage=true)'
 
+#after_success:
+#  - julia -e 'cd(Pkg.dir("LTspice")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
 after_success:
-  - julia -e 'cd(Pkg.dir("LTspice")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
+  - julia --project=test/coverage/ -e 'using Pkg; Pkg.instantiate()'
+  - julia --project=test/coverage/ test/coverage/coverage.jl

@@ -1,3 +1,5 @@
+push!(LOAD_PATH,"..")
+using Pkg; Pkg.instantiate()
 using Documenter, LTspice
 
 # Build docs.

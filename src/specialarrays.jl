@@ -34,8 +34,6 @@ Base.convert(::Type{LTspice.ParameterValuesArray{T,n}}, x::LTspice.ParameterValu
 
 Same as Array, but setindex! returns error.
 """
-# User cannot modify, only
-# updated by running simulation
 mutable struct MeasurementValuesArray{T,n} <: SpecialArray{T,n}
   values :: Array{T,n}
 end

@@ -1,5 +1,6 @@
 using LTspice
-using Base.Test
+using Test
+using Dates
 
 function compare_arrays(x,y)
   @test length(x) == length(y)
@@ -32,7 +33,7 @@ end
 end
 
 
-is_ltspice_installed = (try LTspice.defaultltspiceexecutable() end)!=nothing
+is_ltspice_installed = (try LTspice.defaultltspiceexecutable() catch nothing end)!=nothing
 
 if is_ltspice_installed
   @testset "tests calling LTspice.exe" begin

@@ -23,18 +23,18 @@ end
 Returns the default LTspice executable path for the operating system.
 """
 function defaultltspiceexecutable()
-  @static if is_windows()
+  @static if Sys.iswindows()
     possibleltspiceexecutablelocations = [
     "C:\\Program Files\\LTC\\LTspiceXVII\\XVIIx64.exe",
     "C:\\Program Files (x86)\\LTC\\LTspiceIV\\scad3.exe",
     "C:\\Program Files\\LTC\\LTspiceIV\\scad3.exe"
     ]
   end
-  @static if is_apple()
+  @static if Sys.isapple()
     possibleltspiceexecutablelocations = [
     "/Applications/LTspice.app/Contents/MacOS/LTspice"]
   end
-  @static if is_linux()
+  @static if Sys.islinux()
     possibleltspiceexecutablelocations = [
     "/home/$(ENV["USER"])/.wine/drive_c/Program Files/LTC/LTspiceXVII/XVIIx64.exe",
     "/home/$(ENV["USER"])/.wine/drive_c/Program Files (x86)/LTC/LTspiceIV/scad3.exe"]
@@ -48,9 +48,9 @@ function defaultltspiceexecutable()
 end
 
 function logfileencoding(path::AbstractString)
-  ismatch(r"XVIIx64.exe",path) && return enc"UTF-16LE"
-  ismatch(r"XVIIx32.exe",path) && return enc"UTF-16LE"
-  ismatch(r"scad3.exe",path) && return enc"UTF-8"
+  occursin(r"XVIIx64.exe",path) && return enc"UTF-16LE"
+  occursin(r"XVIIx32.exe",path) && return enc"UTF-16LE"
+  occursin(r"scad3.exe",path) && return enc"UTF-8"
   return enc"UTF-16LE" # for path = ""
 end
 

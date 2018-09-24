@@ -9,7 +9,7 @@ mutable struct Status
   ismeasurementsdirty :: Bool # true = need to run simulation
   timestamp :: DateTime; # timestamp from last simulation run
   duration :: Float64; # simulation time in seconds
-  Status() = new(true,DateTime(),NaN)
+  Status() = new(true,DateTime(1900),NaN)
 end
 mutable struct StepValues{Nstep}
   values ::NTuple{Nstep,Array{Float64,1}}
@@ -172,7 +172,7 @@ function LTspiceSimulation(circuitpath::AbstractString,
   if istempdir
     circuitpath = preparetempdir(circuitpath, executablepath)
   end
-  @static if is_linux()
+  @static if Sys.islinux()
     circuitpath = linkintempdirectoryunderwine(circuitpath)
   end
   circuitparsed = parsecircuitfile(originalcircuitpath,
@@ -196,15 +196,15 @@ function LTspiceSimulation(circuitpath::AbstractString,
     logpath(circuitpath),
     executablepath,
     circuitparsed.circuitfilearray,
-    (circuitparsed.parameternames...),
+    (circuitparsed.parameternames...,),
     circuitparsed.parametervalues,
-    (circuitparsed.parametermultiplier...),
-    (circuitparsed.parameterindex...),
+    (circuitparsed.parametermultiplier...,),
+    (circuitparsed.parameterindex...,),
     parameterdict,
-    (circuitparsed.measurementnames...),
+    (circuitparsed.measurementnames...,),
     measurementdict,
     MeasurementValuesArray{Float64,Nmdim}(fill(NaN,(ntuple(d->1,Nstep)...,Nmeas))), # measurementvalues
-    (circuitparsed.stepnames...),
+    (circuitparsed.stepnames...,),
     blankstepvalues(Nstep),
     Status(),
     circuitparsed.circuitfileencoding,
@@ -233,7 +233,7 @@ end
 function showcircuitpath(io::IO, x::LTspiceSimulation)
   println(io,"circuit path = ",x.circuitpath)
 end
-showparameters{Nmeas,Nmdim,Nstep}(::IO, x::LTspiceSimulation{0,Nmeas,Nmdim,Nstep}) = nothing
+showparameters(::IO, x::LTspiceSimulation{0,Nmeas,Nmdim,Nstep}) where {Nmeas,Nmdim,Nstep} = nothing
 function showparameters(io::IO, x::LTspiceSimulation)
   println(io)
   println(io,"Parameters")
@@ -242,9 +242,9 @@ function showparameters(io::IO, x::LTspiceSimulation)
   end
 end
 showmeasurments(::IO, x::LTspiceSimulation{0,0,1,0}) = nothing
-showmeasurments{Nparam}(::IO, x::LTspiceSimulation{Nparam,0,1,0}) = nothing
-showmeasurments{Nparam,Nmdim,Nstep}(::IO, x::LTspiceSimulation{Nparam,0,Nmdim,Nstep}) = nothing
-function showmeasurements{Nparam,Nmeas}(io::IO, x::LTspiceSimulation{Nparam,Nmeas,1,0})
+showmeasurments(::IO, x::LTspiceSimulation{Nparam,0,1,0}) where Nparam= nothing
+showmeasurments(::IO, x::LTspiceSimulation{Nparam,0,Nmdim,Nstep}) where {Nparam,Nmdim,Nstep} = nothing
+function showmeasurements(io::IO, x::LTspiceSimulation{Nparam,Nmeas,1,0}) where {Nparam,Nmeas}
   if Nmeas!=0
     println(io)
     println(io,"Measurements")
@@ -277,7 +277,7 @@ function showmeasurements(io::IO, x::LTspiceSimulation)
     end
   end
 end
-showsteps{Nparam,Nmeas}(::IO, x::LTspiceSimulation{Nparam,Nmeas,1,0}) = nothing
+showsteps(::IO, x::LTspiceSimulation{Nparam,Nmeas,1,0}) where {Nparam,Nmeas}= nothing
 function showsteps(io::IO, x::LTspiceSimulation)
   if length(x.stepnames)>0
     println(io)
@@ -314,9 +314,9 @@ function Base.values(x::LTspiceSimulation)
   end
   return allvalues
 end
-@generated function Base.getindex{Nparam,Nmeas,Nmdim,Nstep}(
+@generated function Base.getindex(
         x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
-        key::AbstractString)
+        key::AbstractString) where {Nparam,Nmeas,Nmdim,Nstep}
   r = (
       :(x.measurementvalues[x.measurementdict[key]]),
       :(x.measurementvalues[:,x.measurementdict[key]]),
@@ -354,7 +354,7 @@ Base.eltype(x::LTspiceSimulation) = Float64
 Base.length(x::LTspiceSimulation) = length(x.parametervalues) + length(x.measurementvalues)
 
 (x::LTspiceSimulation)(args...) = throw(ArgumentError("number of arguments must match number of parameters"))
-function (x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}){Nparam,Nmeas,Nmdim,Nstep}(args::Vararg{Any,Nparam})
+function (x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep})(args::Vararg{Any,Nparam}) where {Nparam,Nmeas,Nmdim,Nstep}
   for i in eachindex(args)
     x.parametervalues[i] = args[i]
   end
@@ -406,7 +406,7 @@ function run!(x::LTspiceSimulation, force=false)
   flush(x,force)
   if x.status.ismeasurementsdirty || force
     if x.executablepath != ""  # so travis dosen't need to load LTspice
-      @static if is_linux()
+      @static if Sys.islinux()
         drive_c = "/home/$(ENV["USER"])/.wine/drive_c"
         winecircuitpath = joinpath("C:",relpath(x.circuitpath,drive_c))
         run(`$(x.executablepath) -b -Run $winecircuitpath`)

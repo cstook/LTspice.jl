@@ -26,4 +26,4 @@ for file in filelist
   run!(sim)
 end
 
-#cp("test3.log","temp/test3.log", remove_destination=true)
+#cp("test3.log","temp/test3.log", force=true)

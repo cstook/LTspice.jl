@@ -1,6 +1,6 @@
 export perlineiterator
 
-function eachstep{Nstep}(x::StepValues{Nstep}, order=ntuple(i->i,Nstep))
+function eachstep(x::StepValues{Nstep}, order=ntuple(i->i,Nstep)) where Nstep
   length(order) != Nstep && throw(ArgumentError())
   if order==(1,2,3)
     return ((i,j,k) for i=1:length(x.values[1]),
@@ -39,12 +39,12 @@ function eachstep{Nstep}(x::StepValues{Nstep}, order=ntuple(i->i,Nstep))
   end
 end
 
-function eachstep{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
-                         order=ntuple(i->i,Nstep))
+function eachstep(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
+                         order=ntuple(i->i,Nstep)) where {Nparam,Nmeas,Nmdim,Nstep}
   eachstep(x.stepvalues,order)
 end
-function eachstep{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
-                         order::NTuple{Nstep,AbstractString})
+function eachstep(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
+                         order::NTuple{Nstep,AbstractString}) where {Nparam,Nmeas,Nmdim,Nstep}
   eachstep(x,ntuple(i->findfirst(x.stepnames,order[i]),Nstep))
 end
 
@@ -53,7 +53,7 @@ struct ResultNamesIndices
   parametervalue :: Array{Float64,1}
   measurementindex :: Array{Int,1}
 end
-ResultNamesIndices(n::Int) = ResultNamesIndices(Array{Bool}(n),Array{Float64}(n),Array{Int}(n))
+ResultNamesIndices(n::Int) = ResultNamesIndices(Array{Bool}(undef, n),Array{Float64}(undef, n),Array{Int}(undef, n))
 
 """
 ```julia
@@ -80,43 +80,40 @@ open("test.csv",false,true,true,false,false) do io
 end
 ```
 """
-function perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
-                         x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep};
+function perlineiterator(x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep};
                          steporder = ntuple(i->i,Nstep),
                          resultnames = (x.parameternames...,
                                         x.measurementnames...,),
-                         header::Bool = false)
+                         header::Bool = false) where {Nparam,Nmeas,Nmdim,Nstep}
   _perlineiterator(x,steporder,resultnames,header)
 end
 perlineiterator(::NonSteppedSimulation;
                 steporder=nothing,
                 resultnames=nothing,
                 header=nothing) = ()
-function _perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
-                         x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
+function _perlineiterator(x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
                          steporder,
                          resultnames,
-                         header::Bool)
+                         header::Bool) where {Nparam,Nmeas,Nmdim,Nstep}
   if header
-    return chain([headerline(x,steporder,resultnames)],
+    return Iterators.flatten([headerline(x,steporder,resultnames)],
           _perlineiterator(x,steporder,resultnames))
   else
     return _perlineiterator(x,steporder,resultnames)
   end
 end
-function _perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
-                         x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
+function _perlineiterator(x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
                          steporder,
-                         resultnames)
+                         resultnames) where {Nparam,Nmeas,Nmdim,Nstep}
   length(steporder)!=Nstep && throw(ArgumentError("must include all steps"))
   _perlineiterator(x,
-                  ntuple(i->findfirst(x.stepnames,steporder[i]),Nstep),
+                  ntuple(i->something(findfirst(isequal(steporder[i]), x.stepnames), 0),Nstep),
                   resultnames)
 end
-function _perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
-                         x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
+
+function _perlineiterator(x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
                          steporder::NTuple{Nstep,Int},
-                         resultnames)
+                         resultnames) where {Nparam,Nmeas,Nmdim,Nstep}
   allunique(steporder) || throw(ArgumentError("steps must be unique"))
   run!(x)
   resultnameslength = length(resultnames)
@@ -135,9 +132,8 @@ function _perlineiterator{Nparam,Nmeas,Nmdim,Nstep}(
   n = Nstep + resultnameslength
   return (ntuple(j->pliresultvalue(x,rni,i,j,steporder),n) for i in eachstep(x,steporder))
 end
-function pliresultvalue{Nparam,Nmeas,Nmdim,Nstep}(
-                        x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
-                        rni,i,j,steporder)
+function pliresultvalue(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
+                        rni,i,j,steporder) where {Nparam,Nmeas,Nmdim,Nstep}
   if j<=Nstep
     return x.stepvalues.values[steporder[j]][i[steporder[j]]]
   elseif rni.isparameter[j-Nstep]
@@ -147,7 +143,7 @@ function pliresultvalue{Nparam,Nmeas,Nmdim,Nstep}(
   end
 end
 
-function headerline{N}(x,steporder::NTuple{N,Int},resultnames)
+function headerline(x,steporder::NTuple{N,Int},resultnames) where N
   (ntuple(i->x.stepnames[steporder[i]],N)...,resultnames...)
 end
 function headerline(x,steporder,resultnames)

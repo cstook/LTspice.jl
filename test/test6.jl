@@ -10,7 +10,7 @@ function test6()
   @test stepnames(sim) == ()
   @test logpath(sim) != ""
 
-  @static if is_windows()
+  @static if Sys.iswindows()
       @test circuitpath(sim) == filename
   end
 

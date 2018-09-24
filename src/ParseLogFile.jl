@@ -2,24 +2,20 @@ export parselog!
 
 abstract type LogLine end
 abstract type Header <: LogLine end
-type IsCircuitPath <: Header end
+struct IsCircuitPath <: Header end
 abstract type Footer <: LogLine end
-type Date <: Footer end
-type Duration <: Footer end
-type MeasurementName <: LogLine
+struct Date <: Footer end
+struct Duration <: Footer end
+mutable struct MeasurementName <: LogLine
   iter
-  state
   function MeasurementName(x::LTspiceSimulation)
-    iter = eachindex(x.measurementnames)
-    new(iter,start(iter))
+    new(Iterators.Stateful(eachindex(x.measurementnames)))
   end
 end
 mutable struct MeasurementValue <: LogLine
   iter
-  state
   function MeasurementValue(x::LTspiceSimulation)
-    iter = eachindex(x.measurementvalues)
-    new(iter,start(iter))
+    new(Iterators.Stateful(eachindex(x.measurementvalues)))
   end
 end
 mutable struct IsDotStep <: LogLine end
@@ -29,7 +25,7 @@ mutable struct DotStep{Nstep} <: LogLine
   newline :: Array{Float64,1}
   isdone :: Array{Bool,1}
 end
-DotStep{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}) =
+DotStep(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}) where {Nparam,Nmeas,Nmdim,Nstep}=
   DotStep{Nstep}(blankstepvalues(Nstep),
                  [NaN,NaN,NaN,NaN],
                  [NaN,NaN,NaN,NaN],
@@ -37,15 +33,18 @@ DotStep{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}
 
 const circuitpathregex = r"^Circuit: \*\s*([\w\:\\/. ~]+)"i
 function parseline!(::LTspiceSimulation, ::IsCircuitPath, line::AbstractString)
-  ismatch(circuitpathregex, line)
+  occursin(circuitpathregex, line)
 end
 
 const nonsteppedmeasurementregex = r"^.*:.*=([\S]+)"i
 function parseline!(x::NonSteppedSimulation, mv::MeasurementValue, line::AbstractString)
   m = match(nonsteppedmeasurementregex, line)
   m == nothing && return false
-  done(mv.iter, mv.state) && throw(ParseError("unexpected measurement"))
-  (i,mv.state) = next(mv.iter, mv.state)
+  i = popfirst!(mv.iter)
+  #(es=iterate(mv.iter,mv.state))==nothing && throw(ErrorException("unexpected measurement"))
+  #(i,mv.state) = es
+  #done(mv.iter, mv.state) && throw(ErrorException("unexpected measurement"))
+  #(i,mv.state) = next(mv.iter, mv.state)
   try
     x.measurementvalues.values[i] = parse(Float64,m.captures[1])
   catch
@@ -58,8 +57,11 @@ const steppedmeasurementregex = r"^\s*[0-9]+\s+(\S+)"i
 function parseline!(x::LTspiceSimulation, mv::MeasurementValue, line::AbstractString)
   m = match(steppedmeasurementregex, line)
   m == nothing && return false
-  done(mv.iter, mv.state) && throw(ParseError("unexpected measurement"))
-  (i,mv.state) = next(mv.iter, mv.state)
+  i = popfirst!(mv.iter)
+  #(es=iterate(mv.iter,mv.state))==nothing && throw(ErrorException("unexpected measurement"))
+  #(i,mv.state) = es
+  #done(mv.iter, mv.state) && throw(ErrorException("unexpected measurement"))
+  #(i,mv.state) = next(mv.iter, mv.state)
   try
     x.measurementvalues.values[i] = parse(Float64,m.captures[1])
   catch
@@ -72,25 +74,28 @@ const measurementnameregex = r"^Measurement: ([a-z0-9_@#$.:\\]*)"
 function parseline!(x::LTspiceSimulation, mn::MeasurementName, line::AbstractString)
   m = match(measurementnameregex, line)
   m == nothing && return false
-  done(mn.iter, mn.state) && throw(ParseError("unexpected measurement name"))
-  (i,mn.state) = next(mn.iter, mn.state)
-  m.captures[1] != lowercase(x.measurementnames[i]) && throw(ParseError("unexpected measurement name"))
+  i = popfirst!(mn.iter)
+  #(es=iterate(mn.iter,mn.state))==nothing && throw(ErrorException("unexpected measurement"))
+  #(i,mn.state) = es
+  #done(mn.iter, mn.state) && throw(ErrorException("unexpected measurement name"))
+  #(i,mn.state) = next(mn.iter, mn.state)
+  m.captures[1] != lowercase(x.measurementnames[i]) && throw(ErrorException("unexpected measurement name"))
   return true
 end
 
 const dotstepregex = r"(\.step)(?:\s+(.*?)=(.*?))(?:\s+(.*?)=(.*?)){0,1}(?:\s+(.*?)=(.*?)){0,1}\s*$"i
 function parseline!(::LTspiceSimulation, ::IsDotStep, line::AbstractString)
-  ismatch(dotstepregex, line)
+  occursin(dotstepregex, line)
 end
 const dotstepregex123 = (
   r"\.step\s+(?:.*?)=(.*?)\s*$"i,
   r"\.step\s+(?:.*?)=(.*?)\s+(?:.*?)=(.*?)\s*$"i,
   r"\.step\s+(?:.*?)=(.*?)\s+(?:.*?)=(.*?)\s+(?:.*?)=(.*?)\s*$"i
   )
-@generated function parseline!{Nparam,Nmeas,Nmdim,Nstep}(
+@generated function parseline!(
                   x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
                   ds::DotStep{Nstep},
-                  line::AbstractString)
+                  line::AbstractString) where {Nparam,Nmeas,Nmdim,Nstep}
   return quote
     m = match($(dotstepregex123[Nstep]), line)
     m == nothing && return false
@@ -136,7 +141,7 @@ end
 
 function processlines!(io::IO, x::LTspiceSimulation, findlines=[], untillines=[])
   while ~eof(io)
-    line = readline(io, chomp=false)
+    line = readline(io, keep=true)
     for f in findlines
       if parseline!(x,f,line)
         break
@@ -151,21 +156,21 @@ function processlines!(io::IO, x::LTspiceSimulation, findlines=[], untillines=[]
   return 0
 end
 
-function parselog!{Nparam,Nmeas}(x::NonSteppedSimulation{Nparam,Nmeas})
+function parselog!(x::NonSteppedSimulation{Nparam,Nmeas}) where {Nparam,Nmeas}
   open(x.logpath,x.logfileencoding) do io
     measurement = MeasurementValue(x)
     exitcode = processlines!(io, x, [], [measurement,IsDotStep()])
     if exitcode == 2 # this was supposed to be a NonSteppedFile
-      throw(ParseError(".log file is not expected mutable struct.  expected non-stepped, got stepped"))
+      throw(ErrorException(".log file is not expected mutable struct.  expected non-stepped, got stepped"))
     end
     processlines!(io, x, [measurement], [Date()])
-    done(measurement.iter, measurement.state) || throw(ParseError("missing measurement(s)"))
+    #done(measurement.iter, measurement.state) || throw(ErrorException("missing measurement(s)"))
     processlines!(io, x, [Duration()])
   end
   return nothing
 end
 
-function parselog!{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep})
+function parselog!(x::LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep}) where {Nparam,Nmeas,Nmdim,Nstep}
   open(x.logpath,x.logfileencoding) do io
     dotstep = DotStep(x)
     measurementname = MeasurementName(x)
@@ -173,11 +178,12 @@ function parselog!{Nparam,Nmeas,Nmdim,Nstep}(x::LTspiceSimulation{Nparam,Nmeas,N
     x.stepvalues.values = dotstep.stepvalues.values
     measurementarraysize = (ntuple(i->length(dotstep.stepvalues.values[i]),Nstep)...,Nmeas)
     if measurementarraysize != size(x.measurementvalues)
-      x.measurementvalues.values = Array{Float64}(measurementarraysize)
+      x.measurementvalues.values = Array{Float64}(undef, measurementarraysize)
     end
     measurementvalue = MeasurementValue(x)
     processlines!(io, x, [measurementvalue,measurementname], [Date()])
-    done(measurementvalue.iter,measurementvalue.state) || throw(ParseError("missing measurements"))
+    #iterate(measurmentvalue.iter,measurmentvalue.state)==nothing || throw(ErrorException("missing measurements"))
+    #done(measurementvalue.iter,measurementvalue.state) || throw(ErrorException("missing measurements"))
     processlines!(io, x, [Duration()])
   end
   return nothing

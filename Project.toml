@@ -4,6 +4,7 @@ authors = ["Chris Stook <chris@chrisstook.com>"]
 version = "0.1.0"
 
 [deps]
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 StringEncodings = "69024149-9ee7-55f6-a4c4-859efe599b68"
 

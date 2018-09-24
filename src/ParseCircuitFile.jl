@@ -1,51 +1,70 @@
-mutable struct CircuitParsed
-  circuitfilearray :: Array{AbstractString,1}
-  parameternames :: Array{AbstractString,1}
+mutable struct CircuitParsed{T<:AbstractString}
+  circuitfilearray :: Array{T,1}
+  parameternames :: Array{T,1}
   parametervalues :: ParameterValuesArray{Float64,1}
   parametermultiplier :: Array{Float64,1}
   parameterindex :: Array{Int,1}
-  measurementnames :: Array{AbstractString,1}
-  stepnames :: Array{AbstractString,1}
+  measurementnames :: Array{T,1}
+  stepnames :: Array{T,1}
   circuitfileencoding
   cardlist
-  circuitpath::AbstractString
-  workingcircuitpath::AbstractString
-  executablepath::AbstractString
-  includesearchpath::Array{AbstractString,1}
-  librarysearchpath::Array{AbstractString,1}
-  CircuitParsed() =
-    new([],[],[],[],[],[],[],nothing,standardcardlist,"","","",[],[])
+  circuitpath::T
+  workingcircuitpath::T
+  executablepath::T
+  includesearchpath::Array{T,1}
+  librarysearchpath::Array{T,1}
+  CircuitParsed{T}() where T =
+    new{T}([],[],[],[],[],[],[],nothing,standardcardlist,"","","",[],[])
 end
 
 # LTspice allows multiple directives (cards) in a single block
 # in the GUI, ctrl-M is used to create a new line.
 # this puts a backslash n in the file, NOT a newline character.
 #
-# eachcard is an iterator that separates the lines around the backslash n
-struct eachcard
-    line :: AbstractString
-end
-Base.start(::eachcard) = 1
-function Base.next(ec::eachcard, state)
-    p = searchindex(ec.line,"\\n",state)
-    if p!=0 && p!=endof(ec.line)
+# EachCard is an iterator that separates the lines around the backslash n
+
+#=
+Base.start(::EachCard) = 1
+function Base.next(ec::EachCard, state)
+    p = first(something(findnext("\\n", ec.line, state), 0:-1))
+    if p!=0 && p!=lastindex(ec.line)
         card = ec.line[state:p+1]
         state = p+2
     else
         card = ec.line[state:end]
-        state = endof(ec.line)
+        state = lastindex(ec.line)
     end
     return (card, state)
 end
-Base.done(ec::eachcard, state) = state>=endof(ec.line)
+Base.done(ec::EachCard, state) = state>=lastindex(ec.line)
+=#
+struct EachCard{T<:AbstractString}
+    line :: T
+end
+function Base.iterate(ec::EachCard, state=1)
+    if state>=lastindex(ec.line)
+        return nothing
+    end
+    p = first(something(findnext("\\n", ec.line, state), 0:-1))
+    if p!=0 && p!=lastindex(ec.line)
+        card = ec.line[state:p+1]
+        state = p+2
+    else
+        card = ec.line[state:end]
+        state = lastindex(ec.line)
+    end
+    return (card, state)
+end
+
+
 
 abstract type Card end
-type Parameter<:Card end
-type Measure<:Card end
-type Step<:Card end
-type Other<:Card end
-type Include<:Card end
-type Library<:Card end
+struct Parameter<:Card end
+struct Measure<:Card end
+struct Step<:Card end
+struct Other<:Card end
+struct Include<:Card end
+struct Library<:Card end
 const standardcardlist = [Parameter(), Measure(), Step(), Other()]
 const tempdircardlist = [Parameter(), Measure(), Step(),
                          Include(), Library(), Other()]
@@ -76,7 +95,7 @@ function parsecard!(cp::CircuitParsed, ::Parameter, card::AbstractString)
   m == nothing && return false
   currentposition = m.offsets[1]
   push!(cp.circuitfilearray,card[1:currentposition-1])
-  while currentposition<endof(card) && m!=nothing
+  while currentposition<lastindex(card) && m!=nothing
 #    println("      parameter: ",card[currentposition:end])
     m = match(parametercaptureregex,card,currentposition)
     if m!=nothing
@@ -149,7 +168,7 @@ function parsecard!(cp::CircuitParsed, ::Include, card::AbstractString)
   m = match(includeregex, card)
   m == nothing && return false
   incabspath = absolutepath(cp.includesearchpath,m.captures[1])
-  push!(cp.circuitfilearray,replace(card,m.captures[1],incabspath))
+  push!(cp.circuitfilearray,replace(card,m.captures[1] => incabspath))
   return true
 end
 const libraryregex = r"""(?:.lib)[ ]+
@@ -158,7 +177,7 @@ function parsecard!(cp::CircuitParsed, ::Library, card::AbstractString)
   m = match(libraryregex, card)
   m == nothing && return false
   libabspath = absolutepath(cp.librarysearchpath,m.captures[1])
-  push!(cp.circuitfilearray,replace(card,m.captures[1],libabspath))
+  push!(cp.circuitfilearray,replace(card,m.captures[1] => libabspath))
   return true
 end
 function absolutepath(patharray::Array{AbstractString,1},file::AbstractString)
@@ -179,12 +198,12 @@ function parsecard!(cp::CircuitParsed, card::AbstractString)
     end
 end
 
-iscomment(line::AbstractString) = ismatch(r"^TEXT .* ;",line)
+iscomment(line::AbstractString) = occursin(r"^TEXT .* ;",line)
 function parsecircuitfile(circuitpath::AbstractString,
                           workingcircuitpath::AbstractString,
                           executablepath::AbstractString,
                           librarysearhpaths)
-  cp = CircuitParsed()
+  cp = CircuitParsed{String}()
   cp.circuitpath = abspath(circuitpath)
   cp.workingcircuitpath = abspath(workingcircuitpath)
   cp.executablepath = abspath(executablepath)
@@ -205,12 +224,12 @@ function parsecircuitfile(circuitpath::AbstractString,
   cp.circuitfileencoding = circuitfileencoding(circuitpath)
 #  println(circuitpath,"  ",cp.circuitfileencoding)
   open(circuitpath,cp.circuitfileencoding) do io
-    for line in eachline(io, chomp=false)
+    for line in eachline(io, keep=true)
 #      print("line: ",line)
       if iscomment(line)
         push!(cp.circuitfilearray, line)
       else
-        for card in eachcard(line) # might be multi-line directive(s) created with Ctrl-M
+        for card in EachCard(line) # might be multi-line directive(s) created with Ctrl-M
 #          println("  card: ",card)
           parsecard!(cp, card)
         end
@@ -223,7 +242,7 @@ end
 function circuitfileencoding(path::AbstractString)
   function checkencoding(i)
     open(path,encodings[i]) do io
-      if ismatch(r"^Version",readline(io, chomp=false))
+      if occursin(r"^Version",readline(io, keep=true))
         correct_i = i
       end
     end
@@ -232,7 +251,7 @@ function circuitfileencoding(path::AbstractString)
   encodings = [enc"windows-1252",enc"UTF-16LE",enc"UTF-8"] #enc"windows-1252",
   correct_i = 0
   for i in eachindex(encodings)
-    try checkencoding(i) end
+    try checkencoding(i) catch nothing end
     correct_i !=0 && break
   end
   correct_i == 0 && error("invalid LTspice circuit file")

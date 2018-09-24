@@ -12,7 +12,7 @@ function test4()
   @test measurementnames(sim) == ("sum","sump1000")
   @test stepnames(sim) == ("a","b")
 
-  @static if is_windows()
+  @static if Sys.iswindows()
       @test circuitpath(sim) == filename
   end
 

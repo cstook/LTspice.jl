@@ -16,7 +16,7 @@ function test12()
   @test stepvalues(sim) == (v1steps, bsteps, csteps)
   @test measurementnames(sim) == ()
   @test stepnames(sim) == ("V1","b","c")
-  @test measurementvalues(sim) == Array{Float64}((23,6,3,0))
+  @test measurementvalues(sim) == [23.0,6.0,3.0,0.0]
 
   @test length(collect(perlineiterator(sim))) == length(v1steps)*length(bsteps)*length(csteps)
 

@@ -4,7 +4,7 @@ function test1()
   sim = LTspiceSimulation(filename,executablepath="")
   @test LTspice.does_circuitfilearray_file_match(sim)
   show(IOBuffer(),sim)
-  @static if is_windows()
+  @static if Sys.iswindows()
     (circuitdir,_filename) = splitdir(circuitpath(sim))
     @test _filename == filename
     (logdir,logfilename) = splitdir(logpath(sim))

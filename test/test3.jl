@@ -1,7 +1,7 @@
 function test3()
   # copy test3 files to temp so we can test writing to them
-  cp("test3.asc","temp\\test3.asc",remove_destination = true)
-  cp("test3.log","temp\\test3.log",remove_destination = true)
+  cp("test3.asc","temp\\test3.asc",force = true)
+  cp("test3.log","temp\\test3.log",force = true)
 
   filename = "temp\\test3.asc"
   # exectuablepath = null string will not run LTspice.exe.  Test parsing only.

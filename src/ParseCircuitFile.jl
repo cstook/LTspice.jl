@@ -180,7 +180,7 @@ function parsecard!(cp::CircuitParsed, ::Library, card::AbstractString)
   push!(cp.circuitfilearray,replace(card,m.captures[1] => libabspath))
   return true
 end
-function absolutepath(patharray::Array{AbstractString,1},file::AbstractString)
+function absolutepath(patharray, file)
   for path in patharray
     testfile = joinpath(path,file)
     isfile(testfile) && return testfile

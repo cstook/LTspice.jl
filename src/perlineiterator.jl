@@ -96,8 +96,8 @@ function _perlineiterator(x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep},
                          resultnames,
                          header::Bool) where {Nparam,Nmeas,Nmdim,Nstep}
   if header
-    return Iterators.flatten([headerline(x,steporder,resultnames)],
-          _perlineiterator(x,steporder,resultnames))
+    return Iterators.flatten(([headerline(x,steporder,resultnames)],
+          _perlineiterator(x,steporder,resultnames)))
   else
     return _perlineiterator(x,steporder,resultnames)
   end

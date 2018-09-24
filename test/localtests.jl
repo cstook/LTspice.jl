@@ -1,6 +1,6 @@
 # tests to be run on a computer where LTspice is installed.
 using LTspice
-using Base.Test
+using Test
 
 function localtests()
 

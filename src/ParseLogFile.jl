@@ -6,19 +6,19 @@ struct IsCircuitPath <: Header end
 abstract type Footer <: LogLine end
 struct Date <: Footer end
 struct Duration <: Footer end
-mutable struct MeasurementName <: LogLine
+struct MeasurementName <: LogLine
   iter
   function MeasurementName(x::LTspiceSimulation)
     new(Iterators.Stateful(eachindex(x.measurementnames)))
   end
 end
-mutable struct MeasurementValue <: LogLine
+struct MeasurementValue <: LogLine
   iter
   function MeasurementValue(x::LTspiceSimulation)
     new(Iterators.Stateful(eachindex(x.measurementvalues)))
   end
 end
-mutable struct IsDotStep <: LogLine end
+struct IsDotStep <: LogLine end
 mutable struct DotStep{Nstep} <: LogLine
   stepvalues :: StepValues{Nstep}
   lastline :: Array{Float64,1}

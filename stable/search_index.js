@@ -21,7 +21,15 @@ var documenterSearchIndex = {"docs": [
     "page": "Installation",
     "title": "Installation",
     "category": "page",
-    "text": "#InstallationLTspice.jl is currently unregistered.  It can be installed using Pkg.clone.Pkg.clone(\"https://github.com/cstook/LTspice.jl.git\")The julia documentation section on installing unregistered packages provides more information.LTspice.jl is compatible with julia v0.7."
+    "text": ""
+},
+
+{
+    "location": "install/#Installation-1",
+    "page": "Installation",
+    "title": "Installation",
+    "category": "section",
+    "text": "LTspice.jl is currently unregistered.  It can be installed using Pkg.clone.Pkg.clone(\"https://github.com/cstook/LTspice.jl.git\")The julia documentation section on installing unregistered packages provides more information.LTspice.jl is compatible with julia v1.0."
 },
 
 {
@@ -69,7 +77,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Examples",
     "title": "Example 2",
     "category": "section",
-    "text": "jupyter versionIn this example, the efficiency of a LTM6423 will be measured vs Vin and Iout.(Image: example2)Import modules.  For the plot Plots and PyPlot modules are used.using LTspice, Plots\r\npyplot()Create an instance of LTspiceSimulation.example2 = LTspiceSimulation(\"example2.asc\",tempdir=true)Define the values of vin and iout to test.vin_list = linspace(6.0,20.0,10)\r\niout_list = linspace(0.5,3.0,4)Loop over vin and iout measuring efficiency.  Vout is fixed at 3.3V.rfb(vout)= 0.6*60.4e3/(vout-0.6)\r\nfunction compute_efficiency_array(vin_list, iout_list, vout)\r\n    efficiency = Array{Float64}((length(vin_list),length(iout_list)))\r\n    for vin_index in eachindex(vin_list)\r\n        for iout_index in eachindex(iout_list)\r\n            (pin,pout) = example2(vin_list[vin_index],iout_list[iout_index],rfb(vout))\r\n            efficiency[vin_index,iout_index] = -pout/pin\r\n        end\r\n    end\r\n    return efficiency\r\nend\r\n@time efficiency = compute_efficiency_array(vin_list, iout_list, 3.3)Plot the results.plt = plot()\r\nfor iout_index in eachindex(iout_list)\r\n    plot!(plt,vin_list,efficiency[:,iout_index],label = \"Iout=\"*@sprintf(\"%2.2f\",iout_list[iout_index]))\r\nend\r\nplot!(plt, title = \"LTM6423 Efficiency @ Vout = 3.3V\")\r\nplot!(plt, xlabel = \"Vin (V)\", ylabel = \"Efficiency\")\r\nsavefig(plt,\"example2.svg\"); nothing # hide(Image: )"
+    "text": "jupyter versionIn this example, the efficiency of a LTM6423 will be measured vs Vin and Iout.(Image: example2)Import modules.  For the plot Plots and GR modules are used.using Printf\r\nusing LTspice, Plots\r\ngr()Create an instance of LTspiceSimulation.example2 = LTspiceSimulation(\"example2.asc\",tempdir=true)Define the values of vin and iout to test.vin_list = 6.0:1.5:21.0\r\niout_list = 0.5:0.5:3.0Loop over vin and iout measuring efficiency.  Vout is fixed at 3.3V.rfb(vout)= 0.6*60.4e3/(vout-0.6)\r\nfunction compute_efficiency_array(vin_list, iout_list, vout)\r\n    efficiency = Array{Float64}(undef,length(vin_list),length(iout_list))\r\n    for vin_index in eachindex(vin_list)\r\n        for iout_index in eachindex(iout_list)\r\n            (pin,pout) = example2(vin_list[vin_index],iout_list[iout_index],rfb(vout))\r\n            efficiency[vin_index,iout_index] = -pout/pin\r\n        end\r\n    end\r\n    return efficiency\r\nend\r\n@time efficiency = compute_efficiency_array(vin_list, iout_list, 3.3)Plot the results.plt = plot()\r\nfor iout_index in eachindex(iout_list)\r\n    plot!(plt,vin_list,efficiency[:,iout_index],label = \"Iout=\"*@sprintf(\"%2.2f\",iout_list[iout_index]))\r\nend\r\nplot!(plt, title = \"LTM6423 Efficiency @ Vout = 3.3V\")\r\nplot!(plt, xlabel = \"Vin (V)\", ylabel = \"Efficiency\")\r\nsavefig(plt,\"example2.svg\"); nothing # hide(Image: )"
 },
 
 {
@@ -221,7 +229,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public API",
     "title": "LTspice.perlineiterator",
     "category": "function",
-    "text": "perlineiterator(simulation, <keyword arguments>)\n\nRetruns iterator in the format required to pass to writecsv or writedlm.\n\nKeyword Arguments\n\nsteporder     – specify order of steps\nresultnames   – specify parameters and measurements for output\nheader        – true to make first line header\n\nThe step order defaults to the order the step values appear in the circuit file. Step order can be specified by passing an array of step names.  By default there is one column for each step, measurement, and parameter.  The desired measurements and parameters can be set by passing an array of names to resultnames.\n\n# write CSV with headers\nopen(\"test.csv\",false,true,true,false,false) do io\n    writecsv(io,perlineiterator(circuit2,header=true))\nend\n\n\n\n\n\n"
+    "text": "perlineiterator(simulation, <keyword arguments>)\n\nRetruns iterator that flattens multidimensional data.\n\nKeyword Arguments\n\nsteporder     – specify order of steps\nresultnames   – specify parameters and measurements for output\nheader        – true to make first line header\n\nThe step order defaults to the order the step values appear in the circuit file. Step order can be specified by passing an array of step names.  By default there is one column for each step, measurement, and parameter.  The desired measurements and parameters can be set by passing an array of names to resultnames.\n\n# write CSV with headers\nopen(\"test.csv\",write=true, truncate=true,create = true) do io\n    for line in perlineiterator(circuit2,header=true)\n        for x in line\n            print(io,x,\",\")\n        end\n        println(io)\n    end\nend\n\n\n\n\n\n"
 },
 
 {

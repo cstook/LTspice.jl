@@ -1,7 +1,7 @@
 # make sure docs is working directory before calling
-
+push!(LOAD_PATH,"..")
 using Pkg; Pkg.activate("."); Pkg.instantiate()
-using Documenter, LTspice
+using Documenter, LTspice, Printf
 
 # Build docs.
 # ===========
@@ -40,7 +40,7 @@ if "deploy" in ARGS
     branch = "gh-pages",
     latest = "master",
     osname = "linux",
-    julia  = "0.7",
+    julia  = "1.0",
     deps = nothing,
     make = nothing,
   )

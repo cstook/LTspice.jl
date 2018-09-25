@@ -59,7 +59,7 @@ ResultNamesIndices(n::Int) = ResultNamesIndices(Array{Bool}(undef, n),Array{Floa
 ```julia
 perlineiterator(simulation, <keyword arguments>)
 ```
-Retruns iterator in the format required to pass to writecsv or writedlm.
+Retruns iterator that flattens multidimensional data.
 
 **Keyword Arguments**
 
@@ -75,8 +75,13 @@ resultnames.
 
 ```julia
 # write CSV with headers
-open("test.csv",false,true,true,false,false) do io
-    writecsv(io,perlineiterator(circuit2,header=true))
+open("test.csv",write=true, truncate=true,create = true) do io
+    for line in perlineiterator(circuit2,header=true)
+        for x in line
+            print(io,x,",")
+        end
+        println(io)
+    end
 end
 ```
 """

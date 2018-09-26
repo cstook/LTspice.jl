@@ -75,14 +75,8 @@ resultnames.
 
 ```julia
 # write CSV with headers
-open("test.csv",write=true, truncate=true,create = true) do io
-    for line in perlineiterator(circuit2,header=true)
-        for x in line
-            print(io,x,",")
-        end
-        println(io)
-    end
-end
+using DelimitedFiles
+writedlm("test.csv",perlineiterator(circuit2,header=true),',')
 ```
 """
 function perlineiterator(x :: LTspiceSimulation{Nparam,Nmeas,Nmdim,Nstep};

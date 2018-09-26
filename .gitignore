@@ -6,3 +6,4 @@ site/
 docs/build/
 docs/site/
 scratch?.jl
+.ipynb_checkpoints

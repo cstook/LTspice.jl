@@ -1,5 +1,5 @@
 # Quickstart
-[jupyter version](https://github.com/cstook/LTspice.jl/blob/master/examples/example%201/example1.ipynb)
+[jupyter version](https://github.com/cstook/LTspice.jl/blob/master/docs/src/introduction.ipynb)
 
 ![example 1](img/example1.jpg)
 

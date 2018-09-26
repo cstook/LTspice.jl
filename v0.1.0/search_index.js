@@ -229,7 +229,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Public API",
     "title": "LTspice.perlineiterator",
     "category": "function",
-    "text": "perlineiterator(simulation, <keyword arguments>)\n\nRetruns iterator that flattens multidimensional data.\n\nKeyword Arguments\n\nsteporder     – specify order of steps\nresultnames   – specify parameters and measurements for output\nheader        – true to make first line header\n\nThe step order defaults to the order the step values appear in the circuit file. Step order can be specified by passing an array of step names.  By default there is one column for each step, measurement, and parameter.  The desired measurements and parameters can be set by passing an array of names to resultnames.\n\n# write CSV with headers\nopen(\"test.csv\",write=true, truncate=true,create = true) do io\n    for line in perlineiterator(circuit2,header=true)\n        for x in line\n            print(io,x,\",\")\n        end\n        println(io)\n    end\nend\n\n\n\n\n\n"
+    "text": "perlineiterator(simulation, <keyword arguments>)\n\nRetruns iterator that flattens multidimensional data.\n\nKeyword Arguments\n\nsteporder     – specify order of steps\nresultnames   – specify parameters and measurements for output\nheader        – true to make first line header\n\nThe step order defaults to the order the step values appear in the circuit file. Step order can be specified by passing an array of step names.  By default there is one column for each step, measurement, and parameter.  The desired measurements and parameters can be set by passing an array of names to resultnames.\n\n# write CSV with headers\nusing DelimitedFiles\nwritedlm(\"test.csv\",perlineiterator(circuit2,header=true),\',\')\n\n\n\n\n\n"
 },
 
 {

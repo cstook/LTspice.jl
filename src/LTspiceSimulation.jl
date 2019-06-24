@@ -409,7 +409,7 @@ function run!(x::LTspiceSimulation, force=false)
       @static if Sys.islinux()
         drive_c = "/home/$(ENV["USER"])/.wine/drive_c"
         winecircuitpath = joinpath("C:",relpath(x.circuitpath,drive_c))
-        run(`$(x.executablepath) -b -Run $winecircuitpath`)
+        run(`wine $(x.executablepath) -b -Run $winecircuitpath`)
       else
         run(`$(x.executablepath) -b -Run $(x.circuitpath)`)
       end
